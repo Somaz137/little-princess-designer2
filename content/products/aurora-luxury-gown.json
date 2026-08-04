@@ -1,30 +1,45 @@
 {
-  "badge": "Sold out",
-  "name": "Aurora Luxury Gown",
-  "order": 10,
+  "badge": "Made to order",
+  "name": "Aurora Luxury Gown 123",
+  "order": 5,
   "visible": true,
   "sizes": [
     {
       "available": true,
       "size": "13–16 years",
       "price": 13060
+    },
+    {
+      "available": true,
+      "size": "10–12 years",
+      "price": 55
+    },
+    {
+      "available": true,
+      "size": "13–16 years",
+      "price": 21
+    },
+    {
+      "available": true,
+      "size": "4–6 years",
+      "price": 62
     }
   ],
   "description2": "",
-  "accessoryPrice": 1500,
+  "accessoryPrice": 1475,
   "specs": {
-    "fabric": "",
-    "occasion": "",
-    "fit": "",
-    "care": ""
+    "fabric": "satin",
+    "occasion": "blah blah",
+    "fit": "Im testing",
+    "care": "dry clean"
   },
   "images": [
     {
-      "url": "https://res.cloudinary.com/krsizulo/image/upload/v1785253124/WallpaperEngineLockOverride_randomKOSNCF_naosjh.jpg",
+      "url": "https://res.cloudinary.com/krsizulo/image/upload/v1785253096/samples/breakfast.jpg",
       "upload": "",
       "alt": ""
     }
   ],
-  "description": "Our most-requested walima gown: seven layers of soft net over duchess satin, with hand-worked pearl and bead detail running across the bodice and down the centre front.",
-  "subcategory": "r1"
+  "description": "Our most-requested blah blah blah",
+  "subcategory": "y1"
 }
