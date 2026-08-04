@@ -3,8 +3,12 @@
 You need to do this once. After that, adding a product is just opening
 `yoursite.com/admin/` and filling in a form.
 
-There are four steps: push the code to GitHub, connect Netlify, let the admin
-log in via GitHub, and tell the admin which repo it belongs to.
+There are three steps: push the code to GitHub, connect Netlify, and set up
+sign-in with DecapBridge.
+
+Sign-in goes through [DecapBridge](https://decapbridge.com), which means you log
+in with an email address and password. You do **not** need a GitHub account to
+edit the site, and neither does anyone you invite later.
 
 ---
 
@@ -44,62 +48,72 @@ yet — that is step 3.
 
 ---
 
-## 3. Let the admin log in (GitHub OAuth)
+## 3. Set up sign-in (DecapBridge)
 
-The admin saves changes by committing to your GitHub repo, so it needs your
-permission to do that. This is a one-time handshake.
+The admin saves changes by committing to your GitHub repo, so something has to
+be allowed to do that on your behalf. DecapBridge handles it, and lets you sign
+in with an ordinary email address.
 
-### 3a. Create a GitHub OAuth app
+### 3a. Create a site on DecapBridge
 
-1. GitHub → click your avatar → **Settings**
-2. Bottom of the left sidebar → **Developer settings**
-3. **OAuth Apps** → **New OAuth App**
-4. Fill in:
-   - **Application name:** `Little Princess Admin`
-   - **Homepage URL:** your Netlify URL, e.g. `https://littleprincess.netlify.app`
-   - **Authorization callback URL:** `https://api.netlify.com/auth/done`
-     — this exact address, not your own site
-5. **Register application**
-6. Copy the **Client ID**, then **Generate a new client secret** and copy that too.
-   The secret is only shown once.
+1. Go to [decapbridge.com](https://decapbridge.com) and sign up.
+2. Create a **Site**, and connect it to this GitHub repository when asked.
+3. DecapBridge shows you a ready-made `config.yml` snippet. The part you need
+   from it is the **site id** — the long code at the end of the `identity_url`
+   line, which looks like
+   `https://auth.decapbridge.com/sites/0a1b2c3d-4e5f-6789-abcd-ef0123456789`.
 
-### 3b. Give them to Netlify
+### 3b. Paste the site id into the config
 
-1. Netlify → your site → **Site configuration** → **Access & security** →
-   **OAuth**
-2. Under **Authentication providers** → **Install provider** → **GitHub**
-3. Paste the Client ID and Client Secret → **Install**
-
----
-
-## 4. Tell the admin which repo to edit
-
-Open `site/admin/config.yml` and change the third line:
+Open `site/admin/config.yml`. Near the top:
 
 ```yaml
-backend:
-  name: github
-  repo: OWNER/REPO          # <-- change this
+  identity_url: https://auth.decapbridge.com/sites/PASTE-YOUR-SITE-ID-HERE
 ```
 
-to your actual repository, for example:
+Replace `PASTE-YOUR-SITE-ID-HERE` with your site id, so it reads e.g.
 
 ```yaml
-  repo: rimazasif/little-princess
+  identity_url: https://auth.decapbridge.com/sites/0a1b2c3d-4e5f-6789-abcd-ef0123456789
 ```
+
+Leave the `gateway_url` line alone — it is the same for every site.
 
 Commit and push. Netlify redeploys.
 
+> If the snippet DecapBridge gives you differs from what's in `config.yml`,
+> trust theirs for the `backend:` block and keep everything below it as-is.
+> Everything from `local_backend:` downwards is this site's own configuration.
+
 ---
 
-## 5. Log in
+## 4. Log in
 
-Go to `https://your-site.netlify.app/admin/` and click **Login with GitHub**.
-You should land in the admin with **Products**, **Subcategories**,
-**Category pages** and **Site settings** in the sidebar.
+Go to `https://your-site.netlify.app/admin/` and sign in with the email and
+password you registered with DecapBridge. You should land in the admin with
+**Products**, **Subcategories**, **Category pages** and **Site settings** in the
+sidebar.
 
 That's it. Every change you save becomes a commit, Netlify rebuilds, and the
 website updates in a minute or two.
+
+---
+
+## 5. Optional: let someone else edit
+
+In your DecapBridge dashboard, open your site → **Manage collaborators** →
+invite by email. They set their own password (or sign in with Google or
+Microsoft) and can use the admin straight away.
+
+They never need a GitHub account, and they get no access to the repository
+itself — only to the admin form. Because everyone's edits are committed by
+DecapBridge rather than by their own account, `config.yml` puts the editor's
+name into each commit message so you can still tell who changed what.
+
+For that to be worth anything, each person has to fill in their **name** when
+they accept the invitation. If they leave it blank the commit message simply
+ends with a dash and nothing after it — harmless, but useless for telling who
+did what.
 
 ---
 
@@ -170,14 +184,18 @@ Run `npm run build` again to see the changes on the site.
 ## If something goes wrong
 
 **The admin is stuck on "Opening the admin…"**
-The repo name in `config.yml` is probably wrong, or the OAuth provider is not
-installed. Check both, and open your browser's developer console for the actual
-error.
+The site id in `config.yml` is probably still the `PASTE-YOUR-SITE-ID-HERE`
+placeholder, or has a typo. Check it against your DecapBridge dashboard, and
+open your browser's developer console for the actual error.
 
-**"Login with GitHub" does nothing, or fails**
-The callback URL on the GitHub OAuth app must be exactly
-`https://api.netlify.com/auth/done`. A common mistake is putting your own site
-there.
+**The login screen appears but my password is refused**
+Either the site id is wrong — it points the login at a site that isn't yours —
+or the email you are using has not been invited to this site on DecapBridge.
+
+**Login works, but saving fails**
+DecapBridge has lost its connection to the GitHub repository. Re-connect the
+repo from the DecapBridge dashboard. This can also happen if the repository is
+renamed — `repo:` in `config.yml` has to match.
 
 **I saved a change but the website looks the same**
 Netlify needs a minute to rebuild. Check **Deploys** in Netlify — if the build

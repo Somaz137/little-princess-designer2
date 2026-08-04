@@ -7,6 +7,10 @@ Handmade made-to-order kidswear, Lahore. Static website with a
 `/admin/` on the live site and fill in a form. See
 [docs/CMS-SETUP.md](docs/CMS-SETUP.md) for the one-time setup.
 
+Sign-in goes through [DecapBridge](https://decapbridge.com), so editors log in
+with an email address rather than needing a GitHub account with write access to
+this repo.
+
 ---
 
 ## How it fits together

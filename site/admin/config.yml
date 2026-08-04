@@ -1,23 +1,34 @@
 # =============================================================================
 # Decap CMS — Little Princess Designer
 #
-# The repo is set. Remaining one-time step: connect Netlify and install its
-# GitHub OAuth provider so this page can log you in — docs/CMS-SETUP.md step 2-3.
+# Sign-in is handled by DecapBridge, so editors log in with an email address
+# instead of needing a GitHub account of their own.
+#
+# ONE-TIME STEP REMAINING: replace PASTE-YOUR-SITE-ID-HERE below with the site
+# id from your DecapBridge dashboard — docs/CMS-SETUP.md step 3.
 #
 # Editing a product here commits a JSON file to content/products/, which makes
 # Netlify rebuild the site. Changes are live in a minute or two.
 # =============================================================================
 
 backend:
-  name: github
+  name: git-gateway
   repo: Somaz137/little-princess-designer2
   branch: main
+  # Both of these come from DecapBridge. Only the site id changes — the gateway
+  # address is the same for everyone. Until the real id is pasted in, the login
+  # screen appears but no password will be accepted.
+  identity_url: https://auth.decapbridge.com/sites/PASTE-YOUR-SITE-ID-HERE
+  gateway_url: https://gateway.decapbridge.com
+  # Everyone's edits are committed by DecapBridge rather than by their own
+  # GitHub account, so the editor's name is put in the message instead — that is
+  # the only way to tell later who changed what.
   commit_messages:
-    create: 'Add {{collection}} "{{slug}}"'
-    update: 'Update {{collection}} "{{slug}}"'
-    delete: 'Remove {{collection}} "{{slug}}"'
-    uploadMedia: 'Upload {{path}}'
-    deleteMedia: 'Delete {{path}}'
+    create: 'Add {{collection}} "{{slug}}" — {{author-name}}'
+    update: 'Update {{collection}} "{{slug}}" — {{author-name}}'
+    delete: 'Remove {{collection}} "{{slug}}" — {{author-name}}'
+    uploadMedia: 'Upload {{path}} — {{author-name}}'
+    deleteMedia: 'Delete {{path}} — {{author-name}}'
 
 # Lets you run the admin locally with `npm run cms` — no GitHub login needed.
 # Harmless in production: it only activates on localhost.
