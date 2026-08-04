@@ -33,7 +33,7 @@ working tree on 2026-08-04.
 
 ## 404 page polish
 
-- [ ] **`tools/render.js:705` — `.lp-cta` is styled for a different parent.**
+- [x] **`tools/render.js:705` — `.lp-cta` is styled for a different parent.**
       It is only centred as a flex child of `.lp-sticky`; as a block child of
       `.lp-sect` it sits flush left at ≥1180px. Separately,
       `@media (max-width:768px){.lp-cta-s{display:none}}` hides all three
@@ -41,13 +41,13 @@ working tree on 2026-08-04.
       **Fix:** centre the row on the 404 (e.g. `margin-inline:auto`) and either
       accept the hidden subtitles or fold the wording into the titles.
 
-- [ ] **`tools/render.js:698` — no vertical padding on the 404.** `.lp-main`
+- [x] **`tools/render.js:698` — no vertical padding on the 404.** `.lp-main`
       without a modifier and `.lp-sect` supply none, so the "Page not found"
       eyebrow touches the sticky header. Home-page spacing comes from the
       `--gap8`/`--gap9` modifiers, which are not used here.
       **Fix:** add the appropriate `lp-main--*` / `lp-sect--gap*` modifier.
 
-- [ ] **`tools/render.js:717` — wrong nav item marked current.** `tab: "home"`
+- [x] **`tools/render.js:717` — wrong nav item marked current.** `tab: "home"`
       puts `aria-current="page"` on the Home link while the visitor is on a 404,
       which misreports the location to screen readers.
       **Fix:** pass a tab value that matches no nav entry.

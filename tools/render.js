@@ -723,15 +723,16 @@ function render404(model, siteUrl) {
     { icon: ICON.gem, href: "/contact/", title: "How to order", subtitle: "Sizes, delivery and questions" }
   ];
 
-  const body = `<main class="lp-main">
-<section class="lp-sect">
+  // Structured like the contact page: the lp-main modifier carries the width
+  // and padding, so there is no lp-sect inside doubling the gutter.
+  const body = `<main class="lp-main lp-main--notfound">
 <div class="lp-eyebrow">Page not found</div>
 <h1 class="lp-h2">This page has slipped away</h1>
 <p>
 The address may have been mistyped, or the piece you were looking for may have
 been renamed or taken down. Everything else is still here.
 </p>
-<div class="lp-cta">
+<div class="lp-cta lp-cta--center">
 ${links.map(l =>
   '<a href="' + esc(l.href) + '"' + (l.external ? ' target="_blank" rel="noopener"' : "") + ">" +
   svg(l.icon, { stroke: "var(--berry-800)" }) +
@@ -739,11 +740,13 @@ ${links.map(l =>
   '<span class="lp-cta-s">' + esc(l.subtitle) + "</span></a>"
 ).join("\n")}
 </div>
-</section>
 </main>`;
 
   return page(model, {
-    tab: "home",
+    // Matches no nav key, so no link is marked aria-current: the visitor is not
+    // on any of them. The berry defaults on .lp-app apply either way — only the
+    // four category tabs override the palette.
+    tab: "none",
     siteUrl,
     title: "Page not found | " + s.brandName,
     description: "That page could not be found. Browse the collection or message us on WhatsApp.",

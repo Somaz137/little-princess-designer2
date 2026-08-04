@@ -103,12 +103,16 @@ img{max-width:100%}
 
 .lp-main{display:block}
 .lp-main--home{display:flex;flex-direction:column;align-items:stretch}
-.lp-main--shop,.lp-main--product,.lp-main--contact{
+.lp-main--shop,.lp-main--product,.lp-main--contact,.lp-main--notfound{
   max-width:var(--width-container);margin:0 auto;
 }
-.lp-main--shop   {padding:var(--space-7) var(--gutter-page) var(--space-9)}
-.lp-main--product{padding:var(--space-6) var(--gutter-page) var(--space-9)}
-.lp-main--contact{padding:var(--space-8) var(--gutter-page) var(--space-9)}
+.lp-main--shop    {padding:var(--space-7) var(--gutter-page) var(--space-9)}
+.lp-main--product {padding:var(--space-6) var(--gutter-page) var(--space-9)}
+.lp-main--contact {padding:var(--space-8) var(--gutter-page) var(--space-9)}
+/* .lp-h2 is centred, so the eyebrow and body copy centre to match — same
+   treatment the contact page gives its heading and intro. */
+.lp-main--notfound{padding:var(--space-8) var(--gutter-page) var(--space-9);text-align:center}
+.lp-main--notfound p{font:var(--type-body);color:var(--text-body);max-width:62ch;margin:0 auto var(--space-6)}
 
 .lp-sect{
   width:100%;box-sizing:border-box;
@@ -168,6 +172,9 @@ img{max-width:100%}
   padding:0 1.75rem 1.25rem;
   display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem;
 }
+/* On the home page .lp-cta is a flex child of .lp-sticky, which centres it.
+   Anywhere it is a plain block child it needs to centre itself. */
+.lp-cta--center{margin-inline:auto}
 .lp-cta > a{
   display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center;
   background:rgba(255,252,248,.92);border:2px solid var(--berry-300);
