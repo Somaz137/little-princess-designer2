@@ -63,12 +63,19 @@ public_folder: "/assets/uploads"
 # The three hero sketch/colour/photo images stay as repo files either way —
 # they are part of the page design, not catalogue content.
 #
+# Nothing else has to change: the Decap build loaded in admin/index.html already
+# ships the Cloudinary media library, and the site renders whatever address the
+# upload field ends up holding. Turn this on BEFORE uploading any photo — files
+# already committed stay in git history even if you delete them afterwards.
+#
 # media_library:
 #   name: cloudinary
 #   output_filename_only: false
 #   config:
 #     cloud_name: YOUR_CLOUD_NAME
-#     api_key: YOUR_API_KEY
+#     # Quoted on purpose. Unquoted it reads as a number, and Cloudinary's widget
+#     # wants a string — an all-digit key would arrive in the wrong type.
+#     api_key: "YOUR_API_KEY"
 #     default_transformations:
 #       - - fetch_format: auto
 #           quality: auto

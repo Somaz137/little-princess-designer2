@@ -29,23 +29,28 @@ Key constraints:
 Build is clean (45 pages + `404.html`). Everything below is merged to `main`
 (PR #1 and PR #2, HEAD `0d73d7a`).
 
-**Blocked:** publishing from the admin fails with
-`API_ERROR: Resource not accessible by personal access token`. Sign-in works and
-DecapBridge is reaching GitHub — the token DecapBridge uses has read-only access.
-Diagnosed, not yet fixed; the fix is in GitHub/DecapBridge settings, not in this
-repo. See Next step.
+**Fixed:** publishing from the admin used to fail with
+`API_ERROR: Resource not accessible by personal access token` — the token
+DecapBridge uses had read-only access. The owner corrected it in GitHub /
+DecapBridge settings; nothing in this repo changed. `main` has had no CMS-authored
+commit yet, so the first successful save is still unconfirmed from here.
 
 **Not started:** Cloudinary. The `media_library` block in
 `site/admin/config.yml` is still commented out, so uploads would commit into
 this repo. Must be switched on *before* any photo is uploaded — repo history is
-permanent.
+permanent. It needs the owner's Cloudinary **cloud name** and **API key**; those
+two values are the only edit left.
+
+**Empty:** every image slot in `content/` is still `{"url": "", "upload": ""}` —
+39 products, 4 category cards, 10 carousel photos, 1 About photo. The build warns
+about the products and succeeds; the site renders "photo coming soon" frames.
 
 ## Files in flight
 
 - `site/admin/config.yml` — done. `backend: git-gateway` with DecapBridge PKCE,
   real site id `6a40028d-8569-4023-a050-8b533a65ff01` in both `auth_endpoint`
   and `auth_token_endpoint`. Top-level `auth:` claim block present. Cloudinary
-  block at ~line 36 still commented out — the one thing left to edit here.
+  block at ~line 59 still commented out — the one thing left to edit here.
 - `site/admin/index.html` — done. Decap pinned to `3.15.1` (was `^3.8.0`).
 - `tools/content.js` — done. `settings.about.photo` and `settings.carousel` now
   go through `resolveImage()`.
@@ -98,17 +103,27 @@ Nothing uncommitted. Working tree clean.
 
 ## Next step
 
-Fix the admin publish failure. GitHub → Settings → Developer settings →
-Personal access tokens → Fine-grained tokens → open the token DecapBridge uses:
+Turn on Cloudinary, before any photo is uploaded. Uncomment the `media_library`
+block in `site/admin/config.yml` and fill in the owner's Cloudinary **cloud name**
+and **API key** (Cloudinary dashboard → Product Environment Credentials). Both are
+client-side values by design; the API *secret* is not used and must not go in.
 
-1. **Repository access** must include `Somaz137/little-princess-designer2`.
-2. **Repository permissions → Contents** must be **Read and write** (currently
-   read-only). `publish_mode: simple`, so Contents alone is enough — Pull
-   requests permission is not needed unless editorial workflow is turned on later.
+Verified this session, so the two values really are the whole job:
 
-Editing an existing token takes effect immediately; nothing needs re-pasting into
-DecapBridge. If no such token exists, reconnect the repo from the DecapBridge
-dashboard and grant it this repository.
+- The pinned `decap-cms@3.15.1` bundle already contains
+  `decap-cms-media-library-cloudinary@3.1.0` and registers it. **No extra
+  `<script>` tag** — the common tutorial step is unnecessary here.
+- Option names are right, checked against that package's source:
+  `output_filename_only` is an integration option (sits beside `name`), while
+  `default_transformations` is a Cloudinary behaviour key (sits inside `config`)
+  and takes an array-of-arrays. Getting either nesting wrong fails silently.
+- `tools/check-config.js`'s hand-rolled YAML reader survives the uncommented
+  block — tested with real values; `npm run check` still passes.
+- `resolveImage()` uses the stored string verbatim, and `shareImage()` already
+  passes absolute URLs through. So a `https://res.cloudinary.com/...` value lands
+  correctly in both `<img src>` and `og:image` with no code change.
+- `api_key` is quoted in the template on purpose: unquoted, an all-digit key
+  parses as a YAML number and reaches the widget in the wrong type.
 
-Then, before any photo is uploaded: uncomment the `media_library` block in
-`site/admin/config.yml` and fill in the user's Cloudinary cloud name and API key.
+After that the work is content, not code: fill the 54 empty image slots via
+`/admin/`, keeping uploads ~1600px on the long edge and under ~300 KB.
