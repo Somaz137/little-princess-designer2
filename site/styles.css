@@ -471,6 +471,9 @@ carousel-3d{
 /* --- 13. Product detail ----------------------------------------------- */
 
 .lp-back{
+  /* Must not be inline: vertical padding and margins on an inline element do
+     not affect the surrounding layout, so the pill overlapped the gallery. */
+  display:inline-block;
   font:var(--weight-bold) var(--text-sm)/1 var(--font-ui);color:var(--tone-deep);
   background:var(--tone-soft);border:2px solid var(--tone-edge);
   border-radius:var(--radius-pill);padding:10px 16px;cursor:pointer;
