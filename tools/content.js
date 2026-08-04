@@ -43,12 +43,30 @@ function readDir(dir) {
     .map(f => ({ slug: f.replace(/\.json$/, ""), data: readJson(path.join(dir, f)) }));
 }
 
+/** True for addresses that already point somewhere on their own. */
+const isAbsoluteSrc = src => /^(https?:)?\/\//i.test(src) || /^data:/i.test(src);
+
+/**
+ * An image address is either absolute — Cloudinary and anything else pasted in
+ * full — or a path on this site, which must start with "/". A value with
+ * neither resolves against whatever page it happens to land on, and gets the
+ * site origin glued straight onto it when building share tags. Force it
+ * root-relative and say so: a visible 404 beats a silently malformed URL.
+ */
+function normaliseSrc(src) {
+  if (isAbsoluteSrc(src) || src.startsWith("/")) return src;
+  warn('image address "' + src + '" has no https:// and no leading "/" — ' +
+       'treating it as "/' + src + '", which will not load. Paste the full ' +
+       "address, or start it with a slash if it is a file on this site.");
+  return "/" + src;
+}
+
 /** An image entry is `{url, upload, alt}`; a pasted URL wins over an upload. */
 function resolveImage(img, fallbackAlt) {
   if (!img) return null;
   const src = (img.url || "").trim() || (img.upload || "").trim();
   if (!src) return null;
-  return { src, alt: (img.alt || "").trim() || fallbackAlt || "" };
+  return { src: normaliseSrc(src), alt: (img.alt || "").trim() || fallbackAlt || "" };
 }
 
 function resolveImages(list, fallbackAlt) {

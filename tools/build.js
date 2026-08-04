@@ -32,10 +32,14 @@ const SITE_URL = (
 
 /* --- fs helpers --------------------------------------------------------- */
 
+/** Every .html written, so the build summary counts rather than guesses. */
+const pagesWritten = [];
+
 function writeFile(rel, body) {
   const file = path.join(DIST, rel);
   fs.mkdirSync(path.dirname(file), { recursive: true });
   fs.writeFileSync(file, body);
+  if (rel.endsWith(".html")) pagesWritten.push(rel);
 }
 
 function copyRecursive(from, to) {
@@ -118,8 +122,9 @@ writeFile("robots.txt",
 
 const st = model.stats;
 console.log("\nBuilt:");
-console.log("  " + (2 + model.categories.length + model.products.length) + " pages" +
-  "  (home, contact, " + model.categories.length + " category, " + model.products.length + " product)");
+console.log("  " + pagesWritten.length + " pages" +
+  "  (home, contact, 404, " + model.categories.length + " category, " +
+  model.products.length + " product)");
 console.log("  " + st.subcategories + " subcategories, " + st.products + " live products" +
   (st.hidden ? ", " + st.hidden + " hidden by the admin" : ""));
 console.log("  " + urls.length + " urls in sitemap.xml");

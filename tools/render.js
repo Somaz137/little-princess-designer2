@@ -66,16 +66,45 @@ function frame(image, { eager = false, placeholder = "Photo coming soon" } = {})
 /* --- chrome ------------------------------------------------------------- */
 
 /**
- * Absolute URL for a share image. WhatsApp, Instagram and the rest reject
- * relative paths, and Cloudinary links are already absolute — so pass those
- * through untouched and prefix everything else with the site origin.
+ * Absolute form of an image address. WhatsApp, Instagram and structured data
+ * all reject relative paths; Cloudinary links are already absolute, so those
+ * pass through untouched and everything else gets the site origin.
+ *
+ * content.js guarantees a leading "/" on anything not absolute, so this can
+ * join the two without a separator — that guarantee is what stops
+ * "site.comfoo.jpg" being produced from a carelessly pasted value.
  */
+function absoluteUrl(src, siteUrl) {
+  return /^(https?:)?\/\//i.test(src) || /^data:/i.test(src) ? src : siteUrl + src;
+}
+
+/** Share image for og:image / twitter:image, falling back to the logo. */
 function shareImage(image, siteUrl) {
   const src = (image && image.src) || "/assets/logo-lockup.webp";
   return {
-    url: /^https?:\/\//.test(src) ? src : siteUrl + src,
+    url: absoluteUrl(src, siteUrl),
     alt: (image && image.alt) || ""
   };
+}
+
+/**
+ * Serialises structured data for embedding in a <script> block.
+ *
+ * JSON.stringify does not escape "<", so a CMS field containing "</script>"
+ * would close the block early and hand the rest of the value to the HTML
+ * parser as markup — stored XSS, reachable by anyone invited to edit content
+ * even though they hold no access to this repo.
+ *
+ * < is valid JSON and parses back to "<", so what search engines read is
+ * unchanged. U+2028/U+2029 are legal in JSON strings but are line terminators
+ * in JavaScript, so they are escaped too: harmless in ld+json, and it keeps
+ * the output safe if this block ever becomes an executable script type.
+ */
+function jsonLdScript(data) {
+  return JSON.stringify(data)
+    .replace(/</g, "\\u003c")
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029");
 }
 
 function head({ title, description, canonical, jsonLd, share, ogType = "website", brandName = "", noindex = false }) {
@@ -107,7 +136,7 @@ ${share.alt ? '<meta property="og:image:alt" content="' + esc(share.alt) + '">' 
 .lp-grid[data-preload] > .lp-card:nth-child(n+5){display:block}
 [data-loadwrap],.lp-toolbar,.lp-panel,.lp-scrim{display:none}
 </style></noscript>
-${jsonLd ? '<script type="application/ld+json">' + JSON.stringify(jsonLd) + "</script>" : ""}
+${jsonLd ? '<script type="application/ld+json">' + jsonLdScript(jsonLd) + "</script>" : ""}
 </head>
 <body>`;
 }
@@ -575,7 +604,7 @@ Order on WhatsApp</a>
       description: p.description,
       category: p.tabLabel + " > " + p.subcategoryName,
       brand: { "@type": "Brand", name: s.brandName },
-      image: p.images.map(i => (i.src.startsWith("http") ? i.src : siteUrl + i.src)),
+      image: p.images.map(i => absoluteUrl(i.src, siteUrl)),
       offers: {
         "@type": "AggregateOffer",
         priceCurrency: "PKR",
@@ -694,15 +723,16 @@ function render404(model, siteUrl) {
     { icon: ICON.gem, href: "/contact/", title: "How to order", subtitle: "Sizes, delivery and questions" }
   ];
 
-  const body = `<main class="lp-main">
-<section class="lp-sect">
+  // Structured like the contact page: the lp-main modifier carries the width
+  // and padding, so there is no lp-sect inside doubling the gutter.
+  const body = `<main class="lp-main lp-main--notfound">
 <div class="lp-eyebrow">Page not found</div>
 <h1 class="lp-h2">This page has slipped away</h1>
 <p>
 The address may have been mistyped, or the piece you were looking for may have
 been renamed or taken down. Everything else is still here.
 </p>
-<div class="lp-cta">
+<div class="lp-cta lp-cta--center">
 ${links.map(l =>
   '<a href="' + esc(l.href) + '"' + (l.external ? ' target="_blank" rel="noopener"' : "") + ">" +
   svg(l.icon, { stroke: "var(--berry-800)" }) +
@@ -710,11 +740,13 @@ ${links.map(l =>
   '<span class="lp-cta-s">' + esc(l.subtitle) + "</span></a>"
 ).join("\n")}
 </div>
-</section>
 </main>`;
 
   return page(model, {
-    tab: "home",
+    // Matches no nav key, so no link is marked aria-current: the visitor is not
+    // on any of them. The berry defaults on .lp-app apply either way — only the
+    // four category tabs override the palette.
+    tab: "none",
     siteUrl,
     title: "Page not found | " + s.brandName,
     description: "That page could not be found. Browse the collection or message us on WhatsApp.",
