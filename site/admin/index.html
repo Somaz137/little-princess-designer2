@@ -54,7 +54,12 @@
   </small>
 </div>
 
-<script src="https://unpkg.com/decap-cms@^3.8.0/dist/decap-cms.js"></script>
+<!-- Pinned deliberately. A floating range (decap-cms@^3) re-downloads whatever
+     is newest on every visit, so a bad release upstream breaks this admin
+     overnight with no change on our side. Upgrade by bumping this number and
+     checking the admin still loads. Release notes:
+     https://github.com/decaporg/decap-cms/releases -->
+<script src="https://unpkg.com/decap-cms@3.15.1/dist/decap-cms.js"></script>
 <script>
   // Hide the splash as soon as Decap has painted anything — its login screen
   // included, so the Login button is never sitting behind the overlay.

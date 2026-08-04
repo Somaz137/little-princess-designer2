@@ -65,6 +65,19 @@ const nonEmpty = (...vals) => {
 function load() {
   const settings = readJson(path.join(CONTENT, "settings.json"));
 
+  // The CMS stores every photo as {url, upload, alt}; the renderer wants {src,
+  // alt}. Products and category cards are converted further down — these two
+  // are the settings-level photos, and they render as an empty <img> until
+  // they go through the same step.
+  if (settings.about) {
+    settings.about.photo = resolveImage(settings.about.photo, settings.about.heading);
+  }
+  // Nulls are kept rather than filtered out: an empty slot renders the same
+  // "photo coming soon" frame as everywhere else, so the ring keeps its shape
+  // while the catalogue is being photographed.
+  settings.carousel = (Array.isArray(settings.carousel) ? settings.carousel : [])
+    .map(img => resolveImage(img));
+
   const categories = CATEGORY_ORDER.map(key => {
     const c = readJson(path.join(CONTENT, "categories", key + ".json"));
     return Object.assign({}, c, {
