@@ -154,7 +154,7 @@ img{max-width:100%}
   grid-area:1/1;max-width:min(880px,92vw);
   text-align:center;text-wrap:balance;
   font:var(--weight-regular) 3.25rem/1.08 var(--font-hand);
-  color:var(--berry-900);margin:0;
+  color:var(--berry-900);margin:0;will-change:opacity;
 }
 .lp-art{
   position:relative;z-index:1;width:100%;flex:1 1 auto;min-height:0;
@@ -165,7 +165,11 @@ img{max-width:100%}
   position:relative;height:100%;width:auto;aspect-ratio:860/1143;max-width:100%;
   border-radius:var(--radius-hand);overflow:hidden;
 }
-.lp-artframe img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+/* app.js writes inline opacity on these every scroll frame. Without a
+   compositor hint each write repaints a full-bleed image, which is what
+   makes the hero judder on phones. Six promoted layers is a bounded cost. */
+.lp-artframe img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+  will-change:opacity}
 
 .lp-cta{
   flex:0 0 auto;width:100%;max-width:960px;box-sizing:border-box;

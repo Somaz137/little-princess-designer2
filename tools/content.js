@@ -213,6 +213,19 @@ function load() {
     if (!s.products.length) warn('subcategory "' + s.name + '" (' + s.id + ') has no visible products');
   }
 
+  // A product's first photo becomes its link preview. WhatsApp and Facebook do
+  // not render WebP previews, so those links share as bare text — which is
+  // invisible from the admin and easy to leave broken for months.
+  const webpFirst = products
+    .filter(p => p.images.length && /\.webp(\?|$)/i.test(p.images[0].src))
+    .map(p => p.name);
+  if (webpFirst.length) {
+    warn(webpFirst.length + " product(s) have a WebP first photo, which WhatsApp and " +
+      "Facebook will not show when the link is shared: " +
+      webpFirst.slice(0, 5).join(", ") + (webpFirst.length > 5 ? ", …" : "") +
+      ". Use a JPEG or PNG for the first photo, or set Cloudinary's format to jpg.");
+  }
+
   // One line rather than one per product — with an empty catalogue this would
   // otherwise bury the warnings that actually need acting on.
   if (noPhoto.length) {

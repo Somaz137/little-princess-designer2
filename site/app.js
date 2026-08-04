@@ -57,8 +57,20 @@
       if (next !== isMin) header.setAttribute("data-min", next ? "1" : "0");
     });
 
+    /* Mobile browsers fire `resize` continuously while the URL bar slides in and
+       out, and that only ever changes the viewport HEIGHT. Re-measuring then is
+       both pointless and costly: measure() forces a synchronous layout and
+       briefly flips data-min to "0" and back, mid-scroll. Watching width only
+       keeps the header steady on a phone while still handling rotation. */
+    var lastWidth = window.innerWidth;
+    var onResize = raf(function () {
+      if (window.innerWidth === lastWidth) return;
+      lastWidth = window.innerWidth;
+      measure();
+    });
+
     measure();
-    window.addEventListener("resize", measure);
+    window.addEventListener("resize", onResize);
     window.addEventListener("scroll", latch, { passive: true });
     latch();
   }
