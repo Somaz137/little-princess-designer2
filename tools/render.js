@@ -78,12 +78,31 @@ function absoluteUrl(src, siteUrl) {
   return /^(https?:)?\/\//i.test(src) || /^data:/i.test(src) ? src : siteUrl + src;
 }
 
-/** Share image for og:image / twitter:image, falling back to the logo. */
+/**
+ * The built-in preview picture, used whenever a page has no photo of its own.
+ *
+ * PNG, not WebP, and deliberately so: WhatsApp and Facebook do not render WebP
+ * link previews, and every image this site ships is otherwise WebP. The source
+ * is tools/share-card.html — see the note at the top of that file for how to
+ * re-render it if the wording or photo changes.
+ */
+const SHARE_CARD = { src: "/assets/share-card.png", width: 1200, height: 630, type: "image/png" };
+
+const MIME = { png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", gif: "image/gif", webp: "image/webp" };
+
+/** Share image for og:image / twitter:image, falling back to the built-in card. */
 function shareImage(image, siteUrl) {
-  const src = (image && image.src) || "/assets/logo-lockup.webp";
+  const src = (image && image.src) || SHARE_CARD.src;
+  const ext = (src.split("?")[0].match(/\.([a-z0-9]+)$/i) || [])[1];
+  const isCard = src === SHARE_CARD.src;
   return {
     url: absoluteUrl(src, siteUrl),
-    alt: (image && image.alt) || ""
+    alt: (image && image.alt) || "",
+    // Dimensions only for the card, whose size is known. Guessing at a CMS
+    // photo's size would be worse than omitting it — scrapers fetch and measure.
+    width: isCard ? SHARE_CARD.width : null,
+    height: isCard ? SHARE_CARD.height : null,
+    type: isCard ? SHARE_CARD.type : (MIME[String(ext).toLowerCase()] || null)
   };
 }
 
@@ -124,6 +143,9 @@ ${noindex ? '<meta name="robots" content="noindex">' : ""}
 <meta property="og:site_name" content="${esc(brandName)}">
 <meta property="og:locale" content="en_PK">
 <meta property="og:image" content="${esc(share.url)}">
+${share.type ? '<meta property="og:image:type" content="' + esc(share.type) + '">' : ""}
+${share.width ? '<meta property="og:image:width" content="' + share.width + '">' : ""}
+${share.height ? '<meta property="og:image:height" content="' + share.height + '">' : ""}
 ${share.alt ? '<meta property="og:image:alt" content="' + esc(share.alt) + '">' : ""}
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="${esc(share.url)}">
@@ -260,8 +282,11 @@ ${hooks.map((h, i) => i === 0
 <div class="lp-art">
 <div class="lp-artframe">
 ${stages.map((st, i) =>
+  // None of the three are lazy-loaded. They are the hero: the crossfade starts
+  // within the first flick of a scroll, and a lazy image that has not decoded
+  // yet pops in mid-fade, which reads as the animation stuttering.
   '<img data-stage="' + i + '" src="' + st.src + '" alt="' + esc(st.alt) + '"' +
-  (i === 0 ? ' fetchpriority="high"' : ' loading="lazy" style="opacity:0"') + ">"
+  (i === 0 ? ' fetchpriority="high"' : ' style="opacity:0"') + ' decoding="async">'
 ).join("\n")}
 </div>
 </div>
@@ -277,7 +302,34 @@ ${ctas.slice(0, 3).map((c, i) => {
 </div>
 </section>
 
-<section class="lp-sect lp-sect--feat">
+<section class="lp-sect lp-sect--feat lp-anchor lp-car-sect" id="explore-collection">
+<div class="lp-car-head">
+<h2 class="lp-h2 lp-h2--sm"><img class="lp-crown lp-crown--sm" src="/assets/logo-crown.png" alt="">${esc(s.carouselHeading)}</h2>
+<span class="lp-car-hint">${esc(s.carouselHint)}</span>
+</div>
+<div class="lp-car-wrap">
+<carousel-3d>
+${(s.carousel || []).map((img, i) =>
+  '<div><div class="lp-car-face">' + frame(img, { placeholder: "Piece " + (i + 1) }) + "</div></div>"
+).join("\n")}
+</carousel-3d>
+</div>
+</section>
+
+<section class="lp-sect lp-sect--gap9">
+<h2 class="lp-h2"><img class="lp-crown" src="/assets/logo-crown.png" alt="">${esc(s.categoriesHeading)}</h2>
+<div class="lp-getyours">
+${model.categories.map(c => `<a href="${c.href}">
+<div class="lp-gy" data-cat="${esc(c.key)}">
+<div class="lp-gy-photo">${frame(c.card.image, { placeholder: esc(c.label) + " photo" })}</div>
+<div class="lp-gy-t">${esc(c.label)}</div>
+<div class="lp-gy-s">${esc(c.card.subtitle)}</div>
+</div>
+</a>`).join("\n")}
+</div>
+</section>
+
+<section class="lp-sect lp-sect--gap9">
 <h2 class="lp-h2"><img class="lp-crown" src="/assets/logo-crown.png" alt="">${esc(s.featuresHeading)}</h2>
 <div class="lp-feat">
 ${(s.features || []).map(f => `<div>
@@ -306,33 +358,6 @@ ${paragraphs(s.about.body).map(p => "<p>" + inline(p) + "</p>").join("\n")}
 </div>
 </div>
 </section>
-
-<section class="lp-sect lp-sect--gap9 lp-anchor lp-car-sect" id="explore-collection">
-<div class="lp-car-head">
-<h2 class="lp-h2 lp-h2--sm"><img class="lp-crown lp-crown--sm" src="/assets/logo-crown.png" alt="">${esc(s.carouselHeading)}</h2>
-<span class="lp-car-hint">${esc(s.carouselHint)}</span>
-</div>
-<div class="lp-car-wrap">
-<carousel-3d>
-${(s.carousel || []).map((img, i) =>
-  '<div><div class="lp-car-face">' + frame(img, { placeholder: "Piece " + (i + 1) }) + "</div></div>"
-).join("\n")}
-</carousel-3d>
-</div>
-</section>
-
-<section class="lp-sect lp-sect--gap9">
-<h2 class="lp-h2"><img class="lp-crown" src="/assets/logo-crown.png" alt="">${esc(s.categoriesHeading)}</h2>
-<div class="lp-getyours">
-${model.categories.map(c => `<a href="${c.href}">
-<div class="lp-gy" data-cat="${esc(c.key)}">
-<div class="lp-gy-photo">${frame(c.card.image, { placeholder: esc(c.label) + " photo" })}</div>
-<div class="lp-gy-t">${esc(c.label)}</div>
-<div class="lp-gy-s">${esc(c.card.subtitle)}</div>
-</div>
-</a>`).join("\n")}
-</div>
-</section>
 </main>`;
 
   const jsonLd = {
@@ -354,8 +379,9 @@ ${model.categories.map(c => `<a href="${c.href}">
     title: s.seo.title,
     description: s.seo.description,
     canonical: siteUrl + "/",
-    // The finished-dress hero photo, which is what the brand is selling.
-    image: { src: "/assets/dress-real-tall.webp", alt: s.tagline },
+    // Falls through to the built-in share card. The hero photo is WebP and
+    // portrait — the wrong format and the wrong shape for a link preview.
+    image: null,
     jsonLd,
     body
   });
