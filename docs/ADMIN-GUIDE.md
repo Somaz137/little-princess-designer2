@@ -1,7 +1,7 @@
 # Using the admin page
 
-Go to `yoursite.com/admin/`. Everything you save becomes live on the website
-about a minute later.
+Go to `yoursite.com/admin/` and sign in with your email address and password.
+Everything you save becomes live on the website about a minute later.
 
 There are four things in the sidebar:
 
@@ -166,7 +166,12 @@ subcategory still exists.
 
 **I made a mistake — can I undo it?**
 Yes. Every change is saved in the repository's history on GitHub, so nothing is
-ever truly lost. Ask whoever set the site up to roll it back.
+ever truly lost. Ask whoever set the site up to roll it back. Each entry in that
+history carries the name of whoever made the change.
+
+**Can I let someone else add products?**
+Yes — invite them by email from the DecapBridge dashboard. They do not need a
+GitHub account, and they can only reach this admin form, nothing else.
 
 **Can two people edit at once?**
 Yes, but avoid both editing the *same* product simultaneously — the second save
