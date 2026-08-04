@@ -1,0 +1,18 @@
+{
+  "name": "little-princess-designer",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Little Princess Designer — static site + Decap CMS admin",
+  "scripts": {
+    "build": "node tools/check-config.js && node tools/build.js",
+    "start": "npm run build && node tools/serve.js",
+    "serve": "node tools/serve.js",
+    "cms": "npx decap-server",
+    "seed": "node tools/seed-content.js",
+    "check": "node tools/check-config.js",
+    "preview": "node tools/build.js && node tools/build-preview.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -1,0 +1,565 @@
+# =============================================================================
+# Decap CMS — Little Princess Designer
+#
+# The repo is set. Remaining one-time step: connect Netlify and install its
+# GitHub OAuth provider so this page can log you in — docs/CMS-SETUP.md step 2-3.
+#
+# Editing a product here commits a JSON file to content/products/, which makes
+# Netlify rebuild the site. Changes are live in a minute or two.
+# =============================================================================
+
+backend:
+  name: github
+  repo: Somaz137/little-princess-designer2
+  branch: main
+  commit_messages:
+    create: 'Add {{collection}} "{{slug}}"'
+    update: 'Update {{collection}} "{{slug}}"'
+    delete: 'Remove {{collection}} "{{slug}}"'
+    uploadMedia: 'Upload {{path}}'
+    deleteMedia: 'Delete {{path}}'
+
+# Lets you run the admin locally with `npm run cms` — no GitHub login needed.
+# Harmless in production: it only activates on localhost.
+local_backend: true
+
+# Edits publish straight away. Turn on the draft/review workflow later if you
+# ever want a second pair of eyes before things go live:
+#   publish_mode: editorial_workflow
+publish_mode: simple
+
+# Uploads committed to the repo. Keep photos web-sized (under ~300 KB) —
+# anything committed to git stays in its history forever.
+media_folder: "site/assets/uploads"
+public_folder: "/assets/uploads"
+
+# --- Cloudinary --------------------------------------------------------------
+# Uncomment this block and fill in your cloud name + API key to send uploads to
+# Cloudinary instead of the repo. Product photos then live off-git, and the
+# `url` field on each image stays available for pasting links from anywhere.
+# The three hero sketch/colour/photo images stay as repo files either way —
+# they are part of the page design, not catalogue content.
+#
+# media_library:
+#   name: cloudinary
+#   output_filename_only: false
+#   config:
+#     cloud_name: YOUR_CLOUD_NAME
+#     api_key: YOUR_API_KEY
+#     default_transformations:
+#       - - fetch_format: auto
+#           quality: auto
+#           width: 1600
+#           crop: limit
+
+site_url: /
+logo_url: /assets/logo-lockup.webp
+
+collections:
+
+  # ---------------------------------------------------------------------------
+  # PRODUCTS — add, price, describe, photograph, hide
+  # ---------------------------------------------------------------------------
+  - name: products
+    label: Products
+    label_singular: Product
+    description: >
+      Every piece in the shop. A product needs a name, a subcategory, at least
+      one size with a price, and ideally a photo. Turn "Show on website" off to
+      take a piece down without deleting it.
+    folder: content/products
+    create: true
+    delete: true
+    extension: json
+    format: json
+    identifier_field: name
+    slug: "{{slug}}"
+    # Just the name: the stored subcategory is a short code like "g3", which
+    # means nothing at a glance. Use Group by → Subcategory to organise the list.
+    summary: "{{name}}"
+    sortable_fields: [name, order, subcategory]
+    editor:
+      preview: false
+    view_filters:
+      - label: "Live on the website"
+        field: visible
+        pattern: true
+      - label: "Hidden"
+        field: visible
+        pattern: false
+      - label: "Sold out"
+        field: badge
+        pattern: "Sold out"
+    view_groups:
+      - label: "Subcategory"
+        field: subcategory
+    fields:
+      - label: "Product name"
+        name: name
+        widget: string
+        hint: "Shown on the card and the product page. This also sets the web address, so avoid renaming a product that is already being shared."
+
+      - label: "Subcategory"
+        name: subcategory
+        widget: relation
+        collection: subcategories
+        value_field: id
+        search_fields: [name, id]
+        display_fields: [name, parent]
+        hint: "Which section of the shop this appears in. Add or remove sections under Subcategories in the sidebar."
+
+      - label: "Show on website"
+        name: visible
+        widget: boolean
+        default: true
+        hint: "Off = the piece disappears from the shop, keeping everything you have typed. Nothing is deleted."
+
+      - label: "Badge"
+        name: badge
+        widget: select
+        required: false
+        default: ""
+        options:
+          - { label: "None", value: "" }
+          - { label: "New", value: "New" }
+          - { label: "Made to order", value: "Made to order" }
+          - { label: "Sold out", value: "Sold out" }
+        hint: "Optional corner label on the photo. \"Sold out\" keeps the piece visible but marks it clearly."
+
+      - label: "Sort order"
+        name: order
+        widget: number
+        value_type: int
+        default: 100
+        required: false
+        hint: "Lower numbers come first within the subcategory. 10, 20, 30… leaves room to slot things in later."
+
+      - label: "Sizes and prices"
+        name: sizes
+        widget: list
+        label_singular: "Size"
+        # Collapsed, because the summary shows the price already: five expanded
+        # rows push the Photos field ~2000px down the form.
+        collapsed: true
+        summary: "{{fields.size}}  —  PKR {{fields.price}}"
+        hint: "One row per age band you make this in. The price on the website changes with the size the customer picks. Remove a row to stop offering that size."
+        fields:
+          - label: "Size"
+            name: size
+            widget: select
+            options:
+              - "0–3 years"
+              - "4–6 years"
+              - "7–9 years"
+              - "10–12 years"
+              - "13–16 years"
+          - label: "Price (PKR)"
+            name: price
+            widget: number
+            value_type: int
+            min: 1
+            hint: "Numbers only, no commas. 18500 shows as PKR 18,500."
+          - label: "Available"
+            name: available
+            widget: boolean
+            default: true
+            hint: "Off = this size is not offered right now."
+
+      - label: "Matching accessory price (PKR)"
+        name: accessoryPrice
+        widget: number
+        value_type: int
+        required: false
+        default: 1500
+        hint: "Added to the total when the customer ticks \"Add matching accessory\". Leave blank to use the site default."
+
+      - label: "Description"
+        name: description
+        widget: text
+        required: false
+        hint: "Leave blank to use the subcategory's standard description. Fill it in when this piece deserves its own words — fabric, colour, trim."
+
+      - label: "Second paragraph"
+        name: description2
+        widget: text
+        required: false
+        hint: "Optional. Also falls back to the subcategory."
+
+      - label: "Details"
+        name: specs
+        widget: object
+        collapsed: true
+        hint: "Any field left blank uses the subcategory's standard text."
+        fields:
+          - { label: "Fabric", name: fabric, widget: string, required: false }
+          - { label: "Occasion", name: occasion, widget: string, required: false }
+          - { label: "Fit", name: fit, widget: string, required: false }
+          - { label: "Care", name: care, widget: string, required: false }
+
+      - label: "Photos"
+        name: images
+        widget: list
+        label_singular: "Photo"
+        collapsed: false
+        summary: "{{fields.alt}}"
+        hint: "First photo is the one on the card. The product page shows up to three — front, side and back work well. Each row takes EITHER an uploaded file OR a pasted link, not both."
+        fields:
+          - label: "Upload a photo"
+            name: upload
+            widget: image
+            required: false
+            allow_multiple: false
+            hint: "Drag a file in, or pick one you have already uploaded."
+          - label: "…or paste an image link"
+            name: url
+            widget: string
+            required: false
+            hint: "A full https:// address. If both this and an upload are filled in, the link wins."
+          - label: "Photo description (alt text)"
+            name: alt
+            widget: string
+            required: false
+            hint: "Describe the piece for search engines and for anyone using a screen reader — e.g. \"Blush pink net party frock for girls, hand-beaded bodice\"."
+
+  # ---------------------------------------------------------------------------
+  # SUBCATEGORIES — the sections inside each tab
+  # ---------------------------------------------------------------------------
+  - name: subcategories
+    label: Subcategories
+    label_singular: Subcategory
+    description: >
+      The sections inside Girls, Boys, Babies and Ready to wear — "Casual
+      dresses", "Rompers" and so on. Adding one here makes it available to pick
+      on a product. Deleting one hides its products until you move them.
+    folder: content/subcategories
+    create: true
+    delete: true
+    extension: json
+    format: json
+    identifier_field: name
+    slug: "{{fields.id}}"
+    summary: "{{name}}  ·  {{parent}}"
+    sortable_fields: [parent, order, name]
+    editor:
+      preview: false
+    view_groups:
+      - label: "Tab"
+        field: parent
+    fields:
+      - label: "Short code"
+        name: id
+        widget: string
+        pattern: ['^[a-z0-9-]+$', "Lowercase letters, numbers and dashes only — e.g. g5 or party-skirts"]
+        hint: "A short permanent code, e.g. g5. Products remember this code, so DO NOT change it once products are using this subcategory — add a new one instead."
+
+      - label: "Name"
+        name: name
+        widget: string
+        hint: "The heading shown above the grid, e.g. \"Casual dresses\". Safe to rename any time."
+
+      - label: "Tab"
+        name: parent
+        widget: select
+        options:
+          - { label: "Girls", value: girls }
+          - { label: "Boys", value: boys }
+          - { label: "Babies", value: babies }
+          - { label: "Ready to wear", value: ready }
+        hint: "Which of the four shop tabs this section sits under."
+
+      - label: "Sort order"
+        name: order
+        widget: number
+        value_type: int
+        default: 100
+        hint: "Lower numbers appear higher up the page."
+
+      - label: "Standard description"
+        name: defaultDescription
+        widget: text
+        required: false
+        hint: "Used by every product in this subcategory that does not have its own description. Write it once here rather than on each piece."
+
+      - label: "Standard second paragraph"
+        name: defaultDescription2
+        widget: text
+        required: false
+
+      - label: "Standard details"
+        name: defaultSpecs
+        widget: object
+        collapsed: true
+        fields:
+          - { label: "Fabric", name: fabric, widget: string, required: false }
+          - { label: "Occasion", name: occasion, widget: string, required: false }
+          - { label: "Fit", name: fit, widget: string, required: false }
+          - { label: "Care", name: care, widget: string, required: false }
+
+  # ---------------------------------------------------------------------------
+  # CATEGORY PAGES — the copy at the top of each of the four tabs
+  # ---------------------------------------------------------------------------
+  - name: categories
+    label: "Category pages"
+    description: >
+      The wording and card photo for each of the four shop tabs. The tabs
+      themselves and their colours are fixed by the design.
+    editor:
+      preview: false
+    files:
+      - name: girls
+        label: "Girls"
+        file: content/categories/girls.json
+        fields: &category_fields
+          - { label: "Key", name: key, widget: hidden }
+          - { label: "Tab label", name: label, widget: string, hint: "Shown in the navigation bar and footer." }
+          - { label: "Page title", name: title, widget: string, hint: "Used in the breadcrumb trail." }
+          - { label: "Eyebrow", name: eyebrow, widget: string, hint: "The small line above the heading, e.g. \"Made on order\"." }
+          - { label: "Main heading", name: h1, widget: string }
+          - { label: "Intro paragraph", name: blurb, widget: text }
+          - { label: "Second paragraph", name: blurb2, widget: text, hint: "A good place for the words parents actually search for." }
+          - { label: "Grid heading", name: catsHeading, widget: string, hint: "The uppercase line above the subcategory sections." }
+          - label: "Home page card"
+            name: card
+            widget: object
+            collapsed: false
+            hint: "How this tab appears in the \"Get yours now\" row on the home page."
+            fields:
+              - { label: "Card subtitle", name: subtitle, widget: string }
+              - label: "Card photo"
+                name: image
+                widget: object
+                fields:
+                  - { label: "Upload a photo", name: upload, widget: image, required: false }
+                  - { label: "…or paste an image link", name: url, widget: string, required: false }
+              - { label: "Photo description (alt text)", name: alt, widget: string }
+          - label: "Search engine listing"
+            name: seo
+            widget: object
+            collapsed: true
+            fields:
+              - { label: "Page title", name: title, widget: string }
+              - { label: "Description", name: description, widget: text }
+      - name: boys
+        label: "Boys"
+        file: content/categories/boys.json
+        fields: *category_fields
+      - name: babies
+        label: "Babies"
+        file: content/categories/babies.json
+        fields: *category_fields
+      - name: ready
+        label: "Ready to wear"
+        file: content/categories/ready.json
+        fields: *category_fields
+
+  # ---------------------------------------------------------------------------
+  # SITE SETTINGS — contact details and the wording used across the site
+  # ---------------------------------------------------------------------------
+  - name: settings
+    label: "Site settings"
+    description: >
+      Phone number, email, social links and the wording on the home and contact
+      pages. Changing the WhatsApp number here changes it everywhere on the site.
+    editor:
+      preview: false
+    files:
+      - name: general
+        label: "Contact details"
+        file: content/settings.json
+        fields:
+          - { label: "Business name", name: brandName, widget: string }
+          - { label: "Tagline", name: tagline, widget: string }
+          - label: "WhatsApp number"
+            name: whatsappNumber
+            widget: string
+            pattern: ['^[0-9]{8,15}$', "Digits only, with country code and no + or spaces — e.g. 923217152723"]
+            hint: "Country code first, digits only. Used by every WhatsApp button on the site."
+          - { label: "Phone number as shown", name: phoneDisplay, widget: string, hint: "How it reads on screen, e.g. +92 321 715 2723" }
+          - { label: "Email", name: email, widget: string }
+          - { label: "Instagram link", name: instagram, widget: string }
+          - { label: "Facebook link", name: facebook, widget: string }
+          - { label: "TikTok link", name: tiktok, widget: string }
+
+          - label: "Prices and totals"
+            name: accessoryPriceDefault
+            widget: number
+            value_type: int
+            hint: "Default matching-accessory charge, used when a product does not set its own."
+          - { label: "Accessory checkbox label", name: accessoryLabel, widget: string }
+          - { label: "Accessory note", name: accessoryNote, widget: string }
+          - { label: "Delivery note", name: deliveryNote, widget: string, hint: "The small print under the total on a product page." }
+
+          - label: "Home page — search engine listing"
+            name: seo
+            widget: object
+            collapsed: true
+            fields:
+              - { label: "Page title", name: title, widget: string }
+              - { label: "Description", name: description, widget: text }
+
+          - label: "Hero headlines"
+            name: heroHooks
+            widget: list
+            label_singular: "Headline"
+            collapsed: false
+            summary: "{{fields.text}}"
+            hint: "The three hand-lettered lines that fade in as the drawing turns into a dress. Exactly three."
+            fields:
+              - { label: "Line", name: text, widget: string }
+
+          - label: "Hero buttons"
+            name: heroCtas
+            widget: list
+            label_singular: "Button"
+            collapsed: false
+            summary: "{{fields.title}}"
+            hint: "The three cards under the hero. Their links are fixed: collection, WhatsApp, contact page."
+            fields:
+              - { label: "Title", name: title, widget: string }
+              - { label: "Subtitle", name: subtitle, widget: string, hint: "Hidden on phones to save space." }
+
+          - { label: "Features heading", name: featuresHeading, widget: string }
+          - label: "Features"
+            name: features
+            widget: list
+            label_singular: "Feature"
+            collapsed: true
+            summary: "{{fields.title}}"
+            fields:
+              - label: "Icon"
+                name: icon
+                widget: select
+                options:
+                  - { label: "Gift box", value: gift }
+                  - { label: "Globe", value: globe }
+                  - { label: "Crown", value: crown }
+                  - { label: "Dress", value: dress }
+              - { label: "Title", name: title, widget: string }
+              - { label: "Body", name: body, widget: text }
+
+          - label: "Banner"
+            name: quote
+            widget: object
+            collapsed: true
+            fields:
+              - { label: "Heading", name: heading, widget: string }
+              - { label: "Subline", name: subline, widget: text, hint: "Wrap words in **double asterisks** to make them bold." }
+
+          - label: "About us"
+            name: about
+            widget: object
+            collapsed: true
+            fields:
+              - { label: "Eyebrow", name: eyebrow, widget: string }
+              - { label: "Heading", name: heading, widget: string }
+              - { label: "Body", name: body, widget: text, hint: "Leave a blank line between paragraphs. **Double asterisks** make text bold." }
+              - label: "Photo"
+                name: photo
+                widget: object
+                fields:
+                  - { label: "Upload a photo", name: upload, widget: image, required: false }
+                  - { label: "…or paste an image link", name: url, widget: string, required: false }
+                  - { label: "Photo description (alt text)", name: alt, widget: string }
+
+          - { label: "Carousel heading", name: carouselHeading, widget: string }
+          - { label: "Carousel hint", name: carouselHint, widget: string }
+          - label: "Carousel photos"
+            name: carousel
+            widget: list
+            label_singular: "Photo"
+            collapsed: true
+            summary: "{{fields.alt}}"
+            hint: "The spinning \"Explore the Collection\" ring on the home page. Eight to twelve photos looks best."
+            fields:
+              - { label: "Upload a photo", name: upload, widget: image, required: false }
+              - { label: "…or paste an image link", name: url, widget: string, required: false }
+              - { label: "Photo description (alt text)", name: alt, widget: string }
+
+          - { label: "Categories row heading", name: categoriesHeading, widget: string }
+
+          - label: "Contact page"
+            name: contact
+            widget: object
+            collapsed: true
+            fields:
+              - { label: "Heading", name: heading, widget: string }
+              - { label: "Intro", name: intro, widget: text }
+              - { label: "Steps eyebrow", name: stepsEyebrow, widget: string }
+              - label: "Ordering steps"
+                name: steps
+                widget: list
+                label_singular: "Step"
+                collapsed: false
+                summary: "{{fields.title}}"
+                hint: "Numbered automatically. Three works best on phones."
+                fields:
+                  - { label: "Title", name: title, widget: string }
+                  - { label: "Body", name: body, widget: text }
+              - { label: "FAQ heading", name: faqHeading, widget: string }
+              - label: "FAQs"
+                name: faq
+                widget: list
+                label_singular: "Question"
+                collapsed: true
+                summary: "{{fields.question}}"
+                hint: "These are also published as structured data, so Google can show them directly in search results."
+                fields:
+                  - { label: "Question", name: question, widget: string }
+                  - { label: "Answer", name: answer, widget: text }
+              - { label: "Social section heading", name: socialHeading, widget: string }
+              - label: "Social cards"
+                name: social
+                widget: object
+                collapsed: true
+                hint: "The wording on each card. The links themselves come from the contact details above."
+                fields:
+                  - label: "Instagram"
+                    name: instagram
+                    widget: object
+                    fields:
+                      - { label: "Description", name: description, widget: string }
+                      - { label: "Button label", name: button, widget: string }
+                  - label: "WhatsApp"
+                    name: whatsapp
+                    widget: object
+                    fields:
+                      - { label: "Description", name: description, widget: string }
+                      - { label: "Button label", name: button, widget: string }
+                  - label: "Facebook"
+                    name: facebook
+                    widget: object
+                    fields:
+                      - { label: "Description", name: description, widget: string }
+                      - { label: "Button label", name: button, widget: string }
+                  - label: "TikTok"
+                    name: tiktok
+                    widget: object
+                    fields:
+                      - { label: "Description", name: description, widget: string }
+                      - { label: "Button label", name: button, widget: string }
+                  - label: "Email"
+                    name: email
+                    widget: object
+                    fields:
+                      - { label: "Description", name: description, widget: string }
+                      - { label: "Button label", name: button, widget: string }
+              - label: "Feedback block"
+                name: feedback
+                widget: object
+                collapsed: true
+                fields:
+                  - { label: "Eyebrow", name: eyebrow, widget: string }
+                  - { label: "Heading", name: heading, widget: string }
+                  - { label: "Body", name: body, widget: text }
+                  - { label: "Button label", name: button, widget: string }
+                  - { label: "Pre-filled message", name: prefill, widget: string, hint: "What WhatsApp opens with when someone taps the button." }
+              - label: "Search engine listing"
+                name: seo
+                widget: object
+                collapsed: true
+                fields:
+                  - { label: "Page title", name: title, widget: string }
+                  - { label: "Description", name: description, widget: text }
+
+          - { label: "Footer line", name: footerNote, widget: string }
+          - { label: "Floating button label", name: floatingLabel, widget: string }

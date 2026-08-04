@@ -1,0 +1,139 @@
+{
+  "brandName": "Little Princess Designer",
+  "tagline": "Handmade made-to-order kidswear, Lahore",
+  "whatsappNumber": "923217152723",
+  "phoneDisplay": "+92 321 715 2723",
+  "email": "lpd.lhr@gmail.com",
+  "instagram": "https://www.instagram.com/littleprincessdesigner/",
+  "facebook": "https://www.facebook.com/LittlePrincessDesigner/",
+  "tiktok": "https://www.tiktok.com/@littleprincessdesigner",
+  "accessoryPriceDefault": 1500,
+  "accessoryLabel": "Add matching accessory",
+  "accessoryNote": "This will cost extra charges.",
+  "deliveryNote": "Delivery charges are not included in this total.",
+  "seo": {
+    "title": "Little Princess Designer | Handmade Made-to-Order Kidswear, Lahore",
+    "description": "Handmade children's occasion wear from our Lahore studio since 2015 — girls dresses, boys prince suits, baby sets and ready-to-wear kidswear, cut to your measurements."
+  },
+  "heroHooks": [
+    { "text": "There is a princess in every girl" },
+    { "text": "You dream it, we make it" },
+    { "text": "We turn your dreams into reality" }
+  ],
+  "heroCtas": [
+    { "title": "See the collection", "subtitle": "Girls, boys and babies" },
+    { "title": "Message on WhatsApp", "subtitle": "24/7 guidance and support" },
+    { "title": "Customized and Ready to wear", "subtitle": "Talk to us about yours" }
+  ],
+  "featuresHeading": "Features",
+  "features": [
+    {
+      "icon": "gift",
+      "title": "Discounts for customers",
+      "body": "Exclusive offers and seasonal deals, just for you."
+    },
+    {
+      "icon": "globe",
+      "title": "Worldwide shipping",
+      "body": "We deliver style, wherever you are."
+    },
+    {
+      "icon": "crown",
+      "title": "Premium quality",
+      "body": "Made with the finest fabrics, ready to wear in the same quality as customised."
+    },
+    {
+      "icon": "dress",
+      "title": "Casual & party wears",
+      "body": "Themed collections for every mood and moment."
+    }
+  ],
+  "quote": {
+    "heading": "We create the best memories for little princes and princesses",
+    "subline": "Every pearl placed by hand, every stitch sewn by hand — **everything handmade**, with love."
+  },
+  "about": {
+    "eyebrow": "About us · Our story",
+    "heading": "We started small, with a big dream",
+    "body": "Little Princess Designer is a family-run children's occasion-wear studio in Lahore, Pakistan. We started in 2015 on a small scale, with a big dream, and everything we have built since is the untold story of that hard work.\n\nEvery handmade girls dress, boys prince suit and baby set is cut in our own studio and hand-finished by the same small team — no outsourcing, no factory runs. Made-to-order pieces are fitted to your child's measurements; ready-to-wear pieces are stitched to the same standard and dispatched the same day.\n\nWe answer every WhatsApp message ourselves. Thank you for choosing Little Princess Designer.",
+    "photo": {
+      "url": "",
+      "upload": "",
+      "alt": "The Little Princess Designer studio team in Lahore, hand-finishing a children's occasion dress"
+    }
+  },
+  "carouselHeading": "Explore the Collection",
+  "carouselHint": "Drag to spin · tap a piece to bring it forward",
+  "carousel": [
+    { "url": "", "upload": "", "alt": "Handmade girls party frock in blush pink net, made to order" },
+    { "url": "", "upload": "", "alt": "Boys prince suit with braided coat and matching trousers" },
+    { "url": "", "upload": "", "alt": "Ivory flower-girl dress with hand-sewn rosettes" },
+    { "url": "", "upload": "", "alt": "Themed birthday dress for girls with appliqué bodice" },
+    { "url": "", "upload": "", "alt": "Baby romper in soft pre-washed cotton, peach" },
+    { "url": "", "upload": "", "alt": "Girls luxury gown in layered net over satin with beaded bodice" },
+    { "url": "", "upload": "", "alt": "Boys three-piece waistcoat set in cotton-silk" },
+    { "url": "", "upload": "", "alt": "Girls party skirt with satin waistband and lined underlayer" },
+    { "url": "", "upload": "", "alt": "Baby gift set — top, bottom and cap in matching fabric" },
+    { "url": "", "upload": "", "alt": "Ready-to-wear girls dress, stitched and dispatched same day" }
+  ],
+  "categoriesHeading": "Get yours now",
+  "contact": {
+    "heading": "How to place an order",
+    "intro": "Ordering handmade kidswear from Little Princess Designer takes three steps and one WhatsApp conversation. Made-to-order pieces are cut to your child's measurements; ready-to-wear pieces ship the same day.",
+    "stepsEyebrow": "Three steps to your order",
+    "steps": [
+      {
+        "title": "Confirm on WhatsApp",
+        "body": "We confirm every design over WhatsApp before begin the manufacturing."
+      },
+      {
+        "title": "Pay 25% advance",
+        "body": "A 25% advance starts production. Non-refundable once we cut. Delivery is charged separately."
+      },
+      {
+        "title": "We make it just for you",
+        "body": "Cut and hand-finished to your measurements. We message you the day it ships."
+      }
+    ],
+    "faqHeading": "Frequently asked questions",
+    "faq": [
+      {
+        "question": "How long does a made-to-order dress take?",
+        "answer": "Around three weeks from the day the 25% advance is paid. You will be updated via WhatsApp."
+      },
+      {
+        "question": "Do you offer ready-to-wear options?",
+        "answer": "Yes. Our Ready to wear rail is already stitched in standard sizes, made to the same standard quality, lower price and dispatched as soon as you place the order."
+      },
+      {
+        "question": "What sizes are available?",
+        "answer": "Ranges from 0–3 years up to 13–16 years, and the price shown updates with the size you pick. Made-to-order pieces are cut to your child's body, waist and length measurements."
+      },
+      {
+        "question": "Do you ship outside Lahore and Pakistan?",
+        "answer": "We ship nationwide across Pakistan and internationally as well. Delivery is charged separately from the prices shown. We will quote the courier charges according to your city or district."
+      }
+    ],
+    "socialHeading": "Contact us",
+    "social": {
+      "instagram": { "description": "Follow @littleprincessdesigner for new arrivals", "button": "Follow us" },
+      "whatsapp": { "description": "Chat with us on +92 321 715 2723", "button": "Message us" },
+      "facebook": { "description": "See our latest posts on LittlePrincessDesigner", "button": "Like our page" },
+      "tiktok": { "description": "Watch the dresses in motion, @littleprincessdesigner", "button": "Watch on TikTok" },
+      "email": { "description": "Send measurements to lpd.lhr@gmail.com", "button": "Email us" }
+    },
+    "feedback": {
+      "eyebrow": "Suggestions & complaints",
+      "heading": "Tell us how we did",
+      "body": "If a fitting was wrong, a delivery was late, or you have an idea for us — message us. We read every one ourselves and reply the same day.",
+      "button": "Send it on WhatsApp",
+      "prefill": "Hello Little Princess Designer, I have feedback for you:"
+    },
+    "seo": {
+      "title": "Contact Us & How to Order | Little Princess Designer, Lahore",
+      "description": "How to order handmade kidswear from Little Princess Designer: confirm on WhatsApp, pay 25% advance, and we make it to your measurements. FAQs, sizes and delivery."
+    }
+  },
+  "footerNote": "© 2026 Little Princess Designer · Lahore, Pakistan",
+  "floatingLabel": "Contact us"
+}

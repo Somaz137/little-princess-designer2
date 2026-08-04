@@ -1,0 +1,19 @@
+{
+  "key": "ready",
+  "label": "Ready to wear",
+  "title": "Ready to wear",
+  "eyebrow": "In stock · ships immediately",
+  "h1": "Ready to Wear Collection",
+  "blurb": "Already stitched and waiting in the studio — the same handwork, none of the wait. Priced lower and dispatched the same day you order.",
+  "blurb2": "Ready-to-wear kidswear for parents who need it now: instant delivery children's party dresses, boys suits and baby sets in standard sizes, dispatched the same day you order. Same fabrics and same handwork as our made-to-order rail, priced lower.",
+  "catsHeading": "Shop from our ready to wear collection",
+  "card": {
+    "subtitle": "Already stitched, dispatched same day",
+    "image": { "url": "", "upload": "" },
+    "alt": "Ready-to-wear kidswear, already stitched and dispatched the same day"
+  },
+  "seo": {
+    "title": "Ready to Wear Kidswear | Little Princess Designer – Same-Day Dispatch",
+    "description": "Ready-to-wear children's party dresses and suits, already stitched in standard sizes and dispatched the same day. Same handwork, no three-week wait."
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "name": "First Steps Romper",
+  "subcategory": "y2",
+  "visible": true,
+  "badge": "",
+  "order": 30,
+  "sizes": [
+    {
+      "size": "0–3 years",
+      "price": 6300,
+      "available": true
+    },
+    {
+      "size": "4–6 years",
+      "price": 7200,
+      "available": true
+    }
+  ],
+  "accessoryPrice": 1500,
+  "description": "",
+  "description2": "",
+  "specs": {
+    "fabric": "",
+    "occasion": "",
+    "fit": "",
+    "care": ""
+  },
+  "images": [
+    {
+      "url": "",
+      "upload": "",
+      "alt": ""
+    }
+  ]
+}

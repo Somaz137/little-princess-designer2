@@ -1,0 +1,14 @@
+{
+  "id": "b2",
+  "parent": "boys",
+  "name": "Boys collection",
+  "order": 20,
+  "defaultDescription": "A three-piece waistcoat set — shirt, waistcoat and trousers — in breathable cotton-silk. Comfortable enough for a full day of celebrations.",
+  "defaultDescription2": "Collar, placket and buttonholes are hand-finished. Cut to your child's measurements rather than a standard block.",
+  "defaultSpecs": {
+    "fabric": "Breathable cotton-silk, cotton shirt",
+    "occasion": "Day weddings, birthdays, photo sessions",
+    "fit": "Three pieces; comfortable enough for a full day of celebrations",
+    "care": "Machine wash the shirt cold; press the waistcoat with a cloth"
+  }
+}

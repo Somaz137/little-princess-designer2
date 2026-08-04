@@ -1,0 +1,14 @@
+{
+  "id": "r1",
+  "parent": "ready",
+  "name": "Ready to wear",
+  "order": 10,
+  "defaultDescription": "Already stitched and waiting in the studio — no three-week wait. Standard sizing, pressed and packed, dispatched the same day you order.",
+  "defaultDescription2": "Priced lower than our made-to-order pieces, and exchangeable within seven days if the fitting is wrong.",
+  "defaultSpecs": {
+    "fabric": "As shown on the piece — cotton, net or satin",
+    "occasion": "Last-minute parties, weddings, gifting",
+    "fit": "Standard sizing, no measurements needed",
+    "care": "Care card packed with every piece"
+  }
+}

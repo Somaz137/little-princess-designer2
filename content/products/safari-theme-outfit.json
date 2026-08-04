@@ -1,0 +1,50 @@
+{
+  "name": "Safari Theme Outfit",
+  "subcategory": "b3",
+  "visible": true,
+  "badge": "",
+  "order": 20,
+  "sizes": [
+    {
+      "size": "0–3 years",
+      "price": 11400,
+      "available": true
+    },
+    {
+      "size": "4–6 years",
+      "price": 12300,
+      "available": true
+    },
+    {
+      "size": "7–9 years",
+      "price": 13200,
+      "available": true
+    },
+    {
+      "size": "10–12 years",
+      "price": 14100,
+      "available": true
+    },
+    {
+      "size": "13–16 years",
+      "price": 15000,
+      "available": true
+    }
+  ],
+  "accessoryPrice": 1500,
+  "description": "",
+  "description2": "",
+  "specs": {
+    "fabric": "",
+    "occasion": "",
+    "fit": "",
+    "care": ""
+  },
+  "images": [
+    {
+      "url": "",
+      "upload": "",
+      "alt": ""
+    }
+  ]
+}

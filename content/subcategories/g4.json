@@ -1,0 +1,14 @@
+{
+  "id": "g4",
+  "parent": "girls",
+  "name": "Skirts",
+  "order": 40,
+  "defaultDescription": "A stand-alone party skirt with an elasticated comfort waist and a full lined underlayer. Length is set to your measurement so it falls exactly where you want it.",
+  "defaultDescription2": "Pairs with any of our shirts or a plain top. It falls exactly where you want it because the length is cut to your number, not a chart.",
+  "defaultSpecs": {
+    "fabric": "Net over lined cotton underlayer, satin waistband",
+    "occasion": "Parties, mix-and-match everyday dressing",
+    "fit": "Elasticated comfort waist; length set to your measurement",
+    "care": "Cold hand wash, dry in shade, do not tumble dry"
+  }
+}

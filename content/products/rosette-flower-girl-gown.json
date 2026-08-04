@@ -1,0 +1,50 @@
+{
+  "name": "Rosette Flower-Girl Gown",
+  "subcategory": "g3",
+  "visible": true,
+  "badge": "",
+  "order": 40,
+  "sizes": [
+    {
+      "size": "0–3 years",
+      "price": 21200,
+      "available": true
+    },
+    {
+      "size": "4–6 years",
+      "price": 22100,
+      "available": true
+    },
+    {
+      "size": "7–9 years",
+      "price": 23000,
+      "available": true
+    },
+    {
+      "size": "10–12 years",
+      "price": 23900,
+      "available": true
+    },
+    {
+      "size": "13–16 years",
+      "price": 24800,
+      "available": true
+    }
+  ],
+  "accessoryPrice": 1500,
+  "description": "",
+  "description2": "",
+  "specs": {
+    "fabric": "",
+    "occasion": "",
+    "fit": "",
+    "care": ""
+  },
+  "images": [
+    {
+      "url": "",
+      "upload": "",
+      "alt": ""
+    }
+  ]
+}

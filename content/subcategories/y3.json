@@ -1,0 +1,14 @@
+{
+  "id": "y3",
+  "parent": "babies",
+  "name": "Baby sets",
+  "order": 30,
+  "defaultDescription": "A three-piece set — top, bottom and cap — in matching fabric, ready for a first birthday or naming day. Everything is pre-washed and hand-finished.",
+  "defaultDescription2": "Everything is pre-washed and hand-finished, then packed in tissue in a gift box.",
+  "defaultSpecs": {
+    "fabric": "Matching pre-washed cotton across all three pieces",
+    "occasion": "First birthdays, naming days, gifting",
+    "fit": "Top, bottom and cap; relaxed fit with room to grow",
+    "care": "Machine wash warm with like colours, dry in shade"
+  }
+}

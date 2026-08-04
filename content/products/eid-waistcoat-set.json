@@ -1,0 +1,50 @@
+{
+  "name": "Eid Waistcoat Set",
+  "subcategory": "b2",
+  "visible": true,
+  "badge": "",
+  "order": 30,
+  "sizes": [
+    {
+      "size": "0–3 years",
+      "price": 10300,
+      "available": true
+    },
+    {
+      "size": "4–6 years",
+      "price": 11200,
+      "available": true
+    },
+    {
+      "size": "7–9 years",
+      "price": 12100,
+      "available": true
+    },
+    {
+      "size": "10–12 years",
+      "price": 13000,
+      "available": true
+    },
+    {
+      "size": "13–16 years",
+      "price": 13900,
+      "available": true
+    }
+  ],
+  "accessoryPrice": 1500,
+  "description": "",
+  "description2": "",
+  "specs": {
+    "fabric": "",
+    "occasion": "",
+    "fit": "",
+    "care": ""
+  },
+  "images": [
+    {
+      "url": "",
+      "upload": "",
+      "alt": ""
+    }
+  ]
+}

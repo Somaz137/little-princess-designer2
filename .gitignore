@@ -1,0 +1,7 @@
+# Build output — regenerated from content/ on every build
+dist/
+
+node_modules/
+.DS_Store
+*.log
+.netlify/

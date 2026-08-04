@@ -1,0 +1,19 @@
+{
+  "key": "babies",
+  "label": "Babies",
+  "title": "Babies",
+  "eyebrow": "Made on order",
+  "h1": "Babies Collection",
+  "blurb": "Soft, skin-friendly pieces for the tiniest ones — rompers, shirts and gift-ready sets, hand-finished and pre-washed. Choose a size to see the price.",
+  "blurb2": "Soft, skin-friendly baby clothes — rompers, shirts and gift sets — pre-washed, hand-finished and safe against new skin. Ready-made sizes ship quickly, and gift wrapping is available on request.",
+  "catsHeading": "Shop for babies by category",
+  "card": {
+    "subtitle": "Shirts, rompers and baby sets",
+    "image": { "url": "", "upload": "" },
+    "alt": "Baby shirts, rompers and gift sets in soft pre-washed cotton"
+  },
+  "seo": {
+    "title": "Baby Rompers, Shirts & Gift Sets | Little Princess Designer",
+    "description": "Soft, pre-washed baby clothes — rompers, shirts and gift-ready sets, hand-finished and gentle against new skin. Made on order in Lahore."
+  }
+}

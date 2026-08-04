@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Little Princess Designer — Admin</title>
+<link rel="icon" href="/assets/logo-crown.png">
+<!-- Same self-hosted fonts as the site; no third-party request. -->
+<link rel="stylesheet" href="/tokens.css">
+<style>
+  /* Brand skin for the CMS chrome. Decap styles its own internals; these are
+     the bits that read as "someone else's tool" until they're themed. */
+  :root{
+    --lp-berry:#A43462;
+    --lp-berry-deep:#5C1533;
+    --lp-berry-soft:#FDEEF4;
+    --lp-paper:#FFFCF8;
+    --lp-ink:#333530;
+  }
+  body{background:var(--lp-paper);font-family:"Nunito","Segoe UI",system-ui,sans-serif}
+
+  /* Loading state, replaced once the CMS mounts. */
+  #lp-boot{
+    position:fixed;inset:0;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:14px;
+    background:var(--lp-paper);z-index:9999;text-align:center;padding:24px;
+  }
+  #lp-boot img{height:64px;width:auto}
+  #lp-boot p{font:700 15px/1.5 "Nunito",sans-serif;color:var(--lp-ink);margin:0;max-width:34ch}
+  #lp-boot small{font:400 13px/1.5 "Nunito",sans-serif;color:#6B6D68;max-width:44ch}
+  #lp-boot[hidden]{display:none}
+
+  /* Decap chrome in brand colours. */
+  [class*="AppHeader"]{background:var(--lp-berry) !important}
+  [class*="AppHeader"] a,[class*="AppHeader"] button{color:#fff !important}
+  [class*="SiteLinkText"]{font-family:"Caveat Brush",cursive !important;font-size:20px !important}
+  button[class*="ButtonPrimary"],[class*="ToolbarButton"][class*="primary"]{
+    background:var(--lp-berry) !important;border-color:var(--lp-berry-deep) !important;
+  }
+  [class*="CardsGrid"] [class*="Card"]{border-radius:14px !important}
+  /* Field hints readable rather than whisper-grey. */
+  [class*="ControlHint"]{color:#6B6D68 !important;font-size:12.5px !important}
+</style>
+</head>
+<body>
+
+<div id="lp-boot">
+  <img src="/assets/logo-lockup.webp" alt="Little Princess Designer">
+  <p>Opening the admin…</p>
+  <small id="lp-boot-note">
+    If this does not move past this screen, check that the GitHub repo name in
+    <code>admin/config.yml</code> is correct and that you are signed in.
+  </small>
+</div>
+
+<script src="https://unpkg.com/decap-cms@^3.8.0/dist/decap-cms.js"></script>
+<script>
+  // Hide the splash as soon as Decap has painted anything — its login screen
+  // included, so the Login button is never sitting behind the overlay.
+  (function () {
+    var boot = document.getElementById("lp-boot");
+    var hide = function () { if (boot) boot.hidden = true; };
+
+    if (!window.CMS) {
+      document.getElementById("lp-boot-note").textContent =
+        "The CMS script could not load. Check your network connection and reload.";
+      return;
+    }
+
+    // Decap mounts into <div id="nc-root">. Anything inside it means it is up.
+    var check = setInterval(function () {
+      var root = document.getElementById("nc-root");
+      if (root && root.firstElementChild) {
+        clearInterval(check);
+        hide();
+      }
+    }, 120);
+    // Belt and braces: never leave the splash up forever.
+    setTimeout(function () { clearInterval(check); hide(); }, 6000);
+  })();
+</script>
+</body>
+</html>

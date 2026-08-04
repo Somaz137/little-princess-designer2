@@ -1,0 +1,14 @@
+{
+  "id": "b1",
+  "parent": "boys",
+  "name": "Prince dresses",
+  "order": 10,
+  "defaultDescription": "A full prince suit: coat, inner shirt and trousers, with braid detailing on the shoulder and cuff. The coat is fully lined and the trousers have an adjustable waist.",
+  "defaultDescription2": "Coat, inner shirt and trousers, with braid detailing on the shoulder and cuff. Every button is stitched on by hand. Made on order in roughly three weeks.",
+  "defaultSpecs": {
+    "fabric": "Cotton-silk coat with full lining, braid trim",
+    "occasion": "Weddings, Eid, formal family occasions",
+    "fit": "Fully lined coat; trousers with adjustable inner waist",
+    "care": "Dry clean the coat; wash the shirt cold and iron warm"
+  }
+}

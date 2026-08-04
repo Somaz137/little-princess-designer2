@@ -1,0 +1,14 @@
+{
+  "id": "y2",
+  "parent": "babies",
+  "name": "Rompers",
+  "order": 20,
+  "defaultDescription": "A full romper with poppers through the inside leg for quick changes. Lined bodice, soft elastic at the cuffs, no scratchy labels.",
+  "defaultDescription2": "No scratchy labels anywhere. Gift wrapping is available on request.",
+  "defaultSpecs": {
+    "fabric": "Soft cotton jersey, lined bodice, soft elastic cuffs",
+    "occasion": "Everyday wear, naming days, newborn gifts",
+    "fit": "Poppers through the inside leg for quick changes",
+    "care": "Machine wash warm, dry in shade, warm iron if needed"
+  }
+}

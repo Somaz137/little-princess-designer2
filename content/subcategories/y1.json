@@ -1,0 +1,14 @@
+{
+  "id": "y1",
+  "parent": "babies",
+  "name": "Shirts",
+  "order": 10,
+  "defaultDescription": "A soft cotton shirt with shoulder poppers so it goes on easily. Flat seams sit away from the skin and it is pre-washed so it keeps its size.",
+  "defaultDescription2": "Pre-washed so it keeps its size after the first few washes. Made in gentle peach and blue shades.",
+  "defaultSpecs": {
+    "fabric": "Pre-washed soft cotton, no scratchy labels",
+    "occasion": "Everyday, first outings, gifting",
+    "fit": "Shoulder poppers so it goes on easily; flat seams away from the skin",
+    "care": "Machine wash warm, tumble dry low, no bleach"
+  }
+}

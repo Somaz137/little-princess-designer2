@@ -1,0 +1,274 @@
+/* ============================================================================
+   Little Princess Design System — tokens
+   Carried over from the design bundle:
+   _ds/little-princess-design-system-62d0153f-f60b-4e3a-8100-58757c972763/
+   Do not edit these values; they are the binding brand layer.
+
+   The only change from the original is the font block below: the same two
+   typefaces, self-hosted instead of fetched from Google on every page load.
+   ========================================================================== */
+
+/* --- fonts.css ------------------------------------------------------------
+   The design system pulled these from Google Fonts over the network. They are
+   now self-hosted from site/assets/fonts: same typefaces, but no third-party
+   request on every page load, no layout shift waiting on Google, and the site
+   renders correctly offline. Latin + latin-ext subsets only (388 KB total).
+   Space Mono was declared as --font-mono but never used, so it is not shipped.
+
+   To change a weight: fetch it from Google Fonts, drop the .woff2 in
+   site/assets/fonts, and add a matching @font-face below.
+   ------------------------------------------------------------------------- */
+@font-face{
+  font-family:'Caveat Brush';font-style:normal;font-weight:400;font-display:swap;
+  src:url('/assets/fonts/caveat-brush-400-latin-ext.woff2') format('woff2');
+  unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face{
+  font-family:'Caveat Brush';font-style:normal;font-weight:400;font-display:swap;
+  src:url('/assets/fonts/caveat-brush-400-latin.woff2') format('woff2');
+  unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face{
+  font-family:'Nunito';font-style:normal;font-weight:400;font-display:swap;
+  src:url('/assets/fonts/nunito-400-latin-ext.woff2') format('woff2');
+  unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face{
+  font-family:'Nunito';font-style:normal;font-weight:400;font-display:swap;
+  src:url('/assets/fonts/nunito-400-latin.woff2') format('woff2');
+  unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face{
+  font-family:'Nunito';font-style:normal;font-weight:600;font-display:swap;
+  src:url('/assets/fonts/nunito-600-latin-ext.woff2') format('woff2');
+  unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face{
+  font-family:'Nunito';font-style:normal;font-weight:600;font-display:swap;
+  src:url('/assets/fonts/nunito-600-latin.woff2') format('woff2');
+  unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face{
+  font-family:'Nunito';font-style:normal;font-weight:700;font-display:swap;
+  src:url('/assets/fonts/nunito-700-latin-ext.woff2') format('woff2');
+  unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face{
+  font-family:'Nunito';font-style:normal;font-weight:700;font-display:swap;
+  src:url('/assets/fonts/nunito-700-latin.woff2') format('woff2');
+  unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face{
+  font-family:'Nunito';font-style:normal;font-weight:800;font-display:swap;
+  src:url('/assets/fonts/nunito-800-latin-ext.woff2') format('woff2');
+  unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face{
+  font-family:'Nunito';font-style:normal;font-weight:800;font-display:swap;
+  src:url('/assets/fonts/nunito-800-latin.woff2') format('woff2');
+  unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* --- colors.css ---------------------------------------------------------- */
+:root{
+  /* --- Brand base (sampled from the logo artwork) --- */
+  --berry-900:#5C1533;
+  --berry-800:#7C2249;
+  --berry-700:#A43462; /* logo crown, primary brand colour */
+  --berry-600:#BE4B79;
+  --berry-500:#D3719A;
+  --berry-300:#EFB2CB;
+  --berry-200:#F8D9E5;
+  --berry-100:#FDEEF4;
+
+  --ink-900:#22241F;
+  --ink-800:#333530;
+  --ink-700:#454744; /* logo lettering */
+  --ink-500:#6B6D68;
+  --ink-400:#8D8F8A;
+  --ink-300:#B6B8B2;
+  --ink-200:#D9DBD5;
+  --ink-100:#EDEEE9;
+
+  --paper-000:#FFFFFF;
+  --paper-050:#FFFCF8; /* warm page paper */
+  --paper-100:#FBF5EC;
+  --paper-200:#F3E9DA;
+
+  --gold-600:#B8842B;
+  --gold-500:#E0A93F;
+  --gold-200:#F7E4BE;
+
+  --mint-600:#3E8C6E;
+  --mint-500:#5FB894;
+  --mint-200:#D6EFE4;
+
+  --sky-600:#4A7FA8;
+  --sky-500:#7FB0D1;
+  --sky-200:#DCEBF5;
+
+  --coral-600:#C0453D;
+  --coral-500:#E2685F;
+  --coral-200:#F9DCD9;
+
+  /* --- Semantic aliases --- */
+  --surface-page:var(--paper-050);
+  --surface-card:var(--paper-000);
+  --surface-raised:var(--paper-000);
+  --surface-sunken:var(--paper-100);
+  --surface-inverse:var(--ink-800);
+  --surface-brand:var(--berry-700);
+  --surface-brand-soft:var(--berry-100);
+  --surface-accent-soft:var(--gold-200);
+
+  --text-heading:var(--ink-800);
+  --text-body:var(--ink-700);
+  --text-muted:var(--ink-500);
+  --text-faint:var(--ink-400);
+  --text-inverse:var(--paper-000);
+  --text-brand:var(--berry-700);
+  --text-link:var(--berry-700);
+  --text-link-hover:var(--berry-800);
+
+  --border-hairline:var(--ink-200);
+  --border-soft:var(--paper-200);
+  --border-strong:var(--ink-700);
+  --border-brand:var(--berry-700);
+  --border-focus:var(--berry-500);
+
+  --state-success:var(--mint-600);
+  --state-success-soft:var(--mint-200);
+  --state-warning:var(--gold-600);
+  --state-warning-soft:var(--gold-200);
+  --state-danger:var(--coral-600);
+  --state-danger-soft:var(--coral-200);
+  --state-info:var(--sky-600);
+  --state-info-soft:var(--sky-200);
+}
+
+/* --- typography.css ------------------------------------------------------ */
+:root{
+  --font-hand:"Caveat Brush","Bradley Hand",cursive; /* logo voice: headlines, labels, price tags */
+  --font-ui:"Nunito","Segoe UI",system-ui,sans-serif; /* everything else */
+  --font-mono:"Space Mono",ui-monospace,monospace;
+
+  --text-display:clamp(44px,6vw,76px);
+  --text-h1:44px;
+  --text-h2:32px;
+  --text-h3:24px;
+  --text-h4:19px;
+  --text-lg:18px;
+  --text-md:16px;
+  --text-sm:14px;
+  --text-xs:12.5px;
+  --text-micro:11px;
+
+  --leading-tight:1.05;
+  --leading-snug:1.25;
+  --leading-normal:1.55;
+  --leading-loose:1.75;
+
+  --weight-regular:400;
+  --weight-semibold:600;
+  --weight-bold:700;
+  --weight-black:800;
+
+  --tracking-hand:0.01em;
+  --tracking-normal:0;
+  --tracking-label:0.09em;
+
+  /* semantic type roles */
+  --type-display:var(--weight-regular) var(--text-display)/var(--leading-tight) var(--font-hand);
+  --type-h1:var(--weight-black) var(--text-h1)/var(--leading-snug) var(--font-ui);
+  --type-h2:var(--weight-bold) var(--text-h2)/var(--leading-snug) var(--font-ui);
+  --type-h3:var(--weight-bold) var(--text-h3)/var(--leading-snug) var(--font-ui);
+  --type-body:var(--weight-regular) var(--text-md)/var(--leading-normal) var(--font-ui);
+  --type-small:var(--weight-regular) var(--text-sm)/var(--leading-normal) var(--font-ui);
+  --type-label:var(--weight-bold) var(--text-xs)/1.2 var(--font-ui);
+}
+
+/* --- spacing.css -------------------------------------------------------- */
+:root{
+  --space-1:4px;
+  --space-2:8px;
+  --space-3:12px;
+  --space-4:16px;
+  --space-5:22px;
+  --space-6:30px;
+  --space-7:40px;
+  --space-8:56px;
+  --space-9:76px;
+  --space-10:104px;
+
+  --gutter-page:clamp(20px,5vw,64px);
+  --measure-prose:64ch;
+  --width-container:1180px;
+  --width-narrow:760px;
+
+  --control-height-sm:34px;
+  --control-height-md:44px;
+  --control-height-lg:54px;
+}
+
+/* --- radius.css --------------------------------------------------------- */
+:root{
+  --radius-xs:6px;
+  --radius-sm:10px;
+  --radius-md:16px;
+  --radius-lg:24px;
+  --radius-xl:34px;
+  --radius-pill:999px;
+  /* hand-cut: slightly uneven corners, used on cards and image frames */
+  --radius-hand:22px 26px 20px 28px;
+  --radius-hand-alt:28px 20px 26px 22px;
+}
+
+/* --- shadows.css -------------------------------------------------------- */
+:root{
+  /* soft, warm, low-contrast — paper on paper, never grey/blue drop shadows */
+  --shadow-xs:0 1px 2px rgba(69,71,68,.08);
+  --shadow-sm:0 2px 6px rgba(69,71,68,.08);
+  --shadow-md:0 6px 18px rgba(69,71,68,.10);
+  --shadow-lg:0 14px 34px rgba(69,71,68,.13);
+  --shadow-brand:0 10px 24px rgba(164,52,98,.22);
+  --shadow-inset:inset 0 2px 0 rgba(255,255,255,.7);
+  --ring-focus:0 0 0 3px var(--berry-200),0 0 0 5px var(--berry-500);
+  /* the signature "sticker" offset outline used on primary CTAs and tags */
+  --edge-ink:2px 2px 0 var(--ink-800);
+  --edge-berry:2px 2px 0 var(--berry-800);
+}
+
+/* --- motion.css --------------------------------------------------------- */
+:root{
+  --ease-out-soft:cubic-bezier(.22,.75,.3,1);
+  --ease-in-out-soft:cubic-bezier(.5,.05,.3,1);
+  /* --ease-bounce: small pops only — tags, badges, dialog entry */
+  --ease-bounce:cubic-bezier(.34,1.56,.64,1);
+  --dur-fast:120ms;
+  --dur-base:200ms;
+  --dur-slow:340ms;
+  --lift-hover:translateY(-2px);
+  --press-scale:scale(.97);
+}
+@media (prefers-reduced-motion:reduce){
+  :root{
+    --dur-fast:0ms;
+    --dur-base:0ms;
+    --dur-slow:0ms;
+    --lift-hover:none;
+    --press-scale:none;
+  }
+}
+
+/* --- base.css ----------------------------------------------------------- */
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--surface-page);color:var(--text-body);font:var(--type-body);-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{color:var(--text-heading);margin:0 0 var(--space-3)}
+h1{font:var(--type-h1)}h2{font:var(--type-h2)}h3{font:var(--type-h3)}
+p{margin:0 0 var(--space-4);text-wrap:pretty}
+a{color:var(--text-link);text-decoration-color:var(--berry-300);text-underline-offset:3px;transition:color var(--dur-fast) var(--ease-out-soft)}
+a:hover{color:var(--text-link-hover);text-decoration-color:var(--berry-600)}
+:focus-visible{outline:none;box-shadow:var(--ring-focus);border-radius:var(--radius-sm)}
+::selection{background:var(--berry-200);color:var(--ink-900)}
+.lp-hand{font-family:var(--font-hand);letter-spacing:var(--tracking-hand)}
+.lp-eyebrow{font:var(--type-label);letter-spacing:var(--tracking-label);text-transform:uppercase;color:var(--text-muted)}
