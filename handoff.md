@@ -124,6 +124,9 @@ Verified this session, so the two values really are the whole job:
   correctly in both `<img src>` and `og:image` with no code change.
 - `api_key` is quoted in the template on purpose: unquoted, an all-digit key
   parses as a YAML number and reaches the widget in the wrong type.
+- Once enabled, the admin loads `https://media-library.cloudinary.com/global/all.js`
+  at runtime. Nothing to do today — there is no CSP on the site — but that host
+  has to be allowed if one is ever added.
 
 After that the work is content, not code: fill the 54 empty image slots via
 `/admin/`, keeping uploads ~1600px on the long edge and under ~300 KB.
