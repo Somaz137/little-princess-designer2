@@ -78,6 +78,26 @@ function shareImage(image, siteUrl) {
   };
 }
 
+/**
+ * Serialises structured data for embedding in a <script> block.
+ *
+ * JSON.stringify does not escape "<", so a CMS field containing "</script>"
+ * would close the block early and hand the rest of the value to the HTML
+ * parser as markup — stored XSS, reachable by anyone invited to edit content
+ * even though they hold no access to this repo.
+ *
+ * < is valid JSON and parses back to "<", so what search engines read is
+ * unchanged. U+2028/U+2029 are legal in JSON strings but are line terminators
+ * in JavaScript, so they are escaped too: harmless in ld+json, and it keeps
+ * the output safe if this block ever becomes an executable script type.
+ */
+function jsonLdScript(data) {
+  return JSON.stringify(data)
+    .replace(/</g, "\\u003c")
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029");
+}
+
 function head({ title, description, canonical, jsonLd, share, ogType = "website", brandName = "", noindex = false }) {
   return `<!DOCTYPE html>
 <html lang="en">
@@ -107,7 +127,7 @@ ${share.alt ? '<meta property="og:image:alt" content="' + esc(share.alt) + '">' 
 .lp-grid[data-preload] > .lp-card:nth-child(n+5){display:block}
 [data-loadwrap],.lp-toolbar,.lp-panel,.lp-scrim{display:none}
 </style></noscript>
-${jsonLd ? '<script type="application/ld+json">' + JSON.stringify(jsonLd) + "</script>" : ""}
+${jsonLd ? '<script type="application/ld+json">' + jsonLdScript(jsonLd) + "</script>" : ""}
 </head>
 <body>`;
 }

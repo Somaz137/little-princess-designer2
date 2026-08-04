@@ -6,7 +6,7 @@ working tree on 2026-08-04.
 
 ## Security
 
-- [ ] **`tools/render.js:110` — stored XSS via JSON-LD breakout.** `JSON.stringify`
+- [x] **`tools/render.js:110` — stored XSS via JSON-LD breakout.** `JSON.stringify`
       does not escape `<`, so CMS free text containing `</script>` terminates the
       structured-data block and returns the parser to HTML context. Reachable by
       DecapBridge collaborators, who hold no repo access — an escalation past the
