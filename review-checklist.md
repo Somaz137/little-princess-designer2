@@ -25,7 +25,7 @@ working tree on 2026-08-04.
       **Fix:** normalise to a leading `/` before concatenating, and warn on a
       value that is neither absolute nor root-relative.
 
-- [ ] **`tools/build.js:121` — page count in the build summary is wrong.**
+- [x] **`tools/build.js:121` — page count in the build summary is wrong.**
       Still computes `2 + categories + products`, so it reports 45 pages while 46
       files are written; the new 404 is invisible in the log.
       **Fix:** include `404.html` in the count, or derive the count from what was
