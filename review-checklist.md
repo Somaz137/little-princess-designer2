@@ -18,7 +18,7 @@ working tree on 2026-08-04.
 
 ## Correctness
 
-- [ ] **`tools/render.js:76` — `shareImage` concatenates with no separator.**
+- [x] **`tools/render.js:76` — `shareImage` concatenates with no separator.**
       `siteUrl + src` yields a malformed `og:image` if a pasted image link has
       neither a scheme nor a leading slash, with no build warning. Same pattern
       already exists in the product JSON-LD at `:578`.

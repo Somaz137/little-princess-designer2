@@ -66,14 +66,23 @@ function frame(image, { eager = false, placeholder = "Photo coming soon" } = {})
 /* --- chrome ------------------------------------------------------------- */
 
 /**
- * Absolute URL for a share image. WhatsApp, Instagram and the rest reject
- * relative paths, and Cloudinary links are already absolute — so pass those
- * through untouched and prefix everything else with the site origin.
+ * Absolute form of an image address. WhatsApp, Instagram and structured data
+ * all reject relative paths; Cloudinary links are already absolute, so those
+ * pass through untouched and everything else gets the site origin.
+ *
+ * content.js guarantees a leading "/" on anything not absolute, so this can
+ * join the two without a separator — that guarantee is what stops
+ * "site.comfoo.jpg" being produced from a carelessly pasted value.
  */
+function absoluteUrl(src, siteUrl) {
+  return /^(https?:)?\/\//i.test(src) || /^data:/i.test(src) ? src : siteUrl + src;
+}
+
+/** Share image for og:image / twitter:image, falling back to the logo. */
 function shareImage(image, siteUrl) {
   const src = (image && image.src) || "/assets/logo-lockup.webp";
   return {
-    url: /^https?:\/\//.test(src) ? src : siteUrl + src,
+    url: absoluteUrl(src, siteUrl),
     alt: (image && image.alt) || ""
   };
 }
@@ -595,7 +604,7 @@ Order on WhatsApp</a>
       description: p.description,
       category: p.tabLabel + " > " + p.subcategoryName,
       brand: { "@type": "Brand", name: s.brandName },
-      image: p.images.map(i => (i.src.startsWith("http") ? i.src : siteUrl + i.src)),
+      image: p.images.map(i => absoluteUrl(i.src, siteUrl)),
       offers: {
         "@type": "AggregateOffer",
         priceCurrency: "PKR",
