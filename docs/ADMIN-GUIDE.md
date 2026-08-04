@@ -1,7 +1,8 @@
 # Using the admin page
 
-Go to `yoursite.com/admin/` and sign in with your email address and password.
-Everything you save becomes live on the website about a minute later.
+Go to `yoursite.com/admin/` and press **Login** — you are sent to DecapBridge to
+sign in, then brought straight back. Everything you save becomes live on the
+website about a minute later.
 
 There are four things in the sidebar:
 

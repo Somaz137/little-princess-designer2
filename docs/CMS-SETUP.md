@@ -54,45 +54,36 @@ The admin saves changes by committing to your GitHub repo, so something has to
 be allowed to do that on your behalf. DecapBridge handles it, and lets you sign
 in with an ordinary email address.
 
-### 3a. Create a site on DecapBridge
+**This step is already done** — the site exists on DecapBridge and its details
+are in `site/admin/config.yml`. What follows is for reference, in case the
+DecapBridge site is ever deleted and recreated.
 
-1. Go to [decapbridge.com](https://decapbridge.com) and sign up.
-2. Create a **Site**, and connect it to this GitHub repository when asked.
-3. DecapBridge shows you a ready-made `config.yml` snippet. The part you need
-   from it is the **site id** — the long code at the end of the `identity_url`
-   line, which looks like
-   `https://auth.decapbridge.com/sites/0a1b2c3d-4e5f-6789-abcd-ef0123456789`.
+### How it was set up
 
-### 3b. Paste the site id into the config
+1. Sign up at [decapbridge.com](https://decapbridge.com).
+2. Create a **Site** and connect it to this GitHub repository when asked.
+3. DecapBridge produces a ready-made `backend:` block. Paste it over the one in
+   `site/admin/config.yml`, keeping everything from `local_backend:` downwards
+   — that part is this site's own configuration and DecapBridge knows nothing
+   about it.
 
-Open `site/admin/config.yml`. Near the top:
+The site's id appears **twice**, in `auth_endpoint` and `auth_token_endpoint`.
+If you ever replace it, replace both.
 
-```yaml
-  identity_url: https://auth.decapbridge.com/sites/PASTE-YOUR-SITE-ID-HERE
-```
+Two blocks in the config are optional but worth keeping:
 
-Replace `PASTE-YOUR-SITE-ID-HERE` with your site id, so it reads e.g.
-
-```yaml
-  identity_url: https://auth.decapbridge.com/sites/0a1b2c3d-4e5f-6789-abcd-ef0123456789
-```
-
-Leave the `gateway_url` line alone — it is the same for every site.
-
-Commit and push. Netlify redeploys.
-
-> If the snippet DecapBridge gives you differs from what's in `config.yml`,
-> trust theirs for the `backend:` block and keep everything below it as-is.
-> Everything from `local_backend:` downwards is this site's own configuration.
+- **`auth:`** tells the admin where to find the editor's name in their
+  DecapBridge login. Without it, the names in the commit messages come out blank.
+- **`commit_messages:`** puts that name into the repository history.
 
 ---
 
 ## 4. Log in
 
-Go to `https://your-site.netlify.app/admin/` and sign in with the email and
-password you registered with DecapBridge. You should land in the admin with
-**Products**, **Subcategories**, **Category pages** and **Site settings** in the
-sidebar.
+Go to `https://littleprincessdesigner.netlify.app/admin/` and press **Login**.
+You are sent to DecapBridge to sign in — by email and password, or with Google
+or Microsoft — and then returned to the admin. You should land on **Products**,
+with **Subcategories**, **Category pages** and **Site settings** in the sidebar.
 
 That's it. Every change you save becomes a commit, Netlify rebuilds, and the
 website updates in a minute or two.
@@ -184,13 +175,18 @@ Run `npm run build` again to see the changes on the site.
 ## If something goes wrong
 
 **The admin is stuck on "Opening the admin…"**
-The site id in `config.yml` is probably still the `PASTE-YOUR-SITE-ID-HERE`
-placeholder, or has a typo. Check it against your DecapBridge dashboard, and
-open your browser's developer console for the actual error.
+Something in the `backend:` block of `config.yml` is wrong. Check it against
+your DecapBridge dashboard, and open your browser's developer console for the
+actual error.
 
-**The login screen appears but my password is refused**
-Either the site id is wrong — it points the login at a site that isn't yours —
-or the email you are using has not been invited to this site on DecapBridge.
+**Pressing Login goes to DecapBridge and comes back with an error**
+Either the site id in `auth_endpoint` / `auth_token_endpoint` is wrong — it
+points the login at a site that isn't yours — or the email you are using has not
+been invited to this site on DecapBridge.
+
+**Logged in, but the commit history shows a blank name**
+Either the `auth:` block is missing from `config.yml`, or that person did not
+fill in their name on DecapBridge.
 
 **Login works, but saving fails**
 DecapBridge has lost its connection to the GitHub repository. Re-connect the

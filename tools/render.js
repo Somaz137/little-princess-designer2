@@ -65,7 +65,20 @@ function frame(image, { eager = false, placeholder = "Photo coming soon" } = {})
 
 /* --- chrome ------------------------------------------------------------- */
 
-function head({ title, description, canonical, jsonLd }) {
+/**
+ * Absolute URL for a share image. WhatsApp, Instagram and the rest reject
+ * relative paths, and Cloudinary links are already absolute — so pass those
+ * through untouched and prefix everything else with the site origin.
+ */
+function shareImage(image, siteUrl) {
+  const src = (image && image.src) || "/assets/logo-lockup.webp";
+  return {
+    url: /^https?:\/\//.test(src) ? src : siteUrl + src,
+    alt: (image && image.alt) || ""
+  };
+}
+
+function head({ title, description, canonical, jsonLd, share, ogType = "website", brandName = "", noindex = false }) {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -73,12 +86,18 @@ function head({ title, description, canonical, jsonLd }) {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(description)}">
+${noindex ? '<meta name="robots" content="noindex">' : ""}
 <link rel="canonical" href="${esc(canonical)}">
-<meta property="og:type" content="website">
+<meta property="og:type" content="${esc(ogType)}">
 <meta property="og:title" content="${esc(title)}">
 <meta property="og:description" content="${esc(description)}">
 <meta property="og:url" content="${esc(canonical)}">
+<meta property="og:site_name" content="${esc(brandName)}">
+<meta property="og:locale" content="en_PK">
+<meta property="og:image" content="${esc(share.url)}">
+${share.alt ? '<meta property="og:image:alt" content="' + esc(share.alt) + '">' : ""}
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="${esc(share.url)}">
 <link rel="icon" href="/assets/logo-crown.png">
 <link rel="stylesheet" href="/tokens.css">
 <link rel="stylesheet" href="/styles.css">
@@ -159,10 +178,14 @@ function floatingWa(s) {
 </a>`;
 }
 
-function page(model, { tab, title, description, canonical, jsonLd, body }) {
+function page(model, { tab, title, description, canonical, jsonLd, body, image, ogType, siteUrl, noindex }) {
   const s = model.settings;
   return [
-    head({ title, description, canonical, jsonLd }),
+    head({
+      title, description, canonical, jsonLd, ogType, noindex,
+      brandName: s.brandName,
+      share: shareImage(image, siteUrl || "")
+    }),
     '<div class="lp-app" data-tab="' + esc(tab) + '">',
     header(s, tab),
     body,
@@ -298,9 +321,12 @@ ${model.categories.map(c => `<a href="${c.href}">
 
   return page(model, {
     tab: "home",
+    siteUrl,
     title: s.seo.title,
     description: s.seo.description,
     canonical: siteUrl + "/",
+    // The finished-dress hero photo, which is what the brand is selling.
+    image: { src: "/assets/dress-real-tall.webp", alt: s.tagline },
     jsonLd,
     body
   });
@@ -414,9 +440,11 @@ ${sections}
 
   return page(model, {
     tab: cat.key,
+    siteUrl,
     title: cat.seo.title,
     description: cat.seo.description,
     canonical: siteUrl + cat.href,
+    image: cat.card.image,
     jsonLd: {
       "@context": "https://schema.org",
       "@type": "CollectionPage",
@@ -534,9 +562,12 @@ Order on WhatsApp</a>
 
   return page(model, {
     tab: p.tab,
+    siteUrl,
+    ogType: "product",
     title: p.name + " | " + p.tabLabel + " " + p.subcategoryName + " | " + s.brandName,
     description: desc,
     canonical: siteUrl + p.href,
+    image: p.images[0],
     jsonLd: {
       "@context": "https://schema.org",
       "@type": "Product",
@@ -629,6 +660,7 @@ ${esc(c.feedback.button)}</a>
 
   return page(model, {
     tab: "contact",
+    siteUrl,
     title: c.seo.title,
     description: c.seo.description,
     canonical: siteUrl + "/contact/",
@@ -645,4 +677,53 @@ ${esc(c.feedback.button)}</a>
   });
 }
 
-module.exports = { renderHome, renderShop, renderProduct, renderContact, money, esc };
+/* --- 404 ---------------------------------------------------------------- */
+
+/**
+ * Served by Netlify for any address that does not exist — a mistyped URL, or a
+ * link to a product that has since been renamed or hidden. Deliberately built
+ * from the same classes as the rest of the site so it needs no CSS of its own.
+ */
+function render404(model, siteUrl) {
+  const s = model.settings;
+  const links = [
+    { icon: ICON.crownCta, href: "/girls/", title: "Browse the collection",
+      subtitle: "Girls, boys, babies and ready to wear" },
+    { icon: ICON.waOutline, href: waLink(s.whatsappNumber, "Hello! I was looking for something on your website."),
+      title: "Message us on WhatsApp", subtitle: "Tell us what you were looking for", external: true },
+    { icon: ICON.gem, href: "/contact/", title: "How to order", subtitle: "Sizes, delivery and questions" }
+  ];
+
+  const body = `<main class="lp-main">
+<section class="lp-sect">
+<div class="lp-eyebrow">Page not found</div>
+<h1 class="lp-h2">This page has slipped away</h1>
+<p>
+The address may have been mistyped, or the piece you were looking for may have
+been renamed or taken down. Everything else is still here.
+</p>
+<div class="lp-cta">
+${links.map(l =>
+  '<a href="' + esc(l.href) + '"' + (l.external ? ' target="_blank" rel="noopener"' : "") + ">" +
+  svg(l.icon, { stroke: "var(--berry-800)" }) +
+  '<span class="lp-cta-t">' + esc(l.title) + "</span>" +
+  '<span class="lp-cta-s">' + esc(l.subtitle) + "</span></a>"
+).join("\n")}
+</div>
+</section>
+</main>`;
+
+  return page(model, {
+    tab: "home",
+    siteUrl,
+    title: "Page not found | " + s.brandName,
+    description: "That page could not be found. Browse the collection or message us on WhatsApp.",
+    // No canonical to the 404 itself — it stands in for many addresses, so it
+    // points at the home page instead, and is kept out of search results.
+    canonical: siteUrl + "/",
+    noindex: true,
+    body
+  });
+}
+
+module.exports = { renderHome, renderShop, renderProduct, renderContact, render404, money, esc };

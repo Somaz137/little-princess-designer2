@@ -88,6 +88,8 @@ writeFile("data/settings.json", JSON.stringify(s, null, 2) + "\n");
 // 3. pages
 writeFile("index.html", render.renderHome(model, SITE_URL));
 writeFile("contact/index.html", render.renderContact(model, SITE_URL));
+// Netlify serves this for any address that matches nothing else.
+writeFile("404.html", render.render404(model, SITE_URL));
 for (const cat of model.categories) {
   writeFile(cat.key + "/index.html", render.renderShop(model, cat, SITE_URL));
 }
