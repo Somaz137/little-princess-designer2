@@ -113,6 +113,18 @@ const svg = (body, { size = 24, stroke = "currentColor", width = 1.6, viewBox = 
  *              flat 570px once the container caps at 1180px (viewport 1308px,
  *              where the clamped page gutter has reached its own 64px cap).
  *
+ *              Those are the layout widths; the numbers below are 1.5x them,
+ *              and that multiplier is why the gallery stopped looking soft.
+ *              `sizes` is what the browser multiplies by the screen density to
+ *              choose a copy, so the honest 570px picked the 1200 on a 2x
+ *              laptop and never reached the 1600 the detail profile offers.
+ *              1.5x also covers the crop: .lp-gallery img is object-fit:cover
+ *              in a 3/4 frame, so a landscape upload is scaled until its height
+ *              fills the frame and its width overflows — up to 1.78x the column
+ *              for a 4:3 photo, all of which comes out of the same pixels.
+ *              Cards do not get this: nobody studies a thumbnail, and there the
+ *              multiplier would be pure waste.
+ *
  * These are hints, not promises: get one wrong and the browser fetches a copy
  * a size out, which is still far less than the original.
  */
@@ -121,7 +133,7 @@ const IMG_SIZES = {
   category: "(max-width: 768px) 44vw, (max-width: 1024px) 45vw, 255px",
   product: "(max-width: 768px) 45vw, 436px",
   studio: "(max-width: 768px) 230px, 270px",
-  gallery: "(max-width: 720px) 92vw, (max-width: 1308px) 44vw, 570px"
+  gallery: "(max-width: 720px) 138vw, (max-width: 1308px) 66vw, 855px"
 };
 
 /**
