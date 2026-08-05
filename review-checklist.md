@@ -84,7 +84,7 @@ Ordered by what to do first. The three admin-facing items (#3, #4, #13) all edit
       they do nothing when clicked.
       **Fix:** omit both buttons when the gallery has one slide.
 
-- [ ] **`tools/build.js:111` — `sitemap.xml` carries no `<lastmod>`.** Search engines
+- [x] **`tools/build.js:111` — `sitemap.xml` carries no `<lastmod>`.** Search engines
       get no signal about which pages changed, so new products are recrawled later
       than they need to be.
       **Fix:** emit `<lastmod>` per URL from the mtime of the backing file in

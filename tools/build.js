@@ -16,6 +16,7 @@
 
 const fs = require("fs");
 const path = require("path");
+const { execFileSync } = require("child_process");
 const content = require("./content");
 const render = require("./render");
 
@@ -29,6 +30,51 @@ const SITE_URL = (
   process.env.DEPLOY_PRIME_URL ||
   "http://localhost:8080"
 ).replace(/\/+$/, "");
+
+/* --- sitemap dates ------------------------------------------------------ */
+
+/**
+ * When each file under content/ last actually changed, for <lastmod>.
+ *
+ * Deliberately not file mtimes. The site is built from a fresh clone, and a
+ * clone stamps every file with the moment it was checked out — so mtimes would
+ * date every page "today" on every deploy. A sitemap that claims the whole
+ * site changed each time is worse than one with no dates at all: it is the
+ * signal search engines learn to ignore.
+ *
+ * So the dates come from git, in one call for the whole directory. A shallow
+ * clone cannot answer the question — it holds one commit, and would date
+ * everything to that — so it returns nothing and every URL goes out without a
+ * <lastmod>, which is valid and honest. If the deployed sitemap has no dates,
+ * that is what happened: give the build a full clone.
+ */
+function contentDates() {
+  const dates = new Map();
+  try {
+    const shallow = execFileSync("git", ["rev-parse", "--is-shallow-repository"],
+      { cwd: ROOT, encoding: "utf8" }).trim();
+    if (shallow !== "false") return dates;
+
+    // %cI is the committer date, ISO 8601. --name-only lists the files each
+    // commit touched, so one pass gives every file its newest commit.
+    const log = execFileSync("git",
+      ["log", "--format=%cI", "--name-only", "--", "content"],
+      { cwd: ROOT, encoding: "utf8", maxBuffer: 32 * 1024 * 1024 });
+
+    let current = null;
+    for (const line of log.split("\n")) {
+      const value = line.trim();
+      if (!value) continue;
+      if (/^\d{4}-\d{2}-\d{2}T/.test(value)) { current = value.slice(0, 10); continue; }
+      // Newest first, so the first date a file is seen with is the one to keep.
+      if (current && !dates.has(value)) dates.set(value, current);
+    }
+  } catch {
+    // No git, or no history to read. Dates are an optimisation; the sitemap is
+    // still correct without them.
+  }
+  return dates;
+}
 
 /* --- fs helpers --------------------------------------------------------- */
 
@@ -102,16 +148,23 @@ for (const p of model.products) {
 }
 
 // 4. robots + sitemap
+// Each URL is dated by the content file it is built from: a product by its own
+// JSON, a category page by its category file, home and contact by settings.
 const urls = [
-  "/",
-  "/contact/",
-  ...model.categories.map(c => c.href),
-  ...model.products.map(p => p.href)
+  ["/", "content/settings.json"],
+  ["/contact/", "content/settings.json"],
+  ...model.categories.map(c => [c.href, "content/categories/" + c.key + ".json"]),
+  ...model.products.map(p => [p.href, "content/products/" + p.id + ".json"])
 ];
+const dates = contentDates();
 writeFile("sitemap.xml",
   '<?xml version="1.0" encoding="UTF-8"?>\n' +
   '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
-  urls.map(u => "  <url><loc>" + SITE_URL + u + "</loc></url>").join("\n") +
+  urls.map(([u, file]) => {
+    const on = dates.get(file);
+    return "  <url><loc>" + SITE_URL + u + "</loc>" +
+      (on ? "<lastmod>" + on + "</lastmod>" : "") + "</url>";
+  }).join("\n") +
   "\n</urlset>\n"
 );
 writeFile("robots.txt",
