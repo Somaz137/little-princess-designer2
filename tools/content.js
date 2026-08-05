@@ -216,8 +216,12 @@ function load() {
   // A product's first photo becomes its link preview. WhatsApp and Facebook do
   // not render WebP previews, so those links share as bare text — which is
   // invisible from the admin and easy to leave broken for months.
+  // Cloudinary photos are exempt: the renderer asks Cloudinary for a JPEG copy
+  // at preview size, so their original format does not reach WhatsApp.
   const webpFirst = products
-    .filter(p => p.images.length && /\.webp(\?|$)/i.test(p.images[0].src))
+    .filter(p => p.images.length &&
+      /\.webp(\?|$)/i.test(p.images[0].src) &&
+      !/^https?:\/\/res\.cloudinary\.com\//i.test(p.images[0].src))
     .map(p => p.name);
   if (webpFirst.length) {
     warn(webpFirst.length + " product(s) have a WebP first photo, which WhatsApp and " +

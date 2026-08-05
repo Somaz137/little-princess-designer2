@@ -47,13 +47,24 @@
       document.documentElement.style.setProperty("--lp-header", px + "px");
     };
 
-    /* One-way latch: minimise once past 120px, expand again only back at the
-       very top. Without the latch, the reflow from minimising nudges scrollY
-       across the threshold and the header flickers. */
+    /* Where the header is allowed to start minimising.
+       On the home page that is the end of the hero story, so the drawing plays
+       all the way through to the finished dress before the header moves — two
+       things animating against each other reads as jank. Elsewhere, 120px. */
+    var story = $(".lp-story");
+    var threshold = function () {
+      if (!story) return 120;
+      var end = story.offsetTop + story.offsetHeight - window.innerHeight;
+      return Math.max(120, end);
+    };
+
+    /* One-way latch: minimise once past the threshold, expand again only back
+       at the very top. Without the latch, the reflow from minimising nudges
+       scrollY across the threshold and the header flickers. */
     var latch = raf(function () {
       var y = window.scrollY || 0;
       var isMin = header.getAttribute("data-min") === "1";
-      var next = isMin ? y >= 4 : y > 120;
+      var next = isMin ? y >= 4 : y > threshold();
       if (next !== isMin) header.setAttribute("data-min", next ? "1" : "0");
     });
 

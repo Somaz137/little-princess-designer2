@@ -85,8 +85,12 @@ img{max-width:100%}
   border:2px solid #7C2447;background:#A43462;
   display:flex;align-items:center;justify-content:center;
   box-shadow:0 2px 0 #7C2447;
+  /* Size and paint animate; POSITION must not. On phones this button is placed
+     by `margin-left:auto`, and animating margin makes the browser slide it from
+     the left edge across to the right every time the header minimises — which
+     reads as the icon flashing on the wrong side. */
   transition:width 260ms cubic-bezier(.2,.8,.3,1),height 260ms cubic-bezier(.2,.8,.3,1),
-             opacity 200ms ease,margin 260ms ease,filter 140ms ease,transform 140ms ease;
+             opacity 200ms ease,filter 140ms ease,transform 140ms ease;
 }
 .lp-igbtn:hover{filter:brightness(1.06);transform:translateY(-2px)}
 .lp-igbtn svg{width:27px;height:27px}
