@@ -17,17 +17,24 @@
 
 const fs = require("fs");
 const path = require("path");
+const { SIZES } = require("./content");
 
 const ROOT = path.join(__dirname, "..");
 const SUBDIR = path.join(ROOT, "content", "subcategories");
 const PRODDIR = path.join(ROOT, "content", "products");
 const FORCE = process.argv.includes("--force");
 
-/** Canonical size vocabulary. Must match the `size` select in admin/config.yml. */
-const SIZES = ["0–3 years", "4–6 years", "7–9 years", "10–12 years", "13–16 years"];
-const BABY_SIZES = ["0–3 years", "4–6 years"];
+/**
+ * The size vocabulary, taken from content.js so this file cannot drift out of
+ * step with the admin the way it had. Babies are offered the youngest two
+ * bands, and the uplifts are held by position rather than by name so none of
+ * the strings is written down twice.
+ */
+const BABY_BAND_COUNT = 2;
+const BABY_SIZES = SIZES.slice(0, BABY_BAND_COUNT);
 /** Age-band uplifts the prototype applied on top of a product's base price. */
-const UPLIFT = { "0–3 years": 0, "4–6 years": 900, "7–9 years": 1800, "10–12 years": 2700, "13–16 years": 3600 };
+const UPLIFT_BY_BAND = [0, 900, 1800, 2700, 3600];
+const upliftFor = size => UPLIFT_BY_BAND[SIZES.indexOf(size)] || 0;
 
 const SUBS = [
   {
@@ -213,7 +220,7 @@ for (const s of SUBS) {
     const slug = slugify(name);
     const sizes = (s.parent === "babies" ? BABY_SIZES : SIZES).map(size => ({
       size,
-      price: s.base + i * 900 + UPLIFT[size],
+      price: s.base + i * 900 + upliftFor(size),
       available: true
     }));
     const ov = OVERRIDES[slug] || {};

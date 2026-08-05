@@ -56,7 +56,7 @@ Ordered by what to do first. The three admin-facing items (#3, #4, #13) all edit
       pass it as the third argument to the existing `nonEmpty()` chain, making the
       cascade product → subcategory → site default.
 
-- [ ] **`tools/content.js:20` vs `site/admin/config.yml:183-188` — the size list is
+- [x] **`tools/content.js:20` vs `site/admin/config.yml:183-188` — the size list is
       duplicated with nothing keeping the copies in step.** `SIZES` drives price-row
       validation (`:175`), age-order sorting (`:185`) and the shop filter chips
       (`:261`). Adding a sixth age band in the admin alone means every price using
@@ -66,15 +66,15 @@ Ordered by what to do first. The three admin-facing items (#3, #4, #13) all edit
       **Fix (decided: full merge):** delete `SIZES` from `content.js` and read the
       list out of `config.yml` at build time via the existing YAML reader in
       `tools/check-config.js:27`. Guards, all required:
-    - [ ] Reader returns the 5 current strings byte-for-byte before anything else
+    - [x] Reader returns the 5 current strings byte-for-byte before anything else
           changes — the en dash in `0–3 years` (U+2013) is not a hyphen, so compare
           with `===`, not by eye.
-    - [ ] Build **fails loudly** if the list is missing, empty, not an array, or has
+    - [x] Build **fails loudly** if the list is missing, empty, not an array, or has
           a different length than the previous build — never fall through to `[]`,
           which would strip every price on the site.
-    - [ ] `npm run build` output is diffed before and after: same 46 pages, same 39
+    - [x] `npm run build` output is diffed before and after: same 46 pages, same 39
           products, same warnings, identical `dist/data/products.json`.
-    - [ ] Stale copy in `tools/seed-content.js:27` deleted or pointed at the same
+    - [x] Stale copy in `tools/seed-content.js:27` deleted or pointed at the same
           source, so it cannot mislead later.
 
 ## Polish

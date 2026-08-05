@@ -13,12 +13,72 @@
 const fs = require("fs");
 const path = require("path");
 const images = require("./images");
+const { parseYaml } = require("./yaml");
 
 const ROOT = path.join(__dirname, "..");
 const CONTENT = path.join(ROOT, "content");
 
-/** Canonical size vocabulary. Keep in step with the `size` select in site/admin/config.yml. */
-const SIZES = ["0–3 years", "4–6 years", "7–9 years", "10–12 years", "13–16 years"];
+const CONFIG = path.join(ROOT, "site", "admin", "config.yml");
+
+/**
+ * How many age bands the admin is expected to offer.
+ *
+ * A tripwire, not a limit. The size list below is read out of config.yml, and
+ * a reader that quietly returned the wrong thing — one entry, or none — would
+ * strip prices from the whole site rather than fail. Changing the bands is
+ * meant to be two edits: the dropdown in config.yml, and this number.
+ */
+const EXPECTED_SIZE_COUNT = 5;
+
+/**
+ * The canonical size vocabulary, read out of the admin's own dropdown so the
+ * two cannot drift apart. It drives price-row validation, age-order sorting
+ * and the shop filter chips; a size offered in the admin but missing here has
+ * its prices silently discarded and can take a whole product off the site.
+ *
+ * Every failure here is fatal on purpose. Falling through to [] would build a
+ * site with no prices on it, which looks like a content problem and is not.
+ */
+function readSizes() {
+  const where = "site/admin/config.yml (products → Sizes and prices → Size → options)";
+  const fail = why => {
+    throw new Error(
+      "Cannot read the size list from " + where + ": " + why + ".\n" +
+      "  Every price row on the site is checked against this list, so building with\n" +
+      "  the wrong one would strip prices site-wide. Fix the dropdown, or update\n" +
+      "  EXPECTED_SIZE_COUNT in tools/content.js if the age bands really did change."
+    );
+  };
+
+  const config = parseYaml(fs.readFileSync(CONFIG, "utf8"));
+  const products = (config.collections || []).find(c => c.name === "products");
+  if (!products) fail("no 'products' collection");
+
+  const priceRows = (products.fields || []).find(f => f.name === "sizes");
+  if (!priceRows) fail("the products collection has no 'sizes' field");
+
+  const size = (priceRows.fields || []).find(f => f.name === "size");
+  if (!size) fail("'sizes' has no 'size' field");
+
+  if (!Array.isArray(size.options)) {
+    fail("'options' is " + (size.options === undefined ? "missing" : "not a list"));
+  }
+
+  // Decap selects take either a bare string or {label, value}; the size list
+  // uses bare strings today, and either reads the same from here.
+  const list = size.options
+    .map(o => (o && typeof o === "object" ? o.value : o))
+    .filter(v => typeof v === "string" && v.trim());
+
+  if (!list.length) fail("the option list is empty");
+  if (list.length !== EXPECTED_SIZE_COUNT) {
+    fail("it has " + list.length + " entries, not the expected " + EXPECTED_SIZE_COUNT);
+  }
+  return list;
+}
+
+const SIZES = readSizes();
+
 /** Tab order across nav, footer and the "Get yours now" grid. */
 const CATEGORY_ORDER = ["girls", "boys", "babies", "ready"];
 
