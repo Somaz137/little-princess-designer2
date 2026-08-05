@@ -7,32 +7,19 @@
 
 const images = require("./images");
 
-const ESC = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
-const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ESC[c]);
+/**
+ * The product card, and the helpers it is built from, live in tools/card.js —
+ * the admin's preview panel loads that same file in the browser to draw the
+ * card as the owner types. Anything the card touches has to be reachable from
+ * both sides, so it lives there and is imported here rather than the other way
+ * round. Everything else about rendering stays in this file, which is Node-only.
+ */
+const card = require("./card");
+const { esc, safeHref, money, frame, IMG_SIZES, productCard } = card;
 
 /** Minimal inline formatting for CMS prose: **bold** only. */
 const inline = s => esc(s).replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
 
-/**
- * Escapes a link address and allowlists its scheme. `esc()` alone neutralises
- * markup but leaves `javascript:` intact, and the social links are free-text
- * fields held by editors who have no repo access, so every address that comes
- * out of the CMS goes through here rather than through `esc()`. Anything
- * outside the allowlist collapses to "#" so the link is inert, not broken.
- */
-const SAFE_SCHEMES = ["https:", "http:", "mailto:", "tel:"];
-const safeHref = url => {
-  const raw = String(url == null ? "" : url).trim();
-  if (!raw) return "#";
-  // Browsers drop control characters while parsing a scheme, so "java\tscript:"
-  // still runs. Decide on a stripped copy, but emit the address as written.
-  const probe = raw.replace(/[\u0000-\u0020]/g, "").toLowerCase();
-  if (probe.startsWith("//")) return "#"; // scheme-relative: points off-site
-  if (/^[/#?]/.test(probe)) return esc(raw); // same-page or same-site
-  const scheme = probe.match(/^([a-z][a-z0-9+.-]*:)/);
-  if (!scheme) return esc(raw); // relative path, no scheme to check
-  return SAFE_SCHEMES.includes(scheme[1]) ? esc(raw) : "#";
-};
 
 /**
  * Closes every product's page summary when Site Settings has no wording of its
@@ -47,8 +34,6 @@ const SUMMARY_TAIL = "Made to order, hand-finished in our Lahore studio.";
  * ring sparse.
  */
 const CAROUSEL_COUNT = 10;
-
-const money = n => "PKR " + Number(n).toLocaleString("en-US");
 
 /** Splits a CMS textarea into paragraphs on blank lines. */
 const paragraphs = s => String(s || "").split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
@@ -90,80 +75,7 @@ const svg = (body, { size = 24, stroke = "currentColor", width = 1.6, viewBox = 
   '<svg viewBox="' + viewBox + '" width="' + size + '" height="' + size + '" fill="none" stroke="' + stroke +
   '" stroke-width="' + width + '" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + body + "</svg>";
 
-/* --- shared image frame ------------------------------------------------- */
 
-/**
- * How wide each kind of photo is actually drawn, read off styles.css so the
- * browser can pick a copy rather than fetching a 4000px original for a 250px
- * hole. 768px is the phone breakpoint used throughout the stylesheet.
- *
- *   carousel — .lp-car-face is 3/4 of the carousel's 31.25rem height (20rem on
- *              a phone), so 375px and 240px
- *   category — .lp-getyours is 4 columns of the 1180px container, less .lp-gy's
- *              padding and border; 2 columns on a phone
- *   product  — .lp-grid is 2 columns of 900px; 2 columns of the viewport on a
- *              phone
- *   studio   — .lp-ceo gives the photo 0.5 of a 0.5fr/1.5fr split, capped at
- *              230px on a phone
- *   gallery  — .lp-detail is auto-fit minmax(300px,1fr) with a 40px gap, so it
- *              is two columns until the container drops under 640px — around a
- *              712px viewport, hence the 720px breakpoint rather than the usual
- *              768. Above it the column is half the container less the gap:
- *              ~44vw while the container is still tracking the viewport, then a
- *              flat 570px once the container caps at 1180px (viewport 1308px,
- *              where the clamped page gutter has reached its own 64px cap).
- *
- *              Those are the layout widths; the numbers below are 1.5x them,
- *              and that multiplier is why the gallery stopped looking soft.
- *              `sizes` is what the browser multiplies by the screen density to
- *              choose a copy, so the honest 570px picked the 1200 on a 2x
- *              laptop and never reached the 1600 the detail profile offers.
- *              1.5x also covers the crop: .lp-gallery img is object-fit:cover
- *              in a 3/4 frame, so a landscape upload is scaled until its height
- *              fills the frame and its width overflows — up to 1.78x the column
- *              for a 4:3 photo, all of which comes out of the same pixels.
- *              Cards do not get this: nobody studies a thumbnail, and there the
- *              multiplier would be pure waste.
- *
- * These are hints, not promises: get one wrong and the browser fetches a copy
- * a size out, which is still far less than the original.
- */
-const IMG_SIZES = {
-  carousel: "(max-width: 768px) 240px, 375px",
-  category: "(max-width: 768px) 44vw, (max-width: 1024px) 45vw, 255px",
-  product: "(max-width: 768px) 45vw, 436px",
-  studio: "(max-width: 768px) 230px, 270px",
-  gallery: "(max-width: 720px) 138vw, (max-width: 1308px) 66vw, 855px"
-};
-
-/**
- * Renders a photo, or the empty frame shown until one is added in the CMS.
- *
- * `sizes` is the width the picture is actually drawn at, as a CSS length or
- * media-query list. Pass it and the browser is offered resized copies through
- * `srcset` and picks one to match the screen; leave it out and the original is
- * served whole. Every caller passes one — including the product gallery, which
- * used to be exempted on the grounds that a visitor might pinch into the photo.
- * Nothing on the page lets them: .lp-gallery img is `object-fit:cover` inside a
- * fixed 3/4 frame, so the picture is never drawn above its column width. All
- * the exemption bought was the full-resolution original on the one page most
- * likely to be opened on a phone, on data.
- *
- * `profile` picks how generous to be with the copies offered — see PROFILES in
- * tools/images.js. Cards take the default; the gallery asks for "detail".
- */
-function frame(image, { eager = false, placeholder = "Photo coming soon", sizes = "", profile = "card" } = {}) {
-  if (!image) {
-    return '<div class="lp-ph"><img class="lp-ph-crown" src="/assets/logo-crown.png" alt=""><span>' +
-      esc(placeholder) + "</span></div>";
-  }
-  // Empty on a host that cannot resize, in which case both attributes are
-  // dropped and the markup is exactly what it was before.
-  const set = sizes ? images.srcset(image.src, profile) : "";
-  return '<img src="' + esc(image.src) + '" alt="' + esc(image.alt) + '"' +
-    (set ? ' srcset="' + esc(set) + '" sizes="' + esc(sizes) + '"' : "") +
-    (eager ? "" : ' loading="lazy"') + ' decoding="async">';
-}
 
 /* --- chrome ------------------------------------------------------------- */
 
@@ -536,29 +448,6 @@ ${paragraphs(s.about.body).map(p => "<p>" + inline(p) + "</p>").join("\n")}
 const INITIAL_VISIBLE = 4;
 const LOAD_STEP = 4;
 
-function productCard(model, p) {
-  const opts = p.sizes.map((s, i) =>
-    '<option value="' + i + '" data-price="' + s.price + '">' + esc(s.size) + "</option>"
-  ).join("");
-  const first = p.sizes[0];
-  const alt = p.images[0]
-    ? p.images[0].alt
-    : p.name + " — handmade " + p.subcategoryName.toLowerCase() + " for " + p.tabLabel.toLowerCase();
-
-  return `<article class="lp-card" data-product data-min-price="${p.minPrice}" data-sizes="${esc(p.sizes.map(s => s.size).join("|"))}">
-<a class="lp-card-imgbtn" href="${safeHref(p.href)}" aria-label="${esc("View " + p.name + " — " + p.subcategoryName + " for " + p.tabLabel)}">
-<div class="lp-card-photo">
-${p.badge ? '<span class="lp-badge" data-badge="' + esc(p.badge) + '">' + esc(p.badge) + "</span>" : ""}
-${frame(p.images[0] ? { src: p.images[0].src, alt } : null, { placeholder: "Photo coming soon", sizes: IMG_SIZES.product })}
-</div>
-</a>
-<div class="lp-card-body">
-<h4><a class="lp-card-name" href="${safeHref(p.href)}">${esc(p.name)}</a></h4>
-<div class="lp-card-price" data-price-out>${money(first.price)}</div>
-<select class="lp-select" data-price-select aria-label="${esc("Select size for " + p.name)}">${opts}</select>
-</div>
-</article>`;
-}
 
 function renderShop(model, cat, siteUrl) {
   const s = model.settings;

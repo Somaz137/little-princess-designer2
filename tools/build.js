@@ -23,6 +23,9 @@ const render = require("./render");
 const ROOT = path.join(__dirname, "..");
 const SITE = path.join(ROOT, "site");
 const DIST = path.join(ROOT, "dist");
+// This directory. The admin preview is served two files from here — see the
+// copy step below.
+const TOOLS = __dirname;
 
 const SITE_URL = (
   process.env.SITE_URL ||
@@ -117,6 +120,17 @@ const s = model.settings;
 for (const entry of ["tokens.css", "styles.css", "app.js", "carousel-3d.js", "assets", "admin"]) {
   const from = path.join(SITE, entry);
   if (fs.existsSync(from)) copyRecursive(from, path.join(DIST, entry));
+}
+
+// 1b. the two files the admin preview shares with this build. They are build
+// code — they live in tools/ and are required above — but the preview panel
+// loads them as ordinary scripts in the browser, so they need an address. They
+// are copied rather than kept in site/ so that there is exactly one copy in the
+// repository: edit tools/card.js and both the site and the preview change with
+// it, which is the entire point of the arrangement. Order matters at load time
+// (card.js reads images.js off the window), and it is index.html that fixes it.
+for (const entry of ["images.js", "card.js"]) {
+  copyRecursive(path.join(TOOLS, entry), path.join(DIST, "admin", entry));
 }
 
 // 2. data files — the CMS-to-site contract, also handy for any future consumer

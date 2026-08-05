@@ -251,6 +251,21 @@
 <script src="https://unpkg.com/imagekit-media-library-widget@2.4.1/dist/imagekit-media-library-widget.min.js"></script>
 <script src="/admin/imagekit.js"></script>
 
+<!-- The live preview panel, and the two build files it draws the real shop card
+     with. These are copies of tools/images.js and tools/card.js, placed here by
+     the build (tools/build.js) so the browser has an address for them — the
+     originals stay in tools/, where the build requires them, so there is only
+     ever one copy of the card in the repository.
+
+     Order matters again: images.js leaves the resize table on the window, and
+     card.js reads it from there; preview.js needs both, plus `window.CMS` from
+     decap-cms.js above. Unlike imagekit.js this does not have to beat the
+     config fetch — a preview template can be registered at any point — but
+     keeping it in the same ordinary run of <script> tags costs nothing. -->
+<script src="/admin/images.js"></script>
+<script src="/admin/card.js"></script>
+<script src="/admin/preview.js"></script>
+
 <script>
   // Hide the splash as soon as Decap has painted anything — its login screen
   // included, so the Login button is never sitting behind the overlay.

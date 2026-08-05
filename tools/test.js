@@ -181,6 +181,124 @@ check("product id and href come from the filename",
   [byName["Own words"].id, byName["Own words"].href], ["own-words", "/product/own-words/"]);
 check("category href", model.categories.find(c => c.key === "girls").href, "/girls/");
 
+/* --- tools/card.js: the card the site and the admin preview share --------
+ *
+ * The card was pulled out of render.js so the admin's preview panel could draw
+ * the real one instead of a lookalike. That buys accuracy only for as long as
+ * the two halves agree, and neither half can be checked in a browser from here
+ * — the admin loads Decap from a CDN. So the agreement is pinned in Node.
+ */
+
+const card = require("./card");
+const render = require("./render");
+
+/* the move itself: render.js must be using the shared copies, not its own */
+
+checkTrue("render.js re-exports the shared esc, not a second copy",
+  render.esc === card.esc);
+checkTrue("…and the shared money", render.money === card.money);
+
+/* safeHref survived being moved — the scheme allowlist is a security guard
+   (see the Security item in review-checklist.md), and its control-character
+   handling is the part most easily broken by a careless copy. */
+
+check("safeHref keeps an ordinary link", card.safeHref("https://example.test/a"), "https://example.test/a");
+check("safeHref keeps a same-site path", card.safeHref("/girls/"), "/girls/");
+check("safeHref blocks javascript:", card.safeHref("javascript:alert(1)"), "#");
+check("safeHref blocks javascript: hidden behind a tab",
+  card.safeHref("java\tscript:alert(1)"), "#");
+check("safeHref blocks a scheme-relative address", card.safeHref("//evil.test/x"), "#");
+check("safeHref turns nothing into an inert link", card.safeHref(""), "#");
+
+/* the preview's own half: a form mid-typing must produce a drawable card */
+
+// The catalogue the panel fetches at runtime, built here the way tools/build.js
+// writes it, so the lookup under test is the real shape.
+const catalogue = {
+  sizes: model.sizes,
+  categories: model.categories.map(c => ({
+    key: c.key, label: c.label,
+    subcategories: c.subcategories.map(sub => ({ id: sub.id, name: sub.name }))
+  }))
+};
+
+const empty = card.fromCmsEntry({}, catalogue);
+checkTrue("an empty form still yields a card that can be drawn",
+  typeof card.productCard(null, empty.product) === "string");
+checkTrue("…and says the name is missing",
+  empty.notes.some(n => n.includes("name")));
+checkTrue("…and says there is no photo",
+  empty.notes.some(n => n.includes("photo")));
+checkTrue("…and says there is no price",
+  empty.notes.some(n => n.includes("price")));
+check("…with no photo, the card falls back to the empty frame",
+  card.productCard(null, empty.product).includes("lp-ph"), true);
+
+check("a hidden piece is called out in the preview",
+  card.fromCmsEntry({ visible: false }, catalogue).notes.some(n => n.includes("hidden")), true);
+
+/* the mapper applies content.js's rules — same filters, same order */
+
+const typed = card.fromCmsEntry({
+  name: "Half typed",
+  subcategory: "s1",
+  sizes: [
+    { size: "7–9 years", price: 3000, available: true },
+    { size: "0–3 years", price: 1000, available: true },
+    { size: "4–6 years", price: 50, available: false },   // unavailable: dropped
+    { size: "10–12 years", price: 0, available: true },   // no price: dropped
+    { size: "Not a size", price: 900, available: true }   // unknown: dropped
+  ],
+  images: [
+    { upload: "https://ik.imagekit.io/lpdlhr/a.jpg", url: "", alt: "Chosen" },
+    { upload: "https://ik.imagekit.io/lpdlhr/b.jpg", url: "https://example.test/pasted.jpg", alt: "" },
+    { upload: "", url: "", alt: "still empty" }           // untouched row: dropped
+  ]
+}, catalogue);
+
+check("unavailable, unpriced and unknown size rows are dropped",
+  typed.product.sizes.map(s => s.size), ["0–3 years", "7–9 years"]);
+check("…and the survivors come back in age order, not typing order",
+  typed.product.sizes[0].size, "0–3 years");
+check("minPrice is the lowest price, not the first row's",
+  typed.product.minPrice, 1000);
+check("a pasted link beats a library pick on the same row",
+  typed.product.images.map(i => i.src),
+  ["https://ik.imagekit.io/lpdlhr/a.jpg", "https://example.test/pasted.jpg"]);
+check("a photo with no description falls back to the product name",
+  typed.product.images[1].alt, "Half typed");
+check("the subcategory code resolves to its readable name",
+  typed.product.subcategoryName, "Has defaults");
+check("…and to the tab label the card's screen-reader text needs",
+  typed.product.tabLabel, "Girls");
+check("an unknown subcategory code degrades instead of throwing",
+  card.fromCmsEntry({ subcategory: "nope" }, catalogue).product.subcategoryName, "nope");
+check("a photo address with no scheme and no slash is forced root-relative, as on the site",
+  card.fromCmsEntry({ images: [{ upload: "assets/uploads/x.jpg" }] }, catalogue).product.images[0].src,
+  "/assets/uploads/x.jpg");
+
+// Without the catalogue — the fetch failed, or has not landed on the first
+// keystroke — the panel must still draw rather than blank.
+const noCat = card.fromCmsEntry({ name: "No catalogue", sizes: [{ size: "0–3 years", price: 500 }] });
+check("with no catalogue loaded, sizes are kept rather than all rejected",
+  noCat.product.sizes.length, 1);
+checkTrue("…and the card still renders",
+  card.productCard(null, noCat.product).includes("No catalogue"));
+
+/* the two halves agree: a finished product mapped from its raw CMS file must
+   match what content.js built out of the same file for the live site */
+
+const rawPhotos = JSON.parse(
+  require("fs").readFileSync(path.join(FIXTURE, "products", "photos.json"), "utf8"));
+const mapped = card.fromCmsEntry(rawPhotos, catalogue).product;
+const built = byName[rawPhotos.name];
+
+check("preview and site agree on the sizes of a finished product",
+  mapped.sizes, built.sizes);
+check("…on its lowest price", mapped.minPrice, built.minPrice);
+check("…on its photos", mapped.images.map(i => i.src), built.images.map(i => i.src));
+check("…and on their descriptions", mapped.images.map(i => i.alt), built.images.map(i => i.alt));
+
 /* --- report ------------------------------------------------------------- */
 
 if (failures.length) {
