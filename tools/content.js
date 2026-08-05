@@ -12,6 +12,7 @@
 
 const fs = require("fs");
 const path = require("path");
+const images = require("./images");
 
 const ROOT = path.join(__dirname, "..");
 const CONTENT = path.join(ROOT, "content");
@@ -235,12 +236,13 @@ function load() {
   // A product's first photo becomes its link preview. WhatsApp and Facebook do
   // not render WebP previews, so those links share as bare text — which is
   // invisible from the admin and easy to leave broken for months.
-  // Cloudinary photos are exempt: the renderer asks Cloudinary for a JPEG copy
-  // at preview size, so their original format does not reach WhatsApp.
+  // Photos on a host that builds us a JPEG copy at preview size are exempt:
+  // their original format never reaches WhatsApp. images.js knows which hosts
+  // those are.
   const webpFirst = products
     .filter(p => p.images.length &&
       /\.webp(\?|$)/i.test(p.images[0].src) &&
-      !/^https?:\/\/res\.cloudinary\.com\//i.test(p.images[0].src))
+      !images.preview(p.images[0].src))
     .map(p => p.name);
   if (webpFirst.length) {
     warn(webpFirst.length + " product(s) have a WebP first photo, which WhatsApp and " +

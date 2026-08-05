@@ -149,38 +149,20 @@ const SHARE_CARD = { src: "/assets/share-card.png", width: 1200, height: 630, ty
 
 const MIME = { png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", gif: "image/gif", webp: "image/webp" };
 
-/**
- * Cloudinary resizes on delivery, so ask it for a preview-sized copy rather
- * than handing WhatsApp a full-resolution photo. WhatsApp skips preview images
- * over roughly 300 KB, so a wallpaper- or camera-sized upload shares with no
- * picture at all — the page is read fine and only the image is dropped.
- *
- * f_jpg rather than f_auto is deliberate: with f_auto Cloudinary serves WebP to
- * any client whose headers accept it, and WhatsApp and Facebook do not render
- * WebP previews. The page itself still uses the original full-quality URL.
- */
-const CLOUD_PREVIEW = "c_fill,g_auto,w_1200,h_630,f_jpg,q_auto";
-const CLOUD_UPLOAD_RE = /^(https?:\/\/res\.cloudinary\.com\/[^/]+\/image\/upload\/)(.+)$/i;
-
-function cloudinaryPreview(src) {
-  const m = src.match(CLOUD_UPLOAD_RE);
-  if (!m) return null;
-  // Already transformed by us on a previous pass — don't stack it twice.
-  if (m[2].startsWith(CLOUD_PREVIEW + "/")) return src;
-  return m[1] + CLOUD_PREVIEW + "/" + m[2];
-}
-
 /** Share image for og:image / twitter:image, falling back to the built-in card. */
 function shareImage(image, siteUrl) {
   const src = (image && image.src) || SHARE_CARD.src;
   const isCard = src === SHARE_CARD.src;
-  const cloud = cloudinaryPreview(src);
+  // A host that resizes on delivery can hand WhatsApp a preview-sized copy
+  // instead of the full-resolution photo; see tools/images.js for why that
+  // matters and what each host is asked for.
+  const derived = images.preview(src);
 
   // Dimensions are only claimed where they are actually known: the built-in
-  // card, and Cloudinary copies we asked for at an exact size. For any other
+  // card, and derived copies we asked for at an exact size. For any other
   // pasted photo they are omitted — guessing is worse than letting the scraper
   // fetch and measure for itself.
-  if (cloud) return { url: cloud, alt: (image && image.alt) || "", width: 1200, height: 630, type: "image/jpeg" };
+  if (derived) return { url: derived.url, alt: (image && image.alt) || "", width: derived.width, height: derived.height, type: derived.type };
   if (isCard) return { url: absoluteUrl(src, siteUrl), alt: (image && image.alt) || "", width: SHARE_CARD.width, height: SHARE_CARD.height, type: SHARE_CARD.type };
 
   const ext = (src.split("?")[0].match(/\.([a-z0-9]+)$/i) || [])[1];

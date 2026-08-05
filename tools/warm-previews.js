@@ -17,6 +17,9 @@
  * right title and no picture, and why sharing the same link again later works —
  * the first share paid for the build and warmed the cache for everyone else.
  *
+ * Which hosts work this way, and what a derived copy looks like, is in
+ * tools/images.js — this file only warms whatever that says is worth warming.
+ *
  * So the build pays that cost instead, once per image, before anyone shares.
  * This never fails the build: a warm that does not happen costs a slow first
  * share, which is exactly where we were without it.
@@ -27,9 +30,9 @@
 const fs = require("fs");
 const path = require("path");
 const https = require("https");
+const images = require("./images");
 
 const DIST = path.join(__dirname, "..", "dist");
-const CLOUDINARY_RE = /^https:\/\/res\.cloudinary\.com\//i;
 const OG_IMAGE_RE = /<meta\s+property="og:image"\s+content="([^"]+)"/gi;
 
 const CONCURRENCY = 4;
@@ -87,9 +90,11 @@ async function main() {
     return;
   }
 
-  const urls = collectShareImages(DIST).filter((u) => CLOUDINARY_RE.test(u));
+  // images.js decides which hosts build their derived copies lazily and so
+  // are worth a warming request; everything else is served as it stands.
+  const urls = collectShareImages(DIST).filter((u) => images.warms(u));
   if (!urls.length) {
-    console.log("\nShare previews: no Cloudinary photos yet — nothing to warm.");
+    console.log("\nShare previews: no photos on a host that needs warming — nothing to warm.");
     return;
   }
 
@@ -98,12 +103,12 @@ async function main() {
   // NETLIFY=true; `--force` is the escape hatch for testing this by hand.
   const forced = process.argv.includes("--force");
   if (!process.env.NETLIFY && !forced) {
-    console.log("\nShare previews: " + urls.length + " Cloudinary image(s) to warm, skipped off Netlify.");
+    console.log("\nShare previews: " + urls.length + " image(s) to warm, skipped off Netlify.");
     console.log("  (run `node tools/warm-previews.js --force` to warm them from here)");
     return;
   }
 
-  console.log("\nShare previews: warming " + urls.length + " Cloudinary image(s)…");
+  console.log("\nShare previews: warming " + urls.length + " image(s)…");
 
   const queue = urls.slice();
   const failures = [];

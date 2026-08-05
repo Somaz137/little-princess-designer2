@@ -29,7 +29,7 @@ Ordered by what to do first. The three admin-facing items (#3, #4, #13) all edit
       **Fix:** emit a `srcset` of provider-resized copies (400/800/1200) with a
       `sizes` hint, keeping the original on the product-page gallery.
 
-- [ ] **`tools/render.js:103-112`, `tools/content.js:243`,
+- [x] **`tools/render.js:103-112`, `tools/content.js:243`,
       `tools/warm-previews.js:32` — Cloudinary knowledge is spread across three
       files.** Any move to another host (ImageKit, etc.) means finding all three.
       **Fix:** do the `srcset` work in one new `tools/images.js` holding a

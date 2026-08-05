@@ -64,7 +64,39 @@ const HOSTS = [
     resized(src, width) {
       const at = src.search(/\/upload\//i) + "/upload/".length;
       return src.slice(0, at) + "c_limit,w_" + width + ",f_auto,q_auto/" + src.slice(at);
-    }
+    },
+
+    /**
+     * The copy handed to WhatsApp and Facebook as og:image, rather than a
+     * full-resolution photo: WhatsApp skips preview images over roughly 300 KB,
+     * so a wallpaper- or camera-sized upload shares with no picture at all —
+     * the page reads fine and only the image is dropped.
+     *
+     * f_jpg rather than the f_auto used above is deliberate. With f_auto
+     * Cloudinary serves WebP to any client whose headers accept it, and neither
+     * WhatsApp nor Facebook renders WebP previews. The size is exact, so the
+     * dimensions can be claimed in the meta tags.
+     */
+    preview: {
+      transform: "c_fill,g_auto,w_1200,h_630,f_jpg,q_auto",
+      width: 1200,
+      height: 630,
+      type: "image/jpeg",
+      url(src) {
+        const at = src.search(/\/upload\//i) + "/upload/".length;
+        const rest = src.slice(at);
+        // Already transformed by us on a previous pass — don't stack it twice.
+        if (rest.startsWith(this.transform + "/")) return src;
+        return src.slice(0, at) + this.transform + "/" + rest;
+      }
+    },
+
+    /**
+     * Cloudinary builds a derived copy lazily, on the first request for that
+     * exact address, and that first request is slow enough that WhatsApp gives
+     * up on it. warm-previews.js pays that cost at build time instead.
+     */
+    warms: true
   }
 ];
 
@@ -90,4 +122,35 @@ function srcset(src, widths = WIDTHS) {
   return widths.map(w => resized(src, w) + " " + w + "w").join(", ");
 }
 
-module.exports = { WIDTHS, hostFor, resized, srcset };
+/**
+ * The link-preview copy of a photo — `{ url, width, height, type }` — or null
+ * when the host cannot make one, in which case the caller shares the original
+ * and claims no dimensions for it.
+ *
+ * Not gated on `enabled`: a preview address goes into a meta tag read by
+ * WhatsApp and Facebook off the deployed site, never fetched by the local
+ * preview server, so there is nothing to break by emitting it anywhere.
+ */
+function preview(src) {
+  const url = String(src || "");
+  const host = HOSTS.find(h => h.preview && h.match.test(url));
+  if (!host) return null;
+  return {
+    url: host.preview.url(url),
+    width: host.preview.width,
+    height: host.preview.height,
+    type: host.preview.type
+  };
+}
+
+/**
+ * Whether a preview address is worth requesting once at build time. True for
+ * hosts that build derived copies lazily, where the first request is slow
+ * enough to lose a share.
+ */
+function warms(src) {
+  const url = String(src || "");
+  return HOSTS.some(h => h.warms && h.match.test(url));
+}
+
+module.exports = { WIDTHS, hostFor, resized, srcset, preview, warms };
