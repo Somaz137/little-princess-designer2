@@ -621,6 +621,20 @@ function renderProduct(model, p, siteUrl) {
   const tail = (s.productDefaults && String(s.productDefaults.summaryTail || "").trim()) || SUMMARY_TAIL;
   const desc = opening ? opening + ". " + tail : tail;
 
+  // A sold-out piece cannot be supplied, so it does not get an order button —
+  // customers were ordering them. Everything else on the page stays live: the
+  // size dropdown, the price and the total still work, and the floating
+  // WhatsApp button is still there to ask about it. No data-wa-order attribute,
+  // so app.js leaves this alone while it carries on repricing.
+  const soldOut = p.badge === "Sold out";
+  const orderCta = soldOut
+    ? `<span class="lp-wa lp-wa--off" aria-disabled="true">Currently unavailable</span>`
+    : `<a class="lp-wa" target="_blank" rel="noopener" href="${safeHref(waLink(s.whatsappNumber,
+  "Hello Little Princess Designer, I'd like to order:\n" + p.name +
+  "\nSize: " + first.size + "\nMatching accessory: no\nTotal shown: " + money(first.price)))}" data-wa-order>
+${svg(ICON.waFilled, { size: 20, viewBox: "0 0 32 32", stroke: "none", width: 0 })}
+Order on WhatsApp</a>`;
+
   // A product with one photo has nothing to page to, and app.js already
   // null-checks both buttons, so they are simply left out. A product with no
   // photos still gets three placeholder frames, and paging between those works
@@ -700,11 +714,7 @@ ${specRows.map(([k, v]) => "<dt>" + esc(k) + "</dt><dd>" + esc(v) + "</dd>").joi
 <div class="lp-total-note">${esc(s.deliveryNote)}</div>
 </div>
 
-<a class="lp-wa" target="_blank" rel="noopener" href="${safeHref(waLink(s.whatsappNumber,
-  "Hello Little Princess Designer, I'd like to order:\n" + p.name +
-  "\nSize: " + first.size + "\nMatching accessory: no\nTotal shown: " + money(first.price)))}" data-wa-order>
-${svg(ICON.waFilled, { size: 20, viewBox: "0 0 32 32", stroke: "none", width: 0 })}
-Order on WhatsApp</a>
+${orderCta}
 </div>
 </div>
 </main>`;

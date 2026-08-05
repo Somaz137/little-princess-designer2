@@ -104,7 +104,7 @@ Ordered by what to do first. The three admin-facing items (#3, #4, #13) all edit
 
 ## Features
 
-- [ ] **`tools/render.js:635` + `:668` — "Sold out" does not stop an order.** The
+- [x] **`tools/render.js:635` + `:668` — "Sold out" does not stop an order.** The
       badge is a fixed dropdown (`config.yml:151-159`) and already sets
       `OutOfStock` in structured data, but the page still shows a live "Order on
       WhatsApp" button, so customers order pieces that cannot be supplied.

@@ -623,6 +623,14 @@ carousel-3d{
   border-radius:var(--radius-pill);padding:15px 28px;box-shadow:0 2px 0 #128C4B;
 }
 .lp-wa:hover{filter:brightness(1.06);color:var(--paper-000)}
+/* Sold out: the same pill, greyed and inert. Rendered as a span rather than a
+   disabled button — it is a status, not a control, and there is nothing behind
+   it to press. Enquiries still go through the floating WhatsApp button. */
+.lp-wa--off{
+  background:var(--tone-soft);border-color:var(--tone-edge);
+  color:var(--text-muted);box-shadow:none;cursor:default;
+}
+.lp-wa--off:hover{filter:none}
 
 /* --- 14. Contact ------------------------------------------------------ */
 
