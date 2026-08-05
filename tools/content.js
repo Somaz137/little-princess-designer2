@@ -131,6 +131,25 @@ function load() {
     byKey[data.parent].subcategories.push(sub);
   }
   for (const c of categories) c.subcategories.sort((a, b) => a.order - b.order || a.name.localeCompare(b.name));
+
+  // Two subcategories sharing an id is silent damage, and the id is a free-text
+  // field in the admin so one mistyped character does it. The lookup below is
+  // last-one-wins, so every product pointing at that id is pulled out of the
+  // first subcategory and into the second — the first then renders as empty
+  // while its products appear under the wrong heading, and both emit the same
+  // anchor. This is exactly what happened to boys "b2".
+  const seenId = new Map();
+  for (const s of subs) {
+    const clash = seenId.get(s.id);
+    if (clash) {
+      warn('subcategory "' + s.name + '" uses the id "' + s.id + '", but subcategory "' +
+        clash.name + '" already uses that id — one of them will show no products ' +
+        'until you give it an id of its own');
+    } else {
+      seenId.set(s.id, s);
+    }
+  }
+
   const subById = Object.fromEntries(subs.map(s => [s.id, s]));
 
   // --- products -----------------------------------------------------------

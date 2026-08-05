@@ -90,17 +90,22 @@ img{max-width:100%}
      the left edge across to the right every time the header minimises — which
      reads as the icon flashing on the wrong side. */
   transition:width 260ms cubic-bezier(.2,.8,.3,1),height 260ms cubic-bezier(.2,.8,.3,1),
-             opacity 200ms ease,filter 140ms ease,transform 140ms ease;
+             opacity 200ms ease,visibility 260ms,filter 140ms ease,transform 140ms ease;
 }
 .lp-igbtn:hover{filter:brightness(1.06);transform:translateY(-2px)}
-.lp-igbtn svg{width:27px;height:27px}
+.lp-igbtn svg{
+  width:27px;height:27px;
+  /* Shrinks with its button so the glyph does not sit at full size inside a
+     collapsing circle and get clipped square on the way out. */
+  transition:width 260ms cubic-bezier(.2,.8,.3,1),height 260ms cubic-bezier(.2,.8,.3,1);
+}
 
 /* One-way latch: minimises past 120px, restores only at the very top. */
 .lp-header[data-min="1"] .lp-hdr{padding-top:0.4rem;padding-bottom:0.4rem}
 .lp-header[data-min="1"] .lp-logo img{height:48px}
 
 @media (prefers-reduced-motion:reduce){
-  .lp-hdr,.lp-logo img,.lp-igbtn,.lp-navlink,.lp-chev{transition:none}
+  .lp-hdr,.lp-logo img,.lp-igbtn,.lp-igbtn svg,.lp-navlink,.lp-chev{transition:none}
 }
 
 /* --- 4. Layout ----------------------------------------------------------- */
@@ -142,9 +147,29 @@ img{max-width:100%}
 .lp-story{position:relative;height:320vh;background:#EFDCE4}
 .lp-sticky{
   position:sticky;top:var(--lp-header,78px);
-  height:calc(100svh - var(--lp-header,78px));
+  /* `svh` is the small-viewport height — the phone's viewport with the URL bar
+     showing — so the hero does not resize as the bar slides away. It is also
+     Chrome 108 / Safari 15.4 / Samsung Internet 21, and an engine older than
+     that throws the whole declaration away rather than ignoring the unit.
+     That left this element at `height:auto`, so the art frame's `height:100%`
+     resolved against nothing and the entire hero collapsed to zero — while the
+     headlines above it, laid out normally, carried on animating. That is the
+     "the title changed but there was no picture" report: the images download
+     fine, they are just painted into a zero-sized box.
+     So `vh` here, and `svh` only where it is supported. It has to be @supports
+     rather than the usual trick of writing both declarations and letting the
+     invalid one be dropped — that trick does NOT work through `var()`. A
+     declaration containing a variable cannot be validated until computed-value
+     time, so the `svh` version wins the cascade at parse time and only then
+     turns out to be invalid, at which point the property resets to `auto`
+     instead of falling back to the line above it. Verified: written as two
+     plain declarations, this element still collapsed. */
+  height:calc(100vh - var(--lp-header,78px));
   display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
   overflow:hidden;
+}
+@supports (height:1svh){
+  .lp-sticky{height:calc(100svh - var(--lp-header,78px))}
 }
 /* The three headlines share one grid cell in normal flow, so the band sizes
    itself to the tallest wrapped line and can never clip. */
@@ -169,6 +194,19 @@ img{max-width:100%}
   position:relative;height:100%;width:auto;aspect-ratio:860/1143;max-width:100%;
   border-radius:var(--radius-hand);overflow:hidden;
 }
+/* The hero frame is the one place a missing `aspect-ratio` is fatal rather
+   than ugly. Everywhere else it sits on a `width:100%` box and only supplies
+   the height; here the frame is `width:auto` with a percentage height and none
+   of its children are in flow, so without the ratio there is nothing to give
+   it a width and it computes to zero. Chrome gained `aspect-ratio` in 88 and
+   Safari in 15, so this is a much older tier of browser than the `svh` problem
+   above — and one that would be losing every product photo too. Filling the
+   available width is a fair trade there: `object-fit:cover` crops the dress
+   rather than distorting it. */
+@supports not (aspect-ratio:1/1){
+  .lp-artframe{width:100%}
+}
+
 /* app.js writes inline opacity on these every scroll frame. Without a
    compositor hint each write repaints a full-bleed image, which is what
    makes the hero judder on phones. Six promoted layers is a bounded cost. */
@@ -417,22 +455,40 @@ carousel-3d{
 .lp-load{
   position:relative;display:inline-flex;align-items:center;gap:2.5rem;
   font:var(--weight-black) 0.9375rem/1 var(--font-ui);color:#FFFFFF;
-  background:linear-gradient(90deg,
-    color-mix(in oklab,var(--tone) 58%,#ffffff) 0%,
-    var(--tone) 52%,
-    var(--tone-deep) 100%);
+  /* Fallbacks first; the tinted versions are in the @supports block below.
+     `color-mix` is Chrome 111, and because these declarations also contain
+     `var()` an older engine does not quietly ignore them — it accepts them at
+     parse time and then drops the whole property at computed-value time, the
+     same trap documented on `.lp-sticky`. For `background` that resets to
+     transparent, and this button's text is white, so on Chrome 103 the
+     "Load more" pill vanished entirely. The gradient below keeps the per-tab
+     tint and only loses the lightened left end. */
+  background:linear-gradient(90deg,var(--tone) 0%,var(--tone-deep) 100%);
   border:none;border-radius:999px;
   padding:0.5rem 0.5rem 0.5rem 1.9rem;cursor:pointer;
-  box-shadow:0 8px 18px color-mix(in oklab,var(--tone-deep) 32%,transparent),
-             0 2px 4px color-mix(in oklab,var(--tone-deep) 24%,transparent);
+  box-shadow:0 8px 18px rgba(34,36,31,.30),0 2px 4px rgba(34,36,31,.22);
   transition:filter 140ms ease,transform 140ms ease,box-shadow 140ms ease;
 }
 .lp-load:hover{filter:brightness(1.06);transform:translateY(-2px)}
-.lp-load:active{transform:translateY(1px);box-shadow:0 3px 8px color-mix(in oklab,var(--tone-deep) 30%,transparent)}
+.lp-load:active{transform:translateY(1px);box-shadow:0 3px 8px rgba(34,36,31,.28)}
 .lp-load-badge{
   flex:0 0 auto;width:2.25rem;height:2.25rem;border-radius:999px;background:#FFFCF8;
   display:flex;align-items:center;justify-content:center;
-  box-shadow:0 1px 3px color-mix(in oklab,var(--tone-deep) 28%,transparent);
+  box-shadow:0 1px 3px rgba(34,36,31,.26);
+}
+/* The intended look, wherever color-mix exists. Shadows tinted with the tab's
+   own deep tone rather than the neutral ink used above. */
+@supports (background:color-mix(in oklab,red 50%,white)){
+  .lp-load{
+    background:linear-gradient(90deg,
+      color-mix(in oklab,var(--tone) 58%,#ffffff) 0%,
+      var(--tone) 52%,
+      var(--tone-deep) 100%);
+    box-shadow:0 8px 18px color-mix(in oklab,var(--tone-deep) 32%,transparent),
+               0 2px 4px color-mix(in oklab,var(--tone-deep) 24%,transparent);
+  }
+  .lp-load:active{box-shadow:0 3px 8px color-mix(in oklab,var(--tone-deep) 30%,transparent)}
+  .lp-load-badge{box-shadow:0 1px 3px color-mix(in oklab,var(--tone-deep) 28%,transparent)}
 }
 
 /* --- 12. Filters panel ------------------------------------------------- */
@@ -720,13 +776,21 @@ carousel-3d{
 /* --- 18. Phone -------------------------------------------------------- */
 
 @media (max-width:768px){
-  /* Header: logo centred on its own row, nav left, Instagram right-aligned
-     inline with the nav row. */
+  /* Header: logo centred on its own row, then ONE row shared by the nav pills
+     and the Instagram button — the button is not given a row of its own.
+
+     `flex:1 1 0` on the nav is what makes them share it. With `flex-basis:auto`
+     the nav's hypothetical size is its max-content width — all six pills side
+     by side, far wider than a phone — so it claimed a whole flex line before
+     the button was even considered, and the button wrapped onto a third row.
+     A zero basis keeps the nav out of that line-breaking decision; it then
+     takes whatever width is left beside the button and wraps its pills
+     internally. */
   .lp-hdr{gap:0.4rem;align-items:flex-start}
   .lp-logo{width:auto;flex:1 1 100%;justify-content:center;order:0}
   .lp-logo img{height:2.9rem}
   .lp-nav{
-    order:1;flex:1 1 auto;justify-content:flex-start;align-items:flex-start;gap:7px;
+    order:1;flex:1 1 0;justify-content:flex-start;align-items:flex-start;gap:7px;
   }
   .lp-navlink{padding:0.7rem 0.95rem;font-size:0.97rem}
   .lp-igbtn{
@@ -739,17 +803,32 @@ carousel-3d{
   .lp-header[data-min="1"] .lp-logo img{height:1.9rem}
   .lp-header[data-min="1"] .lp-nav{gap:5px}
   .lp-header[data-min="1"] .lp-navlink{padding:0.4rem 0.65rem;font-size:0.85rem}
-  /* The Instagram button stays put and just gets a little smaller, the same as
-     the logo. It used to collapse to nothing here, and the `margin:0` in that
-     rule wiped out the `margin-left:auto` holding it against the right edge —
-     so the moment the header minimised it snapped left and faded out there,
-     which is what read as the icon flashing on the wrong side. Whatever else
-     changes in this rule, do not reset the margin. */
-  .lp-header[data-min="1"] .lp-igbtn{width:2.25rem;height:2.25rem}
-  .lp-header[data-min="1"] .lp-igbtn svg{width:1.25rem;height:1.25rem}
+  /* The Instagram button folds away once the header minimises, leaving the
+     shrunk header as just the logo and the tabs. It is still reachable at the
+     top of every page and in the footer.
+
+     It collapses IN PLACE. `margin-left:auto` is the only thing holding it
+     against the right edge, and an earlier version of this rule reset it with
+     `margin:0` — so the instant the header minimised the button snapped from
+     the right edge to the left at full size and only then faded out, over
+     there. That is the flash in the owner's screen recording. Whatever else
+     changes in this rule, never reset the margin.
+
+     `visibility` is what takes the collapsed link out of the tab order — a
+     0x0 transparent anchor is still focusable, and tabbing to something a
+     sighted keyboard user cannot see is its own bug. It is in the transition
+     list so it holds `visible` for the whole fade and only flips at the end. */
+  .lp-header[data-min="1"] .lp-igbtn{
+    width:0;height:0;border-width:0;opacity:0;visibility:hidden;
+    overflow:hidden;pointer-events:none;
+  }
+  .lp-header[data-min="1"] .lp-igbtn svg{width:0;height:0}
 
   /* Hero story */
-  .lp-story{height:165svh}
+  /* Same fallback pair as .lp-sticky. Without the `vh` line an older phone
+     falls all the way back to the 320vh in the base rule, which stretches the
+     three-stage crossfade over twice the scrolling it was timed for. */
+  .lp-story{height:165vh;height:165svh}
   .lp-sticky{justify-content:space-between}
   .lp-hooks{min-height:clamp(48px,8vh,84px);padding:0.65rem 1rem 0.55rem}
   .lp-hook{font-size:2.5rem}

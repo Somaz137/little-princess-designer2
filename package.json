@@ -4,7 +4,7 @@
   "private": true,
   "description": "Little Princess Designer — static site + Decap CMS admin",
   "scripts": {
-    "build": "node tools/check-config.js && node tools/build.js",
+    "build": "node tools/check-config.js && node tools/build.js && node tools/warm-previews.js",
     "start": "npm run build && node tools/serve.js",
     "serve": "node tools/serve.js",
     "cms": "npx decap-server",
