@@ -27,17 +27,27 @@
  *
  *   detail — the gallery on a product page. This is the photo a customer
  *            decides on, zooms their face towards, and compares against what
- *            arrives, so it is worth spending bytes on:
- *              · one rung up the quality ladder, for fewer artefacts in the
- *                satin and lace that compressors handle worst;
- *              · a 1600 step, so a 2× or 3× screen has something to step up to
- *                rather than stretching the 1200.
- *            Still a fraction of an untouched phone upload.
+ *            arrives, so it is worth spending bytes on: a fixed high quality
+ *            rather than the host's judgement, and a 1600 step above the card
+ *            widths.
+ *
+ * 1600 is deliberately the largest step, and that is what bounds the cost: no
+ * device can ask for anything above it however dense its screen, so the biggest
+ * download a product page can produce is one 1600-wide copy at this quality —
+ * the ~300-500 KB the owner budgeted for. Raising the ceiling means raising
+ * that bill, so add a step here only with a number in mind.
  */
 const PROFILES = {
   card: { widths: [400, 800, 1200], quality: "auto" },
   detail: { widths: [400, 800, 1200, 1600], quality: "best" }
 };
+
+/**
+ * The quality number the "detail" profile asks for, on a 1-100 scale both hosts
+ * understand. One place, because it is the knob to turn when the owner says the
+ * product photos look soft — or when the bill says they cost too much.
+ */
+const DETAIL_QUALITY = 90;
 
 /**
  * Netlify resizes anything the site itself serves, through /.netlify/images.
@@ -58,11 +68,11 @@ const HOSTS = [
     // unbounded.
     match: /^\/assets\/uploads\//i,
     enabled: onNetlify,
-    // Netlify's default quality is 75. `q=90` is the "detail" rung: visibly
-    // cleaner on fabric, still far short of the original's weight.
+    // Netlify's default quality is 75; the "detail" rung asks for the same
+    // number Cloudinary is given, so the two hosts stay in step.
     resized(src, width, quality) {
       return "/.netlify/images?url=" + encodeURIComponent(src) + "&w=" + width + "&fit=contain" +
-        (quality === "best" ? "&q=90" : "");
+        (quality === "best" ? "&q=" + DETAIL_QUALITY : "");
     }
   },
   {
@@ -81,15 +91,18 @@ const HOSTS = [
      * here because these are the pictures on the page; the link-preview copy
      * is pinned to JPEG separately, since WhatsApp renders neither.
      *
-     * q_auto:best is the "detail" rung. Cloudinary still chooses the exact
-     * number per image, it is just told to err towards fidelity rather than
-     * towards size — so a flat photo costs little more than it does at q_auto
-     * and a detailed one gets the bytes it needs.
+     * The "detail" rung is a fixed q_90, not q_auto:best. Every q_auto level,
+     * best included, is still Cloudinary deciding per image how little it can
+     * get away with, and on a clean studio shot of a plain fabric it decides on
+     * a number well below 90. A literal quality takes that judgement away: the
+     * product page gets the same fidelity whatever the photo, which is the
+     * point of paying for it. DETAIL_QUALITY is the dial — 80 is noticeably
+     * softer, 95 roughly doubles the file for little visible gain.
      */
     resized(src, width, quality) {
       const at = src.search(/\/upload\//i) + "/upload/".length;
       return src.slice(0, at) + "c_limit,w_" + width + ",f_auto," +
-        (quality === "best" ? "q_auto:best" : "q_auto") + "/" + src.slice(at);
+        (quality === "best" ? "q_" + DETAIL_QUALITY : "q_auto") + "/" + src.slice(at);
     },
 
     /**
