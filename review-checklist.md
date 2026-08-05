@@ -90,7 +90,7 @@ Ordered by what to do first. The three admin-facing items (#3, #4, #13) all edit
       **Fix:** emit `<lastmod>` per URL from the mtime of the backing file in
       `content/`.
 
-- [ ] *(optional)* **`site/app.js:233` — "Load more" gives screen readers no
+- [x] *(optional)* **`site/app.js:233` — "Load more" gives screen readers no
       feedback.** Four cards appear further down with nothing announced. The button
       itself already hides correctly when nothing is left to load
       (`site/app.js:225`, `tools/render.js:462`) — verified against the built pages.
@@ -137,11 +137,13 @@ Ordered by what to do first. The three admin-facing items (#3, #4, #13) all edit
 
 ## Checked and found not to be a problem
 
-- **"Load more" hiding when nothing is left to load.** Already correct at both
-  layers — omitted at build time for sections of 4 or fewer
-  (`tools/render.js:462`) and hidden live as filters change (`site/app.js:225`).
-  Confirmed against all 12 built sections: the button appears only in
-  girls/Casual dresses (5) and ready/Ready to wear (6).
+- ~~**"Load more" hiding when nothing is left to load.**~~ **Was a problem after
+  all — fixed 2026-08-05.** Both layers were right about *when* to hide it, but
+  `.lp-loadwrap{display:flex}` outranked the browser's `[hidden]{display:none}`,
+  so `loadwrap.hidden = true` had no effect and the button stayed on screen and
+  clickable with nothing left to reveal. The original check read the markup and
+  the JS; this only shows up in a browser. `.lp-loadwrap[hidden]{display:none}`
+  added, verified in Chromium on both affected sections.
 - **Filter panel focus handling.** Raised, then dropped as out of scope.
 
 ## Closed in the previous round

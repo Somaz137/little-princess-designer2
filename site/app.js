@@ -234,8 +234,25 @@
       btn.addEventListener("click", function () {
         var sec = btn.closest("[data-subsect]");
         if (!sec) return;
+        // Where the new cards will start. Read before the count moves, so it
+        // is the index of the first one the click reveals.
+        var firstNew = sec._visible;
         sec._visible += sec._step;
         apply();
+
+        // Nothing announces four cards appearing further down the page, and a
+        // screen-reader or keyboard user is left where they were with no way to
+        // tell the click did anything. Moving focus to the first new card says
+        // it: the card's name and price are read out, and tabbing carries on
+        // from there. tabindex is set here rather than in the markup so the
+        // cards are not in the tab order the rest of the time.
+        var revealed = $$("[data-product]", sec).filter(function (card) {
+          return !card.hidden;
+        })[firstNew];
+        if (revealed) {
+          revealed.setAttribute("tabindex", "-1");
+          revealed.focus();
+        }
       });
     });
 

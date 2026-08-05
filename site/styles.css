@@ -452,6 +452,11 @@ carousel-3d{
 
 /* Load more — gradient pill with white circular arrow badge, tinted per tab. */
 .lp-loadwrap{display:flex;justify-content:center;margin-top:var(--space-6)}
+/* app.js hides this wrapper once nothing is left to load. A bare `display:flex`
+   outranks the browser's own `[hidden]{display:none}`, so without this the
+   button stayed on screen and clickable with nothing left to reveal. Same
+   pattern as `.lp-grid > [hidden]` above. */
+.lp-loadwrap[hidden]{display:none}
 .lp-load{
   position:relative;display:inline-flex;align-items:center;gap:2.5rem;
   font:var(--weight-black) 0.9375rem/1 var(--font-ui);color:#FFFFFF;
