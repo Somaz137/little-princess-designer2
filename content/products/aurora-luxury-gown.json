@@ -1,5 +1,5 @@
 {
-  "badge": "Made to order",
+  "badge": "Sold out",
   "name": "Aurora Luxury Gown 123",
   "visible": true,
   "sizes": [
@@ -41,5 +41,5 @@
   ],
   "description": "Our most-requested blah blah blah",
   "subcategory": "y1",
-  "addedOn": "2026-08-04T12:00:00.000Z"
+  "addedOn": ""
 }
