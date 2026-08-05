@@ -136,12 +136,36 @@
     return table;
   }
 
+  /**
+   * Writes a price into a block built by priceBlock() in tools/card.js: the
+   * price paid, plus the crossed-out original above it when the chosen size is
+   * on sale. `data-was` is empty on a size at its usual price, which hides that
+   * line — so changing size can move a card into or out of its sale look.
+   */
+  function paintPrice(out, price, was) {
+    if (!out) return;
+    var nowEl = $("[data-price-now]", out);
+    var wasEl = $("[data-price-was]", out);
+    if (nowEl) nowEl.textContent = money(price);
+    if (wasEl) {
+      var on = was && Number(was) > 0;
+      wasEl.textContent = on ? money(was) : "";
+      wasEl.hidden = !on;
+    }
+    // Older markup with no spans inside: keep the single-line behaviour rather
+    // than blanking the price.
+    if (!nowEl && !wasEl) out.textContent = money(price);
+  }
+
   function paintCardPrice(card) {
     var select = $("[data-price-select]", card);
     var out = $("[data-price-out]", card);
     if (!select || !out) return;
     var opt = select.options[select.selectedIndex];
-    if (opt) out.textContent = money(opt.getAttribute("data-price"));
+    if (!opt) return;
+    var was = opt.getAttribute("data-was");
+    paintPrice(out, opt.getAttribute("data-price"), was);
+    out.classList.toggle("lp-card-price--sale", !!(was && Number(was) > 0));
   }
 
   function initCards() {
@@ -413,7 +437,13 @@
       var withAccessory = accessory && accessory.checked;
       var total = price + (withAccessory ? accessoryPrice : 0);
 
-      if (priceOut) priceOut.textContent = money(price);
+      var was = opt.getAttribute("data-was");
+      if (priceOut) {
+        paintPrice(priceOut, price, was);
+        priceOut.classList.toggle("lp-detail-price--sale", !!(was && Number(was) > 0));
+      }
+      // The total is what is actually paid, so it never carries the old price:
+      // one crossed-out number on the page is a saving, two is a puzzle.
       if (totalOut) totalOut.textContent = money(total);
 
       if (waLink) {

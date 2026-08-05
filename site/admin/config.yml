@@ -232,9 +232,10 @@ collections:
         options:
           - { label: "None", value: "" }
           - { label: "New", value: "New" }
+          - { label: "Sale", value: "Sale" }
           - { label: "Made to order", value: "Made to order" }
           - { label: "Sold out", value: "Sold out" }
-        hint: "Optional corner label on the photo. \"Sold out\" keeps the piece visible but marks it clearly."
+        hint: "Optional corner label on the photo. \"Sold out\" keeps the piece visible but marks it clearly. \"Sale\" is the label only — the discount itself comes from the sale prices in the sizes below, and the two are set separately so you can mark a sale before pricing it."
 
       - label: "Added on"
         name: addedOn
@@ -250,7 +251,9 @@ collections:
         # Collapsed, because the summary shows the price already: five expanded
         # rows push the Photos field ~2000px down the form.
         collapsed: true
-        summary: "{{fields.size}}  —  PKR {{fields.price}}"
+        # A row on sale reads "4–6 years — PKR 18500 → 14000", so the discount
+        # is visible without opening the row.
+        summary: "{{fields.size}}  —  PKR {{fields.price}}{{fields.salePrice | ternary('  →  PKR ', '')}}{{fields.salePrice}}"
         hint: "One row per age band you make this in. The price on the website changes with the size the customer picks. Remove a row to stop offering that size."
         fields:
           - label: "Size"
@@ -268,6 +271,18 @@ collections:
             value_type: int
             min: 1
             hint: "Numbers only, no commas. 18500 shows as PKR 18,500."
+          # Sale prices are per size, not per product, because the prices
+          # themselves are: a piece can cost different amounts in different age
+          # bands, and the page shows whichever size the customer has picked.
+          # One sale price for the whole piece would have nothing to strike
+          # through the moment they changed size.
+          - label: "Sale price (PKR)"
+            name: salePrice
+            widget: number
+            value_type: int
+            required: false
+            min: 1
+            hint: "Leave blank for the normal price. Fill it in and the old price is shown above it with a line through it, and the customer pays this one. It must be lower than the price above, or it is ignored."
           - label: "Available"
             name: available
             widget: boolean
