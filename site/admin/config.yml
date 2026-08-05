@@ -11,15 +11,20 @@
 
 backend:
   name: git-gateway
-  repo: Somaz137/little-princess-designer2
+  # The repository moved from the Somaz137 account to the littleprincessdesigner
+  # organisation. Reading from the old address still works — GitHub forwards it —
+  # which is why nothing looked broken until sign-in failed. This line is what
+  # the admin hands to DecapBridge, so it has to name where the repository
+  # actually lives, not where it used to.
+  repo: littleprincessdesigner/little-princess-designer2
   branch: main
   # DecapBridge signs people in, then hands a short-lived token back to this
   # page. The long code in both endpoints is this site's id on DecapBridge —
   # if you ever delete and recreate the site there, replace it in BOTH lines.
   auth_type: pkce
   base_url: https://auth.decapbridge.com
-  auth_endpoint: /sites/6a40028d-8569-4023-a050-8b533a65ff01/pkce
-  auth_token_endpoint: /sites/6a40028d-8569-4023-a050-8b533a65ff01/token
+  auth_endpoint: /sites/46bc39a8-a58f-4aed-bc5d-4a660a21ac73/pkce
+  auth_token_endpoint: /sites/46bc39a8-a58f-4aed-bc5d-4a660a21ac73/token
   gateway_url: https://gateway.decapbridge.com
 
   # Everyone's edits are committed by DecapBridge rather than by their own
