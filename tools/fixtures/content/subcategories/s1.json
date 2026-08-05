@@ -1,0 +1,6 @@
+{
+  "id": "s1", "parent": "girls", "name": "Has defaults", "order": 10,
+  "defaultDescription": "SUB description",
+  "defaultDescription2": "SUB second paragraph",
+  "defaultSpecs": { "fabric": "SUB fabric", "occasion": "SUB occasion", "fit": "SUB fit", "care": "SUB care" }
+}

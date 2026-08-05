@@ -191,6 +191,66 @@
       return Number(card.getAttribute("data-min-price")) <= state.max;
     }
 
+    /* --- filter state in the URL ------------------------------------- */
+
+    /**
+     * Size and price lived only in `state`, so a filtered view could not be
+     * reloaded or sent to a customer — the link opened the unfiltered page.
+     * They are mirrored into the hash instead.
+     *
+     * Only non-default values are written, so an unfiltered page keeps a clean
+     * address, and `#g1`-style section anchors — which the footer and
+     * breadcrumbs both use — are left alone: a hash with no "=" in it is a link
+     * to a section, not filter state.
+     */
+    function writeHash() {
+      var parts = [];
+      if (state.size) parts.push("size=" + encodeURIComponent(state.size));
+      if (range && state.max < Number(range.max)) parts.push("max=" + state.max);
+      var hash = parts.length ? "#" + parts.join("&") : "";
+      // replaceState rather than assigning location.hash: dragging the price
+      // slider would otherwise push one history entry per step and bury
+      // whatever page the visitor arrived from.
+      history.replaceState(null, "", location.pathname + location.search + hash);
+    }
+
+    /** Restores state from the hash. Returns false if there was none to read. */
+    function readHash() {
+      var raw = location.hash.slice(1);
+      if (raw.indexOf("=") === -1) return false;
+
+      var params = {};
+      raw.split("&").forEach(function (pair) {
+        var i = pair.indexOf("=");
+        if (i === -1) return;
+        try {
+          params[decodeURIComponent(pair.slice(0, i))] = decodeURIComponent(pair.slice(i + 1));
+        } catch (err) {
+          /* A half-typed or mangled escape — ignore that pair rather than throw. */
+        }
+      });
+
+      // Only a size this page actually offers. A stale or invented one would
+      // otherwise match nothing and read as an empty catalogue.
+      var offered = chips.map(function (c) { return c.getAttribute("data-size-chip"); });
+      state.size = offered.indexOf(params.size) !== -1 ? params.size : null;
+      chips.forEach(function (c) {
+        c.setAttribute("aria-pressed",
+          c.getAttribute("data-size-chip") === state.size ? "true" : "false");
+      });
+
+      if (range) {
+        var hi = Number(range.max);
+        var lo = Number(range.min);
+        var max = Number(params.max);
+        // Clamped, so a hand-edited number cannot push the slider off its track.
+        state.max = params.max !== undefined && isFinite(max) ? Math.min(hi, Math.max(lo, max)) : hi;
+        range.value = state.max;
+        if (rangeOut) rangeOut.textContent = money(state.max);
+      }
+      return true;
+    }
+
     function apply() {
       sections.forEach(function (sec) {
         var cards = $$("[data-product]", sec);
@@ -234,8 +294,25 @@
       btn.addEventListener("click", function () {
         var sec = btn.closest("[data-subsect]");
         if (!sec) return;
+        // Where the new cards will start. Read before the count moves, so it
+        // is the index of the first one the click reveals.
+        var firstNew = sec._visible;
         sec._visible += sec._step;
         apply();
+
+        // Nothing announces four cards appearing further down the page, and a
+        // screen-reader or keyboard user is left where they were with no way to
+        // tell the click did anything. Moving focus to the first new card says
+        // it: the card's name and price are read out, and tabbing carries on
+        // from there. tabindex is set here rather than in the markup so the
+        // cards are not in the tab order the rest of the time.
+        var revealed = $$("[data-product]", sec).filter(function (card) {
+          return !card.hidden;
+        })[firstNew];
+        if (revealed) {
+          revealed.setAttribute("tabindex", "-1");
+          revealed.focus();
+        }
       });
     });
 
@@ -266,6 +343,7 @@
           c.setAttribute("aria-pressed", c === chip && !already ? "true" : "false");
         });
         sections.forEach(function (sec) { sec._visible = sec._initial; });
+        writeHash();
         apply();
       });
     });
@@ -276,6 +354,7 @@
         state.max = Number(range.value);
         if (rangeOut) rangeOut.textContent = money(state.max);
         sections.forEach(function (sec) { sec._visible = sec._initial; });
+        writeHash();
         apply();
       });
     }
@@ -290,6 +369,20 @@
         state.max = Number(range.max);
         if (rangeOut) rangeOut.textContent = money(state.max);
       }
+      sections.forEach(function (sec) { sec._visible = sec._initial; });
+      writeHash();
+      apply();
+    });
+
+    // Restore before the first paint, so a shared link opens already filtered
+    // rather than showing everything and then narrowing.
+    readHash();
+
+    // Someone pasting a different filtered link into the same tab, or using
+    // Back after arriving on one. Our own writeHash uses replaceState, which
+    // does not fire this, so there is no loop.
+    window.addEventListener("hashchange", function () {
+      if (!readHash()) return;
       sections.forEach(function (sec) { sec._visible = sec._initial; });
       apply();
     });
@@ -365,6 +458,149 @@
     }), { passive: true });
   }
 
+  /* --- 6. Catalogue search -------------------------------------------- */
+
+  /**
+   * 39 pieces across 12 sections were reachable only by browsing four tabs.
+   * The build already writes /data/products.json with everything needed, so
+   * this filters that rather than adding any server.
+   *
+   * The button and the panel are both `hidden` in the markup and unhidden
+   * here — with no JavaScript there is nothing to search with, so neither is
+   * shown at all rather than showing a control that does nothing.
+   */
+  function initSearch() {
+    var openBtn = $("[data-search-open]");
+    var panel = $("[data-search]");
+    if (!openBtn || !panel) return;
+
+    var input = $("[data-search-input]", panel);
+    var note = $("[data-search-note]", panel);
+    var results = $("[data-search-results]", panel);
+    var closeBtn = $("[data-search-close]", panel);
+
+    var MAX_HITS = 12;
+    var products = null;   // filled on first open
+    var loading = false;
+
+    openBtn.hidden = false;
+
+    function setOpen(open) {
+      panel.hidden = !open;
+      openBtn.setAttribute("aria-expanded", open ? "true" : "false");
+      if (open) {
+        load();
+        input.focus();
+        input.select();
+      }
+    }
+
+    function load() {
+      if (products || loading) return;
+      loading = true;
+      note.textContent = "Loading the catalogue…";
+      fetch("/data/products.json")
+        .then(function (r) {
+          if (!r.ok) throw new Error("HTTP " + r.status);
+          return r.json();
+        })
+        .then(function (data) {
+          products = (data && data.products) || [];
+          loading = false;
+          run();
+        })
+        .catch(function () {
+          loading = false;
+          products = null;
+          note.textContent = "Search is unavailable right now. Browse the tabs above instead.";
+          results.innerHTML = "";
+        });
+    }
+
+    /** Everything about a piece worth typing: its name, section and tab. */
+    function haystack(p) {
+      return (p.name + " " + p.subcategoryName + " " + p.tabLabel).toLowerCase();
+    }
+
+    function run() {
+      if (!products) return;
+      var q = input.value.trim().toLowerCase();
+      if (!q) {
+        note.textContent = "Type to search " + products.length + " pieces.";
+        results.innerHTML = "";
+        return;
+      }
+      // Every word has to match somewhere, so "boys suit" narrows rather than
+      // widening the way a single-substring match would.
+      var terms = q.split(/\s+/);
+      var hits = products.filter(function (p) {
+        var hay = haystack(p);
+        return terms.every(function (t) { return hay.indexOf(t) !== -1; });
+      });
+
+      if (!hits.length) {
+        note.textContent = 'Nothing matches "' + input.value.trim() + '". Try a shorter word.';
+        results.innerHTML = "";
+        return;
+      }
+
+      note.textContent = hits.length === 1
+        ? "1 piece found."
+        : hits.length > MAX_HITS
+          ? "Showing " + MAX_HITS + " of " + hits.length + " pieces — keep typing to narrow it."
+          : hits.length + " pieces found.";
+
+      results.innerHTML = "";
+      hits.slice(0, MAX_HITS).forEach(function (p) {
+        var a = document.createElement("a");
+        a.className = "lp-search-hit";
+        // Same guard render.js applies server-side: only ever a path on this
+        // site. href is built from a filename today and cannot be typed in the
+        // admin, but assigning a JSON string straight to .href is the one place
+        // here a scheme could sneak in, so it is checked rather than trusted.
+        a.href = /^\/[^/]/.test(String(p.href || "")) ? p.href : "#";
+
+        var img = p.images && p.images[0];
+        if (img) {
+          var el = document.createElement("img");
+          el.src = img.src;
+          el.alt = "";
+          el.loading = "lazy";
+          a.appendChild(el);
+        } else {
+          var ph = document.createElement("div");
+          ph.className = "lp-search-hit-ph";
+          a.appendChild(ph);
+        }
+
+        var text = document.createElement("div");
+        var t = document.createElement("div");
+        t.className = "lp-search-hit-t";
+        // textContent throughout: these are CMS values, and building the row
+        // by hand keeps them out of any HTML parse.
+        t.textContent = p.name;
+        var sub = document.createElement("div");
+        sub.className = "lp-search-hit-s";
+        sub.textContent = p.tabLabel + " · " + p.subcategoryName + " · from " + money(p.minPrice) +
+          (p.badge ? " · " + p.badge : "");
+        text.appendChild(t);
+        text.appendChild(sub);
+        a.appendChild(text);
+        results.appendChild(a);
+      });
+    }
+
+    openBtn.addEventListener("click", function () { setOpen(panel.hidden); });
+    if (closeBtn) closeBtn.addEventListener("click", function () {
+      setOpen(false);
+      openBtn.focus();
+    });
+    input.addEventListener("input", run);
+    panel.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") { setOpen(false); openBtn.focus(); }
+    });
+  }
+
   /* --- boot ----------------------------------------------------------- */
 
   function boot() {
@@ -373,6 +609,7 @@
     initCards();
     initShop();
     initDetail();
+    initSearch();
   }
 
   if (document.readyState === "loading") {

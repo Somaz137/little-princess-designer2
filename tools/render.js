@@ -5,11 +5,51 @@
  * than assembled by JavaScript. app.js then only handles interactivity.
  */
 
+const images = require("./images");
+
 const ESC = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ESC[c]);
 
 /** Minimal inline formatting for CMS prose: **bold** only. */
 const inline = s => esc(s).replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+
+/**
+ * Escapes a link address and allowlists its scheme. `esc()` alone neutralises
+ * markup but leaves `javascript:` intact, and the social links are free-text
+ * fields held by editors who have no repo access, so every address that comes
+ * out of the CMS goes through here rather than through `esc()`. Anything
+ * outside the allowlist collapses to "#" so the link is inert, not broken.
+ */
+const SAFE_SCHEMES = ["https:", "http:", "mailto:", "tel:"];
+const safeHref = url => {
+  const raw = String(url == null ? "" : url).trim();
+  if (!raw) return "#";
+  // Browsers drop control characters while parsing a scheme, so "java\tscript:"
+  // still runs. Decide on a stripped copy, but emit the address as written.
+  const probe = raw.replace(/[\u0000-\u0020]/g, "").toLowerCase();
+  if (probe.startsWith("//")) return "#"; // scheme-relative: points off-site
+  if (/^[/#?]/.test(probe)) return esc(raw); // same-page or same-site
+  const scheme = probe.match(/^([a-z][a-z0-9+.-]*:)/);
+  if (!scheme) return esc(raw); // relative path, no scheme to check
+  return SAFE_SCHEMES.includes(scheme[1]) ? esc(raw) : "#";
+};
+
+/**
+ * Closes every product's page summary when Site Settings has no wording of its
+ * own. Kept as a constant rather than an empty string so a settings file
+ * missing the field still produces a whole sentence.
+ */
+const SUMMARY_TAIL = "Made to order, hand-finished in our Lahore studio.";
+
+/** How many pieces the home page shows as newest, and the wording above them. */
+const LATEST_COUNT = 4;
+const LATEST_HEADING = "Just finished in the studio";
+
+/** First of these with something in it; "" if none. Mirrors content.js. */
+const nonEmptyText = (...vals) => {
+  for (const v of vals) if (typeof v === "string" && v.trim()) return v.trim();
+  return "";
+};
 
 const money = n => "PKR " + Number(n).toLocaleString("en-US");
 
@@ -38,6 +78,8 @@ const ICON = {
   crown: '<path d="M3 7l4 4 5-6 5 6 4-4v11H3V7Z"></path>',
   dress: '<path d="M9 3h6l-1.5 4 5 12H5.5l5-12L9 3Z"></path><path d="M9 3c1 2 5 2 6 0"></path>',
   filters: '<path d="M4 6h16M7 12h10M10 18h4"></path>',
+  search: '<circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.6-3.6"></path>',
+  close: '<path d="m6 6 12 12M18 6 6 18"></path>',
   chevRight: '<path d="m9 6 6 6-6 6"></path>',
   chevDown: '<path d="m6 9 6 6 6-6"></path>',
   arrowLeft: '<path d="m14.5 5-7 7 7 7"></path>',
@@ -53,13 +95,49 @@ const svg = (body, { size = 24, stroke = "currentColor", width = 1.6, viewBox = 
 
 /* --- shared image frame ------------------------------------------------- */
 
-/** Renders a photo, or the empty frame shown until one is added in the CMS. */
-function frame(image, { eager = false, placeholder = "Photo coming soon" } = {}) {
+/**
+ * How wide each kind of card photo is actually drawn, read off styles.css so
+ * the browser can pick a copy rather than fetching a 4000px original for a
+ * 250px hole. 768px is the phone breakpoint used throughout the stylesheet.
+ *
+ *   carousel — .lp-car-face is 3/4 of the carousel's 31.25rem height (20rem on
+ *              a phone), so 375px and 240px
+ *   category — .lp-getyours is 4 columns of the 1180px container, less .lp-gy's
+ *              padding and border; 2 columns on a phone
+ *   product  — .lp-grid is 2 columns of 900px; 2 columns of the viewport on a
+ *              phone
+ *   studio   — .lp-ceo gives the photo 0.5 of a 0.5fr/1.5fr split, capped at
+ *              230px on a phone
+ *
+ * These are hints, not promises: get one wrong and the browser fetches a copy
+ * a size out, which is still far less than the original.
+ */
+const CARD_SIZES = {
+  carousel: "(max-width: 768px) 240px, 375px",
+  category: "(max-width: 768px) 44vw, (max-width: 1024px) 45vw, 255px",
+  product: "(max-width: 768px) 45vw, 436px",
+  studio: "(max-width: 768px) 230px, 270px"
+};
+
+/**
+ * Renders a photo, or the empty frame shown until one is added in the CMS.
+ *
+ * `sizes` is the width the picture is actually drawn at, as a CSS length or
+ * media-query list. Pass it and the browser is offered resized copies through
+ * `srcset` and picks one to match the screen; leave it out and the original is
+ * served whole, which is what the product gallery wants — that is the one view
+ * where the photo is the point and a visitor may pinch into it.
+ */
+function frame(image, { eager = false, placeholder = "Photo coming soon", sizes = "" } = {}) {
   if (!image) {
     return '<div class="lp-ph"><img class="lp-ph-crown" src="/assets/logo-crown.png" alt=""><span>' +
       esc(placeholder) + "</span></div>";
   }
+  // Empty on a host that cannot resize, in which case both attributes are
+  // dropped and the markup is exactly what it was before.
+  const set = sizes ? images.srcset(image.src) : "";
   return '<img src="' + esc(image.src) + '" alt="' + esc(image.alt) + '"' +
+    (set ? ' srcset="' + esc(set) + '" sizes="' + esc(sizes) + '"' : "") +
     (eager ? "" : ' loading="lazy"') + ' decoding="async">';
 }
 
@@ -90,38 +168,20 @@ const SHARE_CARD = { src: "/assets/share-card.png", width: 1200, height: 630, ty
 
 const MIME = { png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", gif: "image/gif", webp: "image/webp" };
 
-/**
- * Cloudinary resizes on delivery, so ask it for a preview-sized copy rather
- * than handing WhatsApp a full-resolution photo. WhatsApp skips preview images
- * over roughly 300 KB, so a wallpaper- or camera-sized upload shares with no
- * picture at all — the page is read fine and only the image is dropped.
- *
- * f_jpg rather than f_auto is deliberate: with f_auto Cloudinary serves WebP to
- * any client whose headers accept it, and WhatsApp and Facebook do not render
- * WebP previews. The page itself still uses the original full-quality URL.
- */
-const CLOUD_PREVIEW = "c_fill,g_auto,w_1200,h_630,f_jpg,q_auto";
-const CLOUD_UPLOAD_RE = /^(https?:\/\/res\.cloudinary\.com\/[^/]+\/image\/upload\/)(.+)$/i;
-
-function cloudinaryPreview(src) {
-  const m = src.match(CLOUD_UPLOAD_RE);
-  if (!m) return null;
-  // Already transformed by us on a previous pass — don't stack it twice.
-  if (m[2].startsWith(CLOUD_PREVIEW + "/")) return src;
-  return m[1] + CLOUD_PREVIEW + "/" + m[2];
-}
-
 /** Share image for og:image / twitter:image, falling back to the built-in card. */
 function shareImage(image, siteUrl) {
   const src = (image && image.src) || SHARE_CARD.src;
   const isCard = src === SHARE_CARD.src;
-  const cloud = cloudinaryPreview(src);
+  // A host that resizes on delivery can hand WhatsApp a preview-sized copy
+  // instead of the full-resolution photo; see tools/images.js for why that
+  // matters and what each host is asked for.
+  const derived = images.preview(src);
 
   // Dimensions are only claimed where they are actually known: the built-in
-  // card, and Cloudinary copies we asked for at an exact size. For any other
+  // card, and derived copies we asked for at an exact size. For any other
   // pasted photo they are omitted — guessing is worse than letting the scraper
   // fetch and measure for itself.
-  if (cloud) return { url: cloud, alt: (image && image.alt) || "", width: 1200, height: 630, type: "image/jpeg" };
+  if (derived) return { url: derived.url, alt: (image && image.alt) || "", width: derived.width, height: derived.height, type: derived.type };
   if (isCard) return { url: absoluteUrl(src, siteUrl), alt: (image && image.alt) || "", width: SHARE_CARD.width, height: SHARE_CARD.height, type: SHARE_CARD.type };
 
   const ext = (src.split("?")[0].match(/\.([a-z0-9]+)$/i) || [])[1];
@@ -209,9 +269,27 @@ ${nav.map(n =>
   (n.key === activeTab ? ' aria-current="page"' : "") + ">" + esc(n.label) + "</a>"
 ).join("\n")}
 </nav>
-<a class="lp-igbtn" target="_blank" rel="noopener" href="${esc(s.instagram)}" aria-label="Instagram">
+<button type="button" class="lp-searchbtn" data-search-open aria-expanded="false" aria-controls="lp-search" aria-label="Search the catalogue" hidden>
+${svg(ICON.search, { size: 24, stroke: "var(--berry-800)", width: 2 })}
+</button>
+<a class="lp-igbtn" target="_blank" rel="noopener" href="${safeHref(s.instagram)}" aria-label="Instagram">
 ${svg(ICON.igHeader, { size: 27, stroke: "#FFFCF8", width: 1.7 })}
 </a>
+</div>
+<!-- Unhidden by app.js along with the button that opens it: with no JavaScript
+     there is nothing to search with, so neither is shown. -->
+<div class="lp-search" id="lp-search" data-search hidden>
+<div class="lp-search-bar">
+<label class="lp-sr" for="lp-search-q">Search for a piece</label>
+<span class="lp-search-icon">${svg(ICON.search, { size: 20, stroke: "var(--text-muted)", width: 2 })}</span>
+<input class="lp-search-q" id="lp-search-q" type="search" data-search-input autocomplete="off"
+  placeholder="Search by name, category or section — try &quot;gown&quot; or &quot;boys&quot;">
+<button type="button" class="lp-search-close" data-search-close aria-label="Close search">
+${svg(ICON.close, { size: 20, stroke: "var(--berry-800)", width: 2 })}
+</button>
+</div>
+<p class="lp-search-note" data-search-note role="status" aria-live="polite"></p>
+<div class="lp-search-results" data-search-results></div>
 </div>
 </header>`;
 }
@@ -229,17 +307,17 @@ ${categories.map(c => '<a href="' + c.href + '">' + esc(c.label) + "</a>").join(
 <div class="lp-footcol">
 <div class="lp-eyebrow">Follow</div>
 <div>
-<a target="_blank" rel="noopener" href="${esc(s.instagram)}">Instagram</a>
-<a target="_blank" rel="noopener" href="${esc(s.facebook)}">Facebook</a>
-<a target="_blank" rel="noopener" href="${esc(s.tiktok)}">TikTok</a>
-<a target="_blank" rel="noopener" href="${esc(waLink(s.whatsappNumber))}">WhatsApp</a>
+<a target="_blank" rel="noopener" href="${safeHref(s.instagram)}">Instagram</a>
+<a target="_blank" rel="noopener" href="${safeHref(s.facebook)}">Facebook</a>
+<a target="_blank" rel="noopener" href="${safeHref(s.tiktok)}">TikTok</a>
+<a target="_blank" rel="noopener" href="${safeHref(waLink(s.whatsappNumber))}">WhatsApp</a>
 </div>
 </div>
 <div class="lp-footcol">
 <div class="lp-eyebrow">Contact</div>
 <div>
-<a href="mailto:${esc(s.email)}">${esc(s.email)}</a>
-<a href="tel:${esc(String(s.phoneDisplay).replace(/\s/g, ""))}">${esc(s.phoneDisplay)}</a>
+<a href="${safeHref("mailto:" + s.email)}">${esc(s.email)}</a>
+<a href="${safeHref("tel:" + String(s.phoneDisplay).replace(/\s/g, ""))}">${esc(s.phoneDisplay)}</a>
 <a href="/contact/">How to order</a>
 <a href="/#about">About us</a>
 <a href="/contact/#faq">FAQ</a>
@@ -251,7 +329,7 @@ ${categories.map(c => '<a href="' + c.href + '">' + esc(c.label) + "</a>").join(
 }
 
 function floatingWa(s) {
-  return `<a class="lp-float" target="_blank" rel="noopener" href="${esc(waLink(s.whatsappNumber))}" aria-label="Contact us on WhatsApp">
+  return `<a class="lp-float" target="_blank" rel="noopener" href="${safeHref(waLink(s.whatsappNumber))}" aria-label="Contact us on WhatsApp">
 <span class="lp-float-label">${esc(s.floatingLabel)}</span>
 <span class="lp-float-circle">${svg(ICON.waFilled, { size: 32, viewBox: "0 0 32 32", stroke: "none", width: 0 })}</span>
 </a>`;
@@ -285,6 +363,21 @@ function renderHome(model, siteUrl) {
   const s = model.settings;
   const hooks = (s.heroHooks || []).slice(0, 3).map(h => (typeof h === "string" ? h : h.text || ""));
   const ctas = s.heroCtas || [];
+
+  // The newest four pieces across the whole catalogue. Until this row existed,
+  // new work was invisible unless a customer happened to open the right
+  // subcategory. Same card as the shop pages, so it prices and links the same
+  // way; app.js wires every [data-product] on the page, and the filter and
+  // load-more code only looks inside [data-subsect], which this is not.
+  const newest = [...model.products].sort((a, b) => b.addedOn - a.addedOn || a.name.localeCompare(b.name))
+    .slice(0, LATEST_COUNT);
+  const latest = newest.length ? `
+<section class="lp-sect lp-sect--gap9">
+<h2 class="lp-h2"><img class="lp-crown" src="/assets/logo-crown.png" alt="">${esc(nonEmptyText(s.latestHeading, LATEST_HEADING))}</h2>
+<div class="lp-grid lp-grid--4">
+${newest.map(p => productCard(model, p)).join("\n")}
+</div>
+</section>` : "";
   const stages = [
     { src: "/assets/dress-sketch-tall.webp", alt: "Pencil sketch of a made-to-order party frock for girls, drawn in the Little Princess Designer studio" },
     { src: "/assets/dress-colour-tall.webp", alt: "The same girls party frock, watercoloured to show the chosen fabric and trim colours" },
@@ -321,7 +414,7 @@ ${stages.map((st, i) =>
 <div class="lp-cta">
 ${ctas.slice(0, 3).map((c, i) => {
   const m = ctaMeta[i] || ctaMeta[0];
-  return '<a href="' + esc(m.href) + '"' + (m.external ? ' target="_blank" rel="noopener"' : "") + ">" +
+  return '<a href="' + safeHref(m.href) + '"' + (m.external ? ' target="_blank" rel="noopener"' : "") + ">" +
     svg(m.icon, { stroke: "var(--berry-800)" }) +
     '<span class="lp-cta-t">' + esc(c.title) + "</span>" +
     '<span class="lp-cta-s">' + esc(c.subtitle) + "</span></a>";
@@ -338,18 +431,19 @@ ${ctas.slice(0, 3).map((c, i) => {
 <div class="lp-car-wrap">
 <carousel-3d>
 ${(s.carousel || []).map((img, i) =>
-  '<div><div class="lp-car-face">' + frame(img, { placeholder: "Piece " + (i + 1) }) + "</div></div>"
+  '<div><div class="lp-car-face">' + frame(img, { placeholder: "Piece " + (i + 1), sizes: CARD_SIZES.carousel }) + "</div></div>"
 ).join("\n")}
 </carousel-3d>
 </div>
 </section>
+${latest}
 
 <section class="lp-sect lp-sect--gap9">
 <h2 class="lp-h2"><img class="lp-crown" src="/assets/logo-crown.png" alt="">${esc(s.categoriesHeading)}</h2>
 <div class="lp-getyours">
 ${model.categories.map(c => `<a href="${c.href}">
 <div class="lp-gy" data-cat="${esc(c.key)}">
-<div class="lp-gy-photo">${frame(c.card.image, { placeholder: esc(c.label) + " photo" })}</div>
+<div class="lp-gy-photo">${frame(c.card.image, { placeholder: esc(c.label) + " photo", sizes: CARD_SIZES.category })}</div>
 <div class="lp-gy-t">${esc(c.label)}</div>
 <div class="lp-gy-s">${esc(c.card.subtitle)}</div>
 </div>
@@ -370,7 +464,7 @@ ${svg(ICON[FEATURE_ICONS[f.icon] || "crown"], { size: 30, stroke: "#fff", width:
 
 <section class="lp-sect lp-sect--gap9 lp-anchor" id="about" aria-labelledby="about-heading">
 <div class="lp-ceo">
-<div class="lp-ceo-photo">${frame(s.about.photo, { placeholder: "Studio or team photo" })}</div>
+<div class="lp-ceo-photo">${frame(s.about.photo, { placeholder: "Studio or team photo", sizes: CARD_SIZES.studio })}</div>
 <div>
 <div class="lp-eyebrow lp-ceo-eyebrow">${esc(s.about.eyebrow)}</div>
 <h2 class="lp-ceo-h" id="about-heading">${esc(s.about.heading)}</h2>
@@ -430,14 +524,14 @@ function productCard(model, p) {
     : p.name + " — handmade " + p.subcategoryName.toLowerCase() + " for " + p.tabLabel.toLowerCase();
 
   return `<article class="lp-card" data-product data-min-price="${p.minPrice}" data-sizes="${esc(p.sizes.map(s => s.size).join("|"))}">
-<a class="lp-card-imgbtn" href="${p.href}" aria-label="${esc("View " + p.name + " — " + p.subcategoryName + " for " + p.tabLabel)}">
+<a class="lp-card-imgbtn" href="${safeHref(p.href)}" aria-label="${esc("View " + p.name + " — " + p.subcategoryName + " for " + p.tabLabel)}">
 <div class="lp-card-photo">
 ${p.badge ? '<span class="lp-badge" data-badge="' + esc(p.badge) + '">' + esc(p.badge) + "</span>" : ""}
-${frame(p.images[0] ? { src: p.images[0].src, alt } : null, { placeholder: "Photo coming soon" })}
+${frame(p.images[0] ? { src: p.images[0].src, alt } : null, { placeholder: "Photo coming soon", sizes: CARD_SIZES.product })}
 </div>
 </a>
 <div class="lp-card-body">
-<h4><a class="lp-card-name" href="${p.href}">${esc(p.name)}</a></h4>
+<h4><a class="lp-card-name" href="${safeHref(p.href)}">${esc(p.name)}</a></h4>
 <div class="lp-card-price" data-price-out>${money(first.price)}</div>
 <select class="lp-select" data-price-select aria-label="${esc("Select size for " + p.name)}">${opts}</select>
 </div>
@@ -547,7 +641,8 @@ function renderProduct(model, p, siteUrl) {
 
   const views = ["front", "side", "back"];
   const galleryImages = p.images.length ? p.images : [null, null, null];
-  const gallery = galleryImages.slice(0, Math.max(3, galleryImages.length)).map((img, i) => {
+  const slides = galleryImages.slice(0, Math.max(3, galleryImages.length));
+  const gallery = slides.map((img, i) => {
     const fallbackAlt = p.name + " — " + (views[i] || "detail") + " view of the handmade " +
       p.subcategoryName.toLowerCase() + " for " + p.tabLabel.toLowerCase();
     return "<div>" + frame(
@@ -560,6 +655,44 @@ function renderProduct(model, p, siteUrl) {
     '<option value="' + i + '" data-price="' + sz.price + '">' + esc(sz.size) + "</option>"
   ).join("");
   const first = p.sizes[0];
+
+  // The page summary is the opening sentence of the description plus a fixed
+  // tail. Both ends of that need guarding: `description` is optional on
+  // products and on subcategories, so it can resolve empty and leave the
+  // summary opening on a bare ". "; and when the description is a single
+  // sentence, split() never takes its full stop off, which is where the
+  // "hand-stitched buttons.. Made to order" in today's Prince Arthur Suit
+  // summary comes from.
+  const opening = String(p.description || "").split(". ")[0].trim().replace(/[.\s]+$/, "");
+  const tail = (s.productDefaults && String(s.productDefaults.summaryTail || "").trim()) || SUMMARY_TAIL;
+  const desc = opening ? opening + ". " + tail : tail;
+
+  // A sold-out piece cannot be supplied, so it does not get an order button —
+  // customers were ordering them. Everything else on the page stays live: the
+  // size dropdown, the price and the total still work, and the floating
+  // WhatsApp button is still there to ask about it. No data-wa-order attribute,
+  // so app.js leaves this alone while it carries on repricing.
+  const soldOut = p.badge === "Sold out";
+  const orderCta = soldOut
+    ? `<span class="lp-wa lp-wa--off" aria-disabled="true">Currently unavailable</span>`
+    : `<a class="lp-wa" target="_blank" rel="noopener" href="${safeHref(waLink(s.whatsappNumber,
+  "Hello Little Princess Designer, I'd like to order:\n" + p.name +
+  "\nSize: " + first.size + "\nMatching accessory: no\nTotal shown: " + money(first.price)))}" data-wa-order>
+${svg(ICON.waFilled, { size: 20, viewBox: "0 0 32 32", stroke: "none", width: 0 })}
+Order on WhatsApp</a>`;
+
+  // A product with one photo has nothing to page to, and app.js already
+  // null-checks both buttons, so they are simply left out. A product with no
+  // photos still gets three placeholder frames, and paging between those works
+  // the same as it always did.
+  const arrows = slides.length > 1
+    ? `<button type="button" class="lp-arrow lp-arrow--prev" data-gal-prev aria-label="Previous view">
+${svg(ICON.arrowLeft, { size: 20, stroke: "var(--tone-deep)", width: 2 })}
+</button>
+<button type="button" class="lp-arrow lp-arrow--next" data-gal-next aria-label="Next view">
+${svg(ICON.arrowRight, { size: 20, stroke: "var(--tone-deep)", width: 2 })}
+</button>`
+    : "";
 
   const specRows = [
     ["Fabric", p.specs.fabric],
@@ -591,12 +724,7 @@ function renderProduct(model, p, siteUrl) {
 <div class="lp-gallery" data-gallery>
 ${gallery}
 </div>
-<button type="button" class="lp-arrow lp-arrow--prev" data-gal-prev aria-label="Previous view">
-${svg(ICON.arrowLeft, { size: 20, stroke: "var(--tone-deep)", width: 2 })}
-</button>
-<button type="button" class="lp-arrow lp-arrow--next" data-gal-next aria-label="Next view">
-${svg(ICON.arrowRight, { size: 20, stroke: "var(--tone-deep)", width: 2 })}
-</button>
+${arrows}
 </div>
 
 <div class="lp-detail-col">
@@ -609,7 +737,7 @@ ${svg(ICON.arrowRight, { size: 20, stroke: "var(--tone-deep)", width: 2 })}
 
 <div class="lp-desc">
 <h2 class="lp-eyebrow">Product description</h2>
-<p>${esc(p.description)}</p>
+${p.description ? "<p>" + esc(p.description) + "</p>" : ""}
 ${p.description2 ? "<p>" + esc(p.description2) + "</p>" : ""}
 <dl class="lp-specs">
 ${specRows.map(([k, v]) => "<dt>" + esc(k) + "</dt><dd>" + esc(v) + "</dd>").join("\n")}
@@ -632,16 +760,10 @@ ${specRows.map(([k, v]) => "<dt>" + esc(k) + "</dt><dd>" + esc(v) + "</dd>").joi
 <div class="lp-total-note">${esc(s.deliveryNote)}</div>
 </div>
 
-<a class="lp-wa" target="_blank" rel="noopener" href="${esc(waLink(s.whatsappNumber,
-  "Hello Little Princess Designer, I'd like to order:\n" + p.name +
-  "\nSize: " + first.size + "\nMatching accessory: no\nTotal shown: " + money(first.price)))}" data-wa-order>
-${svg(ICON.waFilled, { size: 20, viewBox: "0 0 32 32", stroke: "none", width: 0 })}
-Order on WhatsApp</a>
+${orderCta}
 </div>
 </div>
 </main>`;
-
-  const desc = p.description.split(". ")[0] + ". Made to order, hand-finished in our Lahore studio.";
 
   return page(model, {
     tab: p.tab,
@@ -655,7 +777,8 @@ Order on WhatsApp</a>
       "@context": "https://schema.org",
       "@type": "Product",
       name: p.name,
-      description: p.description,
+      // Never empty: falls back to the same summary the meta tags carry.
+      description: p.description || desc,
       category: p.tabLabel + " > " + p.subcategoryName,
       brand: { "@type": "Brand", name: s.brandName },
       image: p.images.map(i => absoluteUrl(i.src, siteUrl)),
@@ -719,12 +842,12 @@ ${cards.map(card => {
   const meta = (c.social && c.social[card.key]) || {};
   const ext = card.key === "email" ? "" : ' target="_blank" rel="noopener"';
   return `<div>
-<a class="lp-social-icon"${ext} href="${esc(card.href)}" aria-label="${esc(card.aria)}">
+<a class="lp-social-icon"${ext} href="${safeHref(card.href)}" aria-label="${esc(card.aria)}">
 ${svg(card.icon, { size: 28, stroke: "var(--berry-800)", width: 1.5 })}
 </a>
 <div class="lp-social-t">${esc(card.label)}</div>
 <p>${esc(meta.description || "")}</p>
-<a class="lp-social-pill"${ext} href="${esc(card.href)}">${esc(meta.button || "Open")}</a>
+<a class="lp-social-pill"${ext} href="${safeHref(card.href)}">${esc(meta.button || "Open")}</a>
 </div>`;
 }).join("\n")}
 </div>
@@ -735,7 +858,7 @@ ${svg(card.icon, { size: 28, stroke: "var(--berry-800)", width: 1.5 })}
 <h3>${esc(c.feedback.heading)}</h3>
 <p>${esc(c.feedback.body)}</p>
 </div>
-<a class="lp-feedback-btn" target="_blank" rel="noopener" href="${esc(waLink(s.whatsappNumber, c.feedback.prefill))}">
+<a class="lp-feedback-btn" target="_blank" rel="noopener" href="${safeHref(waLink(s.whatsappNumber, c.feedback.prefill))}">
 ${svg(ICON.waOutline, { size: 22, stroke: "#ffffff", width: 1.8 })}
 ${esc(c.feedback.button)}</a>
 </div>
@@ -788,7 +911,7 @@ been renamed or taken down. Everything else is still here.
 </p>
 <div class="lp-cta lp-cta--center">
 ${links.map(l =>
-  '<a href="' + esc(l.href) + '"' + (l.external ? ' target="_blank" rel="noopener"' : "") + ">" +
+  '<a href="' + safeHref(l.href) + '"' + (l.external ? ' target="_blank" rel="noopener"' : "") + ">" +
   svg(l.icon, { stroke: "var(--berry-800)" }) +
   '<span class="lp-cta-t">' + esc(l.title) + "</span>" +
   '<span class="lp-cta-s">' + esc(l.subtitle) + "</span></a>"

@@ -12,17 +12,84 @@
 
 const fs = require("fs");
 const path = require("path");
+const images = require("./images");
+const { parseYaml } = require("./yaml");
 
 const ROOT = path.join(__dirname, "..");
 const CONTENT = path.join(ROOT, "content");
 
-/** Canonical size vocabulary. Keep in step with the `size` select in site/admin/config.yml. */
-const SIZES = ["0–3 years", "4–6 years", "7–9 years", "10–12 years", "13–16 years"];
+const CONFIG = path.join(ROOT, "site", "admin", "config.yml");
+
+/**
+ * How many age bands the admin is expected to offer.
+ *
+ * A tripwire, not a limit. The size list below is read out of config.yml, and
+ * a reader that quietly returned the wrong thing — one entry, or none — would
+ * strip prices from the whole site rather than fail. Changing the bands is
+ * meant to be two edits: the dropdown in config.yml, and this number.
+ */
+const EXPECTED_SIZE_COUNT = 5;
+
+/**
+ * The canonical size vocabulary, read out of the admin's own dropdown so the
+ * two cannot drift apart. It drives price-row validation, age-order sorting
+ * and the shop filter chips; a size offered in the admin but missing here has
+ * its prices silently discarded and can take a whole product off the site.
+ *
+ * Every failure here is fatal on purpose. Falling through to [] would build a
+ * site with no prices on it, which looks like a content problem and is not.
+ */
+function readSizes() {
+  const where = "site/admin/config.yml (products → Sizes and prices → Size → options)";
+  const fail = why => {
+    throw new Error(
+      "Cannot read the size list from " + where + ": " + why + ".\n" +
+      "  Every price row on the site is checked against this list, so building with\n" +
+      "  the wrong one would strip prices site-wide. Fix the dropdown, or update\n" +
+      "  EXPECTED_SIZE_COUNT in tools/content.js if the age bands really did change."
+    );
+  };
+
+  const config = parseYaml(fs.readFileSync(CONFIG, "utf8"));
+  const products = (config.collections || []).find(c => c.name === "products");
+  if (!products) fail("no 'products' collection");
+
+  const priceRows = (products.fields || []).find(f => f.name === "sizes");
+  if (!priceRows) fail("the products collection has no 'sizes' field");
+
+  const size = (priceRows.fields || []).find(f => f.name === "size");
+  if (!size) fail("'sizes' has no 'size' field");
+
+  if (!Array.isArray(size.options)) {
+    fail("'options' is " + (size.options === undefined ? "missing" : "not a list"));
+  }
+
+  // Decap selects take either a bare string or {label, value}; the size list
+  // uses bare strings today, and either reads the same from here.
+  const list = size.options
+    .map(o => (o && typeof o === "object" ? o.value : o))
+    .filter(v => typeof v === "string" && v.trim());
+
+  if (!list.length) fail("the option list is empty");
+  if (list.length !== EXPECTED_SIZE_COUNT) {
+    fail("it has " + list.length + " entries, not the expected " + EXPECTED_SIZE_COUNT);
+  }
+  return list;
+}
+
+const SIZES = readSizes();
+
 /** Tab order across nav, footer and the "Get yours now" grid. */
 const CATEGORY_ORDER = ["girls", "boys", "babies", "ready"];
 
 const warnings = [];
-const warn = msg => { warnings.push(msg); console.warn("  warn: " + msg); };
+// Silenced by load({ quiet: true }) so the test run reads as its own output
+// rather than the site's content warnings.
+let quiet = false;
+const warn = msg => {
+  warnings.push(msg);
+  if (!quiet) console.warn("  warn: " + msg);
+};
 
 function readJson(file, { required = true } = {}) {
   if (!fs.existsSync(file)) {
@@ -80,8 +147,20 @@ const nonEmpty = (...vals) => {
   return "";
 };
 
-function load() {
-  const settings = readJson(path.join(CONTENT, "settings.json"));
+/**
+ * Reads a content directory into the model.
+ *
+ * `dir` exists for tools/test.js, which runs this over small fixture
+ * directories; the site always uses the default. `quiet` keeps those runs from
+ * printing the warnings they are asserting on.
+ */
+function load({ dir = CONTENT, quiet: silent = false } = {}) {
+  quiet = silent;
+  // Reset rather than append: a second load() in the same process — which is
+  // what the tests do — would otherwise inherit the first one's warnings.
+  warnings.length = 0;
+
+  const settings = readJson(path.join(dir, "settings.json"));
 
   // The CMS stores every photo as {url, upload, alt}; the renderer wants {src,
   // alt}. Products and category cards are converted further down — these two
@@ -97,7 +176,7 @@ function load() {
     .map(img => resolveImage(img));
 
   const categories = CATEGORY_ORDER.map(key => {
-    const c = readJson(path.join(CONTENT, "categories", key + ".json"));
+    const c = readJson(path.join(dir, "categories", key + ".json"));
     return Object.assign({}, c, {
       key,
       href: "/" + key + "/",
@@ -111,7 +190,7 @@ function load() {
 
   // --- subcategories ------------------------------------------------------
   const subs = [];
-  for (const { slug, data } of readDir(path.join(CONTENT, "subcategories"))) {
+  for (const { slug, data } of readDir(path.join(dir, "subcategories"))) {
     const id = (data.id || slug).trim();
     if (!byKey[data.parent]) {
       warn('subcategory "' + id + '" has parent "' + data.parent + '", which is not a category — skipped');
@@ -153,10 +232,16 @@ function load() {
   const subById = Object.fromEntries(subs.map(s => [s.id, s]));
 
   // --- products -----------------------------------------------------------
+  // The last rung of the wording cascade, editable in Site Settings. Missing
+  // altogether is fine — every field falls back to "" exactly as it did before
+  // this level existed.
+  const siteDefaults = settings.productDefaults || {};
+  const siteSpecs = siteDefaults.specs || {};
+
   const products = [];
   const noPhoto = [];
   let hiddenCount = 0;
-  for (const { slug, data } of readDir(path.join(CONTENT, "products"))) {
+  for (const { slug, data } of readDir(path.join(dir, "products"))) {
     const name = nonEmpty(data.name, slug);
 
     if (data.visible === false) { hiddenCount++; continue; }
@@ -202,7 +287,10 @@ function load() {
       tab: sub.parent,
       tabLabel: byKey[sub.parent].label,
       badge: nonEmpty(data.badge),
-      order: Number(data.order ?? 100),
+      // Milliseconds, for sorting. Anything unparseable — a hand-edited file,
+      // or a piece from before the field existed — sorts to the bottom rather
+      // than to 1970-adjacent nonsense or NaN.
+      addedOn: Date.parse(data.addedOn) || 0,
       sizes,
       minPrice: Math.min(...sizes.map(s => s.price)),
       accessoryPrice: Number(
@@ -210,13 +298,17 @@ function load() {
           ? data.accessoryPrice
           : settings.accessoryPriceDefault || 0
       ),
-      description: nonEmpty(data.description, sub.defaultDescription),
-      description2: nonEmpty(data.description2, sub.defaultDescription2),
+      // product → subcategory → site default. The third step exists so no
+      // wording can resolve empty: leaving a piece and its subcategory both
+      // blank is two clicks in the admin, and an empty description takes the
+      // page summary with it.
+      description: nonEmpty(data.description, sub.defaultDescription, siteDefaults.description),
+      description2: nonEmpty(data.description2, sub.defaultDescription2, siteDefaults.description2),
       specs: {
-        fabric: nonEmpty(specsIn.fabric, specsDefault.fabric),
-        occasion: nonEmpty(specsIn.occasion, specsDefault.occasion),
-        fit: nonEmpty(specsIn.fit, specsDefault.fit),
-        care: nonEmpty(specsIn.care, specsDefault.care)
+        fabric: nonEmpty(specsIn.fabric, specsDefault.fabric, siteSpecs.fabric),
+        occasion: nonEmpty(specsIn.occasion, specsDefault.occasion, siteSpecs.occasion),
+        fit: nonEmpty(specsIn.fit, specsDefault.fit, siteSpecs.fit),
+        care: nonEmpty(specsIn.care, specsDefault.care, siteSpecs.care)
       },
       images
     };
@@ -228,19 +320,24 @@ function load() {
   }
 
   for (const s of subs) {
-    s.products.sort((a, b) => a.order - b.order || a.name.localeCompare(b.name));
+    // Newest first. `order` used to decide this and is gone from products; the
+    // dates it was converted into reproduce exactly the sequence it gave.
+    // Subcategories keep their own `order` — that is a layout choice, not a
+    // recency one.
+    s.products.sort((a, b) => b.addedOn - a.addedOn || a.name.localeCompare(b.name));
     if (!s.products.length) warn('subcategory "' + s.name + '" (' + s.id + ') has no visible products');
   }
 
   // A product's first photo becomes its link preview. WhatsApp and Facebook do
   // not render WebP previews, so those links share as bare text — which is
   // invisible from the admin and easy to leave broken for months.
-  // Cloudinary photos are exempt: the renderer asks Cloudinary for a JPEG copy
-  // at preview size, so their original format does not reach WhatsApp.
+  // Photos on a host that builds us a JPEG copy at preview size are exempt:
+  // their original format never reaches WhatsApp. images.js knows which hosts
+  // those are.
   const webpFirst = products
     .filter(p => p.images.length &&
       /\.webp(\?|$)/i.test(p.images[0].src) &&
-      !/^https?:\/\/res\.cloudinary\.com\//i.test(p.images[0].src))
+      !images.preview(p.images[0].src))
     .map(p => p.name);
   if (webpFirst.length) {
     warn(webpFirst.length + " product(s) have a WebP first photo, which WhatsApp and " +
@@ -259,6 +356,9 @@ function load() {
   return {
     settings,
     sizes: SIZES,
+    // A copy: the module-level list is cleared by the next load(), and callers
+    // that hold the model should not have it emptied underneath them.
+    warnings: warnings.slice(),
     categories,
     subcategories: subs,
     products,

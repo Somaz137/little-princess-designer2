@@ -1,0 +1,17 @@
+{
+  "name": "Some sizes off",
+  "subcategory": "s1",
+  "addedOn": "2026-08-01T12:00:00.000Z",
+  "sizes": [
+    {
+      "size": "0–3 years",
+      "price": 1500,
+      "available": false
+    },
+    {
+      "size": "4–6 years",
+      "price": 1600,
+      "available": true
+    }
+  ]
+}

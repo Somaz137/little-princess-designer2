@@ -1,0 +1,25 @@
+{
+  "name": "Own words",
+  "subcategory": "s1",
+  "addedOn": "2026-08-03T12:00:00.000Z",
+  "description": "OWN description",
+  "description2": "OWN second paragraph",
+  "specs": {
+    "fabric": "OWN fabric",
+    "occasion": "OWN occasion",
+    "fit": "OWN fit",
+    "care": "OWN care"
+  },
+  "sizes": [
+    {
+      "size": "7–9 years",
+      "price": 3000,
+      "available": true
+    },
+    {
+      "size": "0–3 years",
+      "price": 1000,
+      "available": true
+    }
+  ]
+}
