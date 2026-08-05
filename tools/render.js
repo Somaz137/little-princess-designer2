@@ -93,9 +93,9 @@ const svg = (body, { size = 24, stroke = "currentColor", width = 1.6, viewBox = 
 /* --- shared image frame ------------------------------------------------- */
 
 /**
- * How wide each kind of card photo is actually drawn, read off styles.css so
- * the browser can pick a copy rather than fetching a 4000px original for a
- * 250px hole. 768px is the phone breakpoint used throughout the stylesheet.
+ * How wide each kind of photo is actually drawn, read off styles.css so the
+ * browser can pick a copy rather than fetching a 4000px original for a 250px
+ * hole. 768px is the phone breakpoint used throughout the stylesheet.
  *
  *   carousel — .lp-car-face is 3/4 of the carousel's 31.25rem height (20rem on
  *              a phone), so 375px and 240px
@@ -105,15 +105,23 @@ const svg = (body, { size = 24, stroke = "currentColor", width = 1.6, viewBox = 
  *              phone
  *   studio   — .lp-ceo gives the photo 0.5 of a 0.5fr/1.5fr split, capped at
  *              230px on a phone
+ *   gallery  — .lp-detail is auto-fit minmax(300px,1fr) with a 40px gap, so it
+ *              is two columns until the container drops under 640px — around a
+ *              712px viewport, hence the 720px breakpoint rather than the usual
+ *              768. Above it the column is half the container less the gap:
+ *              ~44vw while the container is still tracking the viewport, then a
+ *              flat 570px once the container caps at 1180px (viewport 1308px,
+ *              where the clamped page gutter has reached its own 64px cap).
  *
  * These are hints, not promises: get one wrong and the browser fetches a copy
  * a size out, which is still far less than the original.
  */
-const CARD_SIZES = {
+const IMG_SIZES = {
   carousel: "(max-width: 768px) 240px, 375px",
   category: "(max-width: 768px) 44vw, (max-width: 1024px) 45vw, 255px",
   product: "(max-width: 768px) 45vw, 436px",
-  studio: "(max-width: 768px) 230px, 270px"
+  studio: "(max-width: 768px) 230px, 270px",
+  gallery: "(max-width: 720px) 92vw, (max-width: 1308px) 44vw, 570px"
 };
 
 /**
@@ -122,8 +130,12 @@ const CARD_SIZES = {
  * `sizes` is the width the picture is actually drawn at, as a CSS length or
  * media-query list. Pass it and the browser is offered resized copies through
  * `srcset` and picks one to match the screen; leave it out and the original is
- * served whole, which is what the product gallery wants — that is the one view
- * where the photo is the point and a visitor may pinch into it.
+ * served whole. Every caller passes one — including the product gallery, which
+ * used to be exempted on the grounds that a visitor might pinch into the photo.
+ * Nothing on the page lets them: .lp-gallery img is `object-fit:cover` inside a
+ * fixed 3/4 frame, so the picture is never drawn above its column width. All
+ * the exemption bought was the full-resolution original on the one page most
+ * likely to be opened on a phone, on data.
  */
 function frame(image, { eager = false, placeholder = "Photo coming soon", sizes = "" } = {}) {
   if (!image) {
@@ -426,7 +438,7 @@ ${newest.map(p =>
   // The placeholder carries the product name rather than the generic wording:
   // a photo-only face with no photo would otherwise say nothing at all, and
   // most of the catalogue is still unphotographed.
-  frame(p.images[0] || null, { placeholder: p.name, sizes: CARD_SIZES.carousel }) +
+  frame(p.images[0] || null, { placeholder: p.name, sizes: IMG_SIZES.carousel }) +
   "</a></div>"
 ).join("\n")}
 </carousel-3d>
@@ -438,7 +450,7 @@ ${newest.map(p =>
 <div class="lp-getyours">
 ${model.categories.map(c => `<a href="${c.href}">
 <div class="lp-gy" data-cat="${esc(c.key)}">
-<div class="lp-gy-photo">${frame(c.card.image, { placeholder: esc(c.label) + " photo", sizes: CARD_SIZES.category })}</div>
+<div class="lp-gy-photo">${frame(c.card.image, { placeholder: esc(c.label) + " photo", sizes: IMG_SIZES.category })}</div>
 <div class="lp-gy-t">${esc(c.label)}</div>
 <div class="lp-gy-s">${esc(c.card.subtitle)}</div>
 </div>
@@ -459,7 +471,7 @@ ${svg(ICON[FEATURE_ICONS[f.icon] || "crown"], { size: 30, stroke: "#fff", width:
 
 <section class="lp-sect lp-sect--gap9 lp-anchor" id="about" aria-labelledby="about-heading">
 <div class="lp-ceo">
-<div class="lp-ceo-photo">${frame(s.about.photo, { placeholder: "Studio or team photo", sizes: CARD_SIZES.studio })}</div>
+<div class="lp-ceo-photo">${frame(s.about.photo, { placeholder: "Studio or team photo", sizes: IMG_SIZES.studio })}</div>
 <div>
 <div class="lp-eyebrow lp-ceo-eyebrow">${esc(s.about.eyebrow)}</div>
 <h2 class="lp-ceo-h" id="about-heading">${esc(s.about.heading)}</h2>
@@ -522,7 +534,7 @@ function productCard(model, p) {
 <a class="lp-card-imgbtn" href="${safeHref(p.href)}" aria-label="${esc("View " + p.name + " — " + p.subcategoryName + " for " + p.tabLabel)}">
 <div class="lp-card-photo">
 ${p.badge ? '<span class="lp-badge" data-badge="' + esc(p.badge) + '">' + esc(p.badge) + "</span>" : ""}
-${frame(p.images[0] ? { src: p.images[0].src, alt } : null, { placeholder: "Photo coming soon", sizes: CARD_SIZES.product })}
+${frame(p.images[0] ? { src: p.images[0].src, alt } : null, { placeholder: "Photo coming soon", sizes: IMG_SIZES.product })}
 </div>
 </a>
 <div class="lp-card-body">
@@ -642,7 +654,7 @@ function renderProduct(model, p, siteUrl) {
       p.subcategoryName.toLowerCase() + " for " + p.tabLabel.toLowerCase();
     return "<div>" + frame(
       img ? { src: img.src, alt: img.alt || fallbackAlt } : null,
-      { eager: i === 0, placeholder: (views[i] || "Extra") + " view" }
+      { eager: i === 0, placeholder: (views[i] || "Extra") + " view", sizes: IMG_SIZES.gallery }
     ) + "</div>";
   }).join("\n");
 
