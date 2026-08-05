@@ -96,7 +96,7 @@ Ordered by what to do first. The three admin-facing items (#3, #4, #13) all edit
       (`site/app.js:225`, `tools/render.js:462`) — verified against the built pages.
       **Fix:** move focus to the first newly-revealed card after the click.
 
-- [ ] *(optional)* **no automated checks anywhere.** `tools/content.js` has real
+- [x] *(optional)* **no automated checks anywhere.** `tools/content.js` has real
       branching — inheritance fallbacks, duplicate-id detection, size and price
       filtering — and a regression would only surface on the live site.
       **Fix:** a dependency-free assertion script over a small fixture content

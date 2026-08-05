@@ -1,0 +1,7 @@
+{
+  "name": "Some sizes off", "subcategory": "s1", "order": 40,
+  "sizes": [
+    { "size": "0–3 years", "price": 1500, "available": false },
+    { "size": "4–6 years", "price": 1600, "available": true }
+  ]
+}

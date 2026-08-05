@@ -1,0 +1,7 @@
+{
+  "name": "No price", "subcategory": "s1",
+  "sizes": [
+    { "size": "4–6 years", "price": 0 },
+    { "size": "7–9 years", "price": "not a number" }
+  ]
+}

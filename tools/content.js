@@ -83,7 +83,13 @@ const SIZES = readSizes();
 const CATEGORY_ORDER = ["girls", "boys", "babies", "ready"];
 
 const warnings = [];
-const warn = msg => { warnings.push(msg); console.warn("  warn: " + msg); };
+// Silenced by load({ quiet: true }) so the test run reads as its own output
+// rather than the site's content warnings.
+let quiet = false;
+const warn = msg => {
+  warnings.push(msg);
+  if (!quiet) console.warn("  warn: " + msg);
+};
 
 function readJson(file, { required = true } = {}) {
   if (!fs.existsSync(file)) {
@@ -141,8 +147,20 @@ const nonEmpty = (...vals) => {
   return "";
 };
 
-function load() {
-  const settings = readJson(path.join(CONTENT, "settings.json"));
+/**
+ * Reads a content directory into the model.
+ *
+ * `dir` exists for tools/test.js, which runs this over small fixture
+ * directories; the site always uses the default. `quiet` keeps those runs from
+ * printing the warnings they are asserting on.
+ */
+function load({ dir = CONTENT, quiet: silent = false } = {}) {
+  quiet = silent;
+  // Reset rather than append: a second load() in the same process — which is
+  // what the tests do — would otherwise inherit the first one's warnings.
+  warnings.length = 0;
+
+  const settings = readJson(path.join(dir, "settings.json"));
 
   // The CMS stores every photo as {url, upload, alt}; the renderer wants {src,
   // alt}. Products and category cards are converted further down — these two
@@ -158,7 +176,7 @@ function load() {
     .map(img => resolveImage(img));
 
   const categories = CATEGORY_ORDER.map(key => {
-    const c = readJson(path.join(CONTENT, "categories", key + ".json"));
+    const c = readJson(path.join(dir, "categories", key + ".json"));
     return Object.assign({}, c, {
       key,
       href: "/" + key + "/",
@@ -172,7 +190,7 @@ function load() {
 
   // --- subcategories ------------------------------------------------------
   const subs = [];
-  for (const { slug, data } of readDir(path.join(CONTENT, "subcategories"))) {
+  for (const { slug, data } of readDir(path.join(dir, "subcategories"))) {
     const id = (data.id || slug).trim();
     if (!byKey[data.parent]) {
       warn('subcategory "' + id + '" has parent "' + data.parent + '", which is not a category — skipped');
@@ -223,7 +241,7 @@ function load() {
   const products = [];
   const noPhoto = [];
   let hiddenCount = 0;
-  for (const { slug, data } of readDir(path.join(CONTENT, "products"))) {
+  for (const { slug, data } of readDir(path.join(dir, "products"))) {
     const name = nonEmpty(data.name, slug);
 
     if (data.visible === false) { hiddenCount++; continue; }
@@ -331,6 +349,9 @@ function load() {
   return {
     settings,
     sizes: SIZES,
+    // A copy: the module-level list is cleared by the next load(), and callers
+    // that hold the model should not have it emptied underneath them.
+    warnings: warnings.slice(),
     categories,
     subcategories: subs,
     products,

@@ -1,0 +1,14 @@
+{
+  "brandName": "Fixture Designer",
+  "productDefaults": {
+    "description": "SITE description",
+    "description2": "SITE second paragraph",
+    "summaryTail": "SITE tail.",
+    "specs": {
+      "fabric": "SITE fabric",
+      "occasion": "SITE occasion",
+      "fit": "SITE fit",
+      "care": "SITE care"
+    }
+  }
+}

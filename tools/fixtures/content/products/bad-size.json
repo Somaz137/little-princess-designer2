@@ -1,0 +1,7 @@
+{
+  "name": "Bad size row", "subcategory": "s1", "order": 30,
+  "sizes": [
+    { "size": "99–100 years", "price": 5000 },
+    { "size": "10–12 years", "price": 4000 }
+  ]
+}
