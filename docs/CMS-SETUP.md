@@ -127,22 +127,27 @@ Two reasons it works this way:
 
 ### Turning it on for a new ImageKit account
 
+**This step is already done** — the shop's account is `lpdlhr`, served from
+`https://ik.imagekit.io/lpdlhr`, and `site/admin/config.yml` names it. What
+follows is for reference, in case the account is ever replaced.
+
 1. Sign up at [imagekit.io](https://imagekit.io) — the free tier is generous.
 2. On the dashboard, find your **URL endpoint** under **Developer options →
-   URL endpoints**. It looks like `https://ik.imagekit.io/abc12xyz`. The last
-   part, `abc12xyz`, is your **ImageKit ID**.
+   URL endpoints**. It looks like `https://ik.imagekit.io/lpdlhr`. The last
+   part, `lpdlhr`, is the **ImageKit ID**.
 3. Put that ID into `site/admin/config.yml`, in the `media_library` block:
 
    ```yaml
    media_library:
      name: imagekit
      config:
-       imagekit_id: "abc12xyz"
+       imagekit_id: "lpdlhr"
    ```
 
-   This is optional and it is not a password — everything in that block only
-   saves the editor a step. Leave it empty and the library still opens; it just
-   asks which ImageKit account to open first.
+   This is optional and it is not a password — it is the public address every
+   photo on the site is served from, and everything in that block only saves the
+   editor a step. Leave it empty and the library still opens; it just asks which
+   ImageKit account to open first.
 4. Commit and push.
 
 There is no API key and no secret anywhere in the admin. The library asks each

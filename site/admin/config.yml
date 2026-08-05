@@ -79,11 +79,11 @@ public_folder: "/assets/uploads"
 media_library:
   name: imagekit
   config:
-    # Your ImageKit ID: the last part of your URL endpoint, so for
-    # https://ik.imagekit.io/abc12xyz it is abc12xyz. Dashboard → Developer
-    # options → URL endpoints. Filling it in means the library opens straight
-    # into this shop's account instead of asking which account to open.
-    imagekit_id: ""
+    # The last part of the shop's URL endpoint, https://ik.imagekit.io/lpdlhr —
+    # dashboard → Developer options → URL endpoints. It means the library opens
+    # straight into this account instead of asking which account to open. Not a
+    # password: it is the public address every photo on the site is served from.
+    imagekit_id: "lpdlhr"
     # Turn on ONLY if you sign in to ImageKit with Google or Microsoft rather
     # than with a password. On a password account it sends you down a sign-in
     # route you cannot finish.
