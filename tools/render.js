@@ -136,15 +136,18 @@ const IMG_SIZES = {
  * fixed 3/4 frame, so the picture is never drawn above its column width. All
  * the exemption bought was the full-resolution original on the one page most
  * likely to be opened on a phone, on data.
+ *
+ * `profile` picks how generous to be with the copies offered — see PROFILES in
+ * tools/images.js. Cards take the default; the gallery asks for "detail".
  */
-function frame(image, { eager = false, placeholder = "Photo coming soon", sizes = "" } = {}) {
+function frame(image, { eager = false, placeholder = "Photo coming soon", sizes = "", profile = "card" } = {}) {
   if (!image) {
     return '<div class="lp-ph"><img class="lp-ph-crown" src="/assets/logo-crown.png" alt=""><span>' +
       esc(placeholder) + "</span></div>";
   }
   // Empty on a host that cannot resize, in which case both attributes are
   // dropped and the markup is exactly what it was before.
-  const set = sizes ? images.srcset(image.src) : "";
+  const set = sizes ? images.srcset(image.src, profile) : "";
   return '<img src="' + esc(image.src) + '" alt="' + esc(image.alt) + '"' +
     (set ? ' srcset="' + esc(set) + '" sizes="' + esc(sizes) + '"' : "") +
     (eager ? "" : ' loading="lazy"') + ' decoding="async">';
@@ -654,7 +657,12 @@ function renderProduct(model, p, siteUrl) {
       p.subcategoryName.toLowerCase() + " for " + p.tabLabel.toLowerCase();
     return "<div>" + frame(
       img ? { src: img.src, alt: img.alt || fallbackAlt } : null,
-      { eager: i === 0, placeholder: (views[i] || "Extra") + " view", sizes: IMG_SIZES.gallery }
+      {
+        eager: i === 0,
+        placeholder: (views[i] || "Extra") + " view",
+        sizes: IMG_SIZES.gallery,
+        profile: "detail"
+      }
     ) + "</div>";
   }).join("\n");
 
