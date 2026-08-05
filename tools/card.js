@@ -135,9 +135,30 @@ function frame(image, { eager = false, placeholder = "Photo coming soon", sizes 
 
 /* --- the card ------------------------------------------------------------ */
 
+/**
+ * The price block, used on the card and on the product page.
+ *
+ * Off sale it is one line. On sale the old price sits above the new one,
+ * smaller and struck through — `wasPrice` is the original, `price` is always
+ * what the customer actually pays (tools/content.js does that swap, so nothing
+ * downstream has to know a sale is on).
+ *
+ * Both spans are always in the markup, with the struck-through one hidden when
+ * there is nothing to strike. That is what lets app.js switch a card between
+ * sale and full price as the size dropdown changes, without building elements.
+ */
+function priceBlock(sz, cls) {
+  return '<span class="lp-price-was" data-price-was' + (sz.wasPrice ? "" : " hidden") + ">" +
+    (sz.wasPrice ? money(sz.wasPrice) : "") + "</span>" +
+    '<span class="' + cls + '" data-price-now>' + money(sz.price) + "</span>";
+}
+
 function productCard(model, p) {
+  // data-was rides along on each option so the dropdown carries both prices;
+  // empty on a size that is not discounted.
   const opts = p.sizes.map((s, i) =>
-    '<option value="' + i + '" data-price="' + s.price + '">' + esc(s.size) + "</option>"
+    '<option value="' + i + '" data-price="' + s.price + '" data-was="' +
+    (s.wasPrice || "") + '">' + esc(s.size) + "</option>"
   ).join("");
   const first = p.sizes[0];
   const alt = p.images[0]
@@ -153,7 +174,7 @@ ${frame(p.images[0] ? { src: p.images[0].src, alt } : null, { placeholder: "Phot
 </a>
 <div class="lp-card-body">
 <h4><a class="lp-card-name" href="${safeHref(p.href)}">${esc(p.name)}</a></h4>
-<div class="lp-card-price" data-price-out>${money(first.price)}</div>
+<div class="lp-card-price${first.wasPrice ? " lp-card-price--sale" : ""}" data-price-out>${priceBlock(first, "lp-price-now")}</div>
 <select class="lp-select" data-price-select aria-label="${esc("Select size for " + p.name)}">${opts}</select>
 </div>
 </article>`;
@@ -197,9 +218,23 @@ function fromCmsEntry(data, catalogue) {
   // could not be loaded, because "unknown" would then mean "unknowable".
   const sizes = (Array.isArray(d.sizes) ? d.sizes : [])
     .filter(s => s && s.available !== false)
-    .map(s => ({ size: String(s.size || "").trim(), price: Number(s.price) }))
+    .map(s => ({
+      size: String(s.size || "").trim(),
+      price: Number(s.price),
+      salePrice: Number(s.salePrice)
+    }))
     .filter(s => s.size && Number.isFinite(s.price) && s.price > 0 &&
       (!order.length || order.includes(s.size)))
+    // Same swap as the site (tools/content.js): `price` is what is paid,
+    // `wasPrice` is the struck-through original, and a sale price that is not
+    // actually lower is ignored rather than shown as a rise.
+    .map(s => {
+      const onSale = Number.isFinite(s.salePrice) && s.salePrice > 0 && s.salePrice < s.price;
+      if (Number.isFinite(s.salePrice) && s.salePrice > 0 && !onSale) {
+        notes.push("The sale price for " + s.size + " is not below its normal price, so it is ignored.");
+      }
+      return { size: s.size, price: onSale ? s.salePrice : s.price, wasPrice: onSale ? s.price : null };
+    })
     .sort((a, b) => order.indexOf(a.size) - order.indexOf(b.size));
 
   // A pasted link wins over a library pick, exactly as on the site
@@ -285,7 +320,7 @@ function findSubcategory(catalogue, id) {
  * scope, and the same `const` name in both is a redeclaration error that kills
  * whichever loads second.
  */
-const CARD_API = { esc, safeHref, money, frame, IMG_SIZES, productCard, fromCmsEntry, findSubcategory };
+const CARD_API = { esc, safeHref, money, frame, IMG_SIZES, priceBlock, productCard, fromCmsEntry, findSubcategory };
 
 if (typeof module === "object" && module.exports) {
   module.exports = CARD_API;

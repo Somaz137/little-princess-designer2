@@ -255,7 +255,11 @@ function load({ dir = CONTENT, quiet: silent = false } = {}) {
 
     const sizes = (Array.isArray(data.sizes) ? data.sizes : [])
       .filter(s => s && s.available !== false)
-      .map(s => ({ size: String(s.size || "").trim(), price: Number(s.price) }))
+      .map(s => ({
+        size: String(s.size || "").trim(),
+        price: Number(s.price),
+        salePrice: Number(s.salePrice)
+      }))
       .filter(s => {
         if (!SIZES.includes(s.size)) {
           warn('product "' + name + '" has unknown size "' + s.size + '" — that row is ignored');
@@ -267,11 +271,38 @@ function load({ dir = CONTENT, quiet: silent = false } = {}) {
         }
         return true;
       })
+      // A sale row carries what the customer pays as `price`, so everything
+      // downstream — the totals, the filters, the "from PKR" line, the price in
+      // the WhatsApp message, the price search engines are shown — is the real
+      // one without having to know a sale is on. `wasPrice` is the crossed-out
+      // original, and is null on anything not discounted.
+      .map(s => {
+        const onSale = Number.isFinite(s.salePrice) && s.salePrice > 0 && s.salePrice < s.price;
+        if (Number.isFinite(s.salePrice) && s.salePrice > 0 && !onSale) {
+          warn('product "' + name + '" has a sale price for ' + s.size + ' that is not below the ' +
+               'normal price (' + s.salePrice + ' vs ' + s.price + ') — the sale price is ignored');
+        }
+        return {
+          size: s.size,
+          price: onSale ? s.salePrice : s.price,
+          wasPrice: onSale ? s.price : null
+        };
+      })
       .sort((a, b) => SIZES.indexOf(a.size) - SIZES.indexOf(b.size));
 
     if (!sizes.length) {
       warn('product "' + name + '" has no size with a price — hidden from the site');
       continue;
+    }
+
+    // The badge and the sale prices are set in two different places on the
+    // form, so it is easy to do one and forget the other. Neither half is
+    // wrong on its own — a sale can be marked before it is priced, and a
+    // quiet discount is a fair thing to want — but a "Sale" badge over
+    // undiscounted prices is the one combination that misleads a customer.
+    if (nonEmpty(data.badge) === "Sale" && !sizes.some(s => s.wasPrice)) {
+      warn('product "' + name + '" is badged "Sale" but no size has a sale price — ' +
+           'customers see the badge and the usual price');
     }
 
     const specsIn = data.specs || {};

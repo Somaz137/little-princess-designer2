@@ -1,0 +1,13 @@
+{
+  "name": "Badged sale only",
+  "subcategory": "s2",
+  "badge": "Sale",
+  "addedOn": "2026-08-04T11:00:00.000Z",
+  "images": [],
+  "sizes": [
+    {
+      "size": "0–3 years",
+      "price": 5000
+    }
+  ]
+}

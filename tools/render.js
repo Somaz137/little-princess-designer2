@@ -567,8 +567,11 @@ function renderProduct(model, p, siteUrl) {
     ) + "</div>";
   }).join("\n");
 
+  // data-was carries the crossed-out original for a discounted size, empty for
+  // one at its usual price — app.js repaints from these as the size changes.
   const opts = p.sizes.map((sz, i) =>
-    '<option value="' + i + '" data-price="' + sz.price + '">' + esc(sz.size) + "</option>"
+    '<option value="' + i + '" data-price="' + sz.price + '" data-was="' +
+    (sz.wasPrice || "") + '">' + esc(sz.size) + "</option>"
   ).join("");
   const first = p.sizes[0];
 
@@ -649,7 +652,7 @@ ${arrows}
 <label class="lp-label" for="lp-detail-size">Select size</label>
 <select class="lp-select lp-select--detail" id="lp-detail-size" data-detail-size>${opts}</select>
 </div>
-<div class="lp-detail-price" data-detail-price>${money(first.price)}</div>
+<div class="lp-detail-price${first.wasPrice ? ' lp-detail-price--sale' : ''}" data-detail-price>${card.priceBlock(first, "lp-price-now")}</div>
 
 <div class="lp-desc">
 <h2 class="lp-eyebrow">Product description</h2>

@@ -64,7 +64,8 @@ console.log("Checking tools/content.js against tools/fixtures/content, and tools
 /* which products survive */
 
 check("visible products", model.products.map(p => p.name).sort(),
-  ["Bad size row", "Inherits site", "Inherits sub", "Own words", "Photos", "Some sizes off", "Undated"]);
+  ["Bad size row", "Badged sale only", "Inherits site", "Inherits sub", "On sale", "Own words",
+    "Photos", "Some sizes off", "Undated"]);
 check("hidden products are counted, not rendered", model.stats.hidden, 1);
 checkTrue("a product with no usable price is dropped, with a warning",
   !byName["No price"] && warned(w, "No price", "no size with a price"));
@@ -115,7 +116,7 @@ check("products sort newest-first within a subcategory, not by filename",
 check("a product with no date sorts last rather than first",
   model.categories.find(c => c.key === "girls").subcategories
     .find(s => s.id === "s2").products.map(p => p.name),
-  ["Inherits site", "Photos", "Undated"]);
+  ["Inherits site", "On sale", "Badged sale only", "Photos", "Undated"]);
 check("a missing date is 0, not NaN — NaN would make the sort incoherent",
   byName["Undated"].addedOn, 0);
 check("a date is parsed to milliseconds for sorting",
@@ -180,6 +181,37 @@ checkTrue("…and nothing to warm", !images.warms(OTHER));
 check("product id and href come from the filename",
   [byName["Own words"].id, byName["Own words"].href], ["own-words", "/product/own-words/"]);
 check("category href", model.categories.find(c => c.key === "girls").href, "/girls/");
+
+/* --- sale prices ---------------------------------------------------------
+ *
+ * A discounted row carries what the customer pays as `price`, with the old
+ * price kept aside as `wasPrice`. That swap is the whole design: the totals,
+ * the filters, the "from PKR" line, the WhatsApp message and the price given
+ * to search engines all keep reading `price` and are correct on a sale without
+ * knowing one is on. These checks are what hold that promise.
+ */
+
+const sale = byName["On sale"];
+
+check("a discounted size charges the sale price",
+  [sale.sizes[0].size, sale.sizes[0].price, sale.sizes[0].wasPrice],
+  ["0–3 years", 6000, 8000]);
+check("a size with no sale price is untouched",
+  [sale.sizes[1].price, sale.sizes[1].wasPrice], [9000, null]);
+check("a sale price that is not lower is ignored rather than shown as a rise",
+  [sale.sizes[2].price, sale.sizes[2].wasPrice], [10000, null]);
+checkTrue("…and that is warned about, since it is a typo not a choice",
+  warned(w, "On sale", "not below", "ignored"));
+check("the lowest price — filters, and the 'from PKR' line — follows the sale",
+  sale.minPrice, 6000);
+
+// The badge and the prices are set in different places on the form, so the one
+// combination that misleads a customer — badge on, nothing actually discounted
+// — gets its own warning. The piece still builds; it is a warning, not a bar.
+checkTrue('a "Sale" badge with no sale price anywhere is warned about',
+  warned(w, "Badged sale only", "no size has a sale price"));
+checkTrue("…and that piece still reaches the site", !!byName["Badged sale only"]);
+check("…at its ordinary price", byName["Badged sale only"].sizes[0].wasPrice, null);
 
 /* --- tools/card.js: the card the site and the admin preview share --------
  *
@@ -267,6 +299,33 @@ check("a pasted link beats a library pick on the same row",
   ["https://ik.imagekit.io/lpdlhr/a.jpg", "https://example.test/pasted.jpg"]);
 check("a photo with no description falls back to the product name",
   typed.product.images[1].alt, "Half typed");
+
+/* the preview panel shows a sale the same way the site does */
+
+const salePreview = card.fromCmsEntry({
+  name: "Preview sale",
+  badge: "Sale",
+  sizes: [
+    { size: "0–3 years", price: 8000, salePrice: 6000 },
+    { size: "4–6 years", price: 9000 },
+    { size: "7–9 years", price: 10000, salePrice: 12000 }
+  ]
+}, catalogue);
+
+check("the preview charges the sale price and keeps the old one to strike",
+  salePreview.product.sizes.map(s => [s.price, s.wasPrice]),
+  [[6000, 8000], [9000, null], [10000, null]]);
+check("…and the preview's lowest price follows the sale, as the site's does",
+  salePreview.product.minPrice, 6000);
+checkTrue("…and a sale price that is not lower is called out rather than shown",
+  salePreview.notes.some(n => n.includes("7–9 years") && n.includes("not below")));
+checkTrue("the drawn card carries both prices",
+  card.productCard(null, salePreview.product).includes("PKR 8,000") &&
+  card.productCard(null, salePreview.product).includes("PKR 6,000"));
+checkTrue("…and marks itself as a sale card so the styling applies",
+  card.productCard(null, salePreview.product).includes("lp-card-price--sale"));
+checkTrue("a card at its usual price hides the struck-through line rather than leaving a gap",
+  card.productCard(null, typed.product).includes('data-price-was hidden'));
 check("the subcategory code resolves to its readable name",
   typed.product.subcategoryName, "Has defaults");
 check("…and to the tab label the card's screen-reader text needs",
