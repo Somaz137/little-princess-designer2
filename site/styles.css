@@ -761,7 +761,8 @@ carousel-3d{
      `margin:0` — so the instant the header minimised the button snapped from
      the right edge to the left at full size and only then faded out, over
      there. That is the flash in the owner's screen recording. Whatever else
-     changes in this rule, never reset the margin. */
+     changes in this rule, never reset the margin.
+
      `visibility` is what takes the collapsed link out of the tab order — a
      0x0 transparent anchor is still focusable, and tabbing to something a
      sighted keyboard user cannot see is its own bug. It is in the transition

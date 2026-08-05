@@ -142,8 +142,9 @@ function load() {
   for (const s of subs) {
     const clash = seenId.get(s.id);
     if (clash) {
-      warn('subcategory "' + s.name + '" uses the id "' + s.id + '", which "' + clash.name +
-        '" already uses — one of them will show no products until you give it its own id');
+      warn('subcategory "' + s.name + '" uses the id "' + s.id + '", but subcategory "' +
+        clash.name + '" already uses that id — one of them will show no products ' +
+        'until you give it an id of its own');
     } else {
       seenId.set(s.id, s);
     }

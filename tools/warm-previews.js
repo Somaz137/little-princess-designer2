@@ -46,8 +46,12 @@ function collectShareImages(dir) {
         if (entry.name !== "admin") walk(full);
       } else if (entry.name.endsWith(".html")) {
         const html = fs.readFileSync(full, "utf8");
-        let m;
-        while ((m = OG_IMAGE_RE.exec(html))) found.add(decodeEntities(m[1]));
+        // matchAll rather than a shared `exec` loop: OG_IMAGE_RE is global and
+        // module-level, so an `exec` loop leans on the terminating null to
+        // reset `lastIndex` between files. That happens to hold here, but it
+        // stops holding the moment anyone adds a `break`, and the failure — a
+        // few images silently never warmed — would be invisible.
+        for (const m of html.matchAll(OG_IMAGE_RE)) found.add(decodeEntities(m[1]));
       }
     }
   };
