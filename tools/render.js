@@ -451,7 +451,7 @@ function renderShop(model, cat, siteUrl) {
     if (!sub.products.length) {
       return `<section class="lp-subsect" data-subsect>
 <h3 id="${esc(sub.id)}">${esc(sub.name)}</h3>
-<p class="lp-empty">New pieces for this category are on the way — message us on WhatsApp and we will send what is in the studio right now.</p>
+<p class="lp-empty">New pieces for this category are on the way.</p>
 </section>`;
     }
     return `<section class="lp-subsect" data-subsect data-step="${LOAD_STEP}" data-visible="${INITIAL_VISIBLE}">
