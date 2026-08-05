@@ -41,6 +41,16 @@ const safeHref = url => {
  */
 const SUMMARY_TAIL = "Made to order, hand-finished in our Lahore studio.";
 
+/** How many pieces the home page shows as newest, and the wording above them. */
+const LATEST_COUNT = 4;
+const LATEST_HEADING = "Just finished in the studio";
+
+/** First of these with something in it; "" if none. Mirrors content.js. */
+const nonEmptyText = (...vals) => {
+  for (const v of vals) if (typeof v === "string" && v.trim()) return v.trim();
+  return "";
+};
+
 const money = n => "PKR " + Number(n).toLocaleString("en-US");
 
 /** Splits a CMS textarea into paragraphs on blank lines. */
@@ -333,6 +343,21 @@ function renderHome(model, siteUrl) {
   const s = model.settings;
   const hooks = (s.heroHooks || []).slice(0, 3).map(h => (typeof h === "string" ? h : h.text || ""));
   const ctas = s.heroCtas || [];
+
+  // The newest four pieces across the whole catalogue. Until this row existed,
+  // new work was invisible unless a customer happened to open the right
+  // subcategory. Same card as the shop pages, so it prices and links the same
+  // way; app.js wires every [data-product] on the page, and the filter and
+  // load-more code only looks inside [data-subsect], which this is not.
+  const newest = [...model.products].sort((a, b) => b.addedOn - a.addedOn || a.name.localeCompare(b.name))
+    .slice(0, LATEST_COUNT);
+  const latest = newest.length ? `
+<section class="lp-sect lp-sect--gap9">
+<h2 class="lp-h2"><img class="lp-crown" src="/assets/logo-crown.png" alt="">${esc(nonEmptyText(s.latestHeading, LATEST_HEADING))}</h2>
+<div class="lp-grid lp-grid--4">
+${newest.map(p => productCard(model, p)).join("\n")}
+</div>
+</section>` : "";
   const stages = [
     { src: "/assets/dress-sketch-tall.webp", alt: "Pencil sketch of a made-to-order party frock for girls, drawn in the Little Princess Designer studio" },
     { src: "/assets/dress-colour-tall.webp", alt: "The same girls party frock, watercoloured to show the chosen fabric and trim colours" },
@@ -391,6 +416,7 @@ ${(s.carousel || []).map((img, i) =>
 </carousel-3d>
 </div>
 </section>
+${latest}
 
 <section class="lp-sect lp-sect--gap9">
 <h2 class="lp-h2"><img class="lp-crown" src="/assets/logo-crown.png" alt="">${esc(s.categoriesHeading)}</h2>

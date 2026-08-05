@@ -159,13 +159,12 @@ collections:
           - { label: "Sold out", value: "Sold out" }
         hint: "Optional corner label on the photo. \"Sold out\" keeps the piece visible but marks it clearly."
 
-      - label: "Sort order"
-        name: order
-        widget: number
-        value_type: int
-        default: 100
+      - label: "Added on"
+        name: addedOn
+        widget: datetime
+        default: "{{now}}"
         required: false
-        hint: "Lower numbers come first within the subcategory. 10, 20, 30… leaves room to slot things in later."
+        hint: "Filled in for you when you add a piece. Newest pieces come first on the shop pages, and the four newest of all appear on the home page. Change it only to move a piece up or down that order."
 
       - label: "Sizes and prices"
         name: sizes
@@ -477,6 +476,12 @@ collections:
             fields:
               - { label: "Title", name: title, widget: string }
               - { label: "Subtitle", name: subtitle, widget: string, hint: "Hidden on phones to save space." }
+
+          - label: "Newest pieces heading"
+            name: latestHeading
+            widget: string
+            required: false
+            hint: "Sits above the four most recently added pieces on the home page."
 
           - { label: "Features heading", name: featuresHeading, widget: string }
           - label: "Features"

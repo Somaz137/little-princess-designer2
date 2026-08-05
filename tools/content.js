@@ -287,7 +287,10 @@ function load({ dir = CONTENT, quiet: silent = false } = {}) {
       tab: sub.parent,
       tabLabel: byKey[sub.parent].label,
       badge: nonEmpty(data.badge),
-      order: Number(data.order ?? 100),
+      // Milliseconds, for sorting. Anything unparseable — a hand-edited file,
+      // or a piece from before the field existed — sorts to the bottom rather
+      // than to 1970-adjacent nonsense or NaN.
+      addedOn: Date.parse(data.addedOn) || 0,
       sizes,
       minPrice: Math.min(...sizes.map(s => s.price)),
       accessoryPrice: Number(
@@ -317,7 +320,11 @@ function load({ dir = CONTENT, quiet: silent = false } = {}) {
   }
 
   for (const s of subs) {
-    s.products.sort((a, b) => a.order - b.order || a.name.localeCompare(b.name));
+    // Newest first. `order` used to decide this and is gone from products; the
+    // dates it was converted into reproduce exactly the sequence it gave.
+    // Subcategories keep their own `order` — that is a layout choice, not a
+    // recency one.
+    s.products.sort((a, b) => b.addedOn - a.addedOn || a.name.localeCompare(b.name));
     if (!s.products.length) warn('subcategory "' + s.name + '" (' + s.id + ') has no visible products');
   }
 

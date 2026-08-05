@@ -58,7 +58,7 @@ console.log("Checking tools/content.js against tools/fixtures/content…\n");
 /* which products survive */
 
 check("visible products", model.products.map(p => p.name).sort(),
-  ["Bad size row", "Inherits site", "Inherits sub", "Own words", "Photos", "Some sizes off"]);
+  ["Bad size row", "Inherits site", "Inherits sub", "Own words", "Photos", "Some sizes off", "Undated"]);
 check("hidden products are counted, not rendered", model.stats.hidden, 1);
 checkTrue("a product with no usable price is dropped, with a warning",
   !byName["No price"] && warned(w, "No price", "no size with a price"));
@@ -102,10 +102,18 @@ check("the size vocabulary is the one read from the admin", model.sizes, SIZES);
 check("subcategories sort by order, not by filename",
   model.categories.find(c => c.key === "girls").subcategories.map(s => s.name),
   ["No defaults", "Has defaults"]);
-check("products sort by order within a subcategory",
+check("products sort newest-first within a subcategory, not by filename",
   model.categories.find(c => c.key === "girls").subcategories
     .find(s => s.id === "s1").products.map(p => p.name),
   ["Inherits sub", "Own words", "Bad size row", "Some sizes off"]);
+check("a product with no date sorts last rather than first",
+  model.categories.find(c => c.key === "girls").subcategories
+    .find(s => s.id === "s2").products.map(p => p.name),
+  ["Inherits site", "Photos", "Undated"]);
+check("a missing date is 0, not NaN — NaN would make the sort incoherent",
+  byName["Undated"].addedOn, 0);
+check("a date is parsed to milliseconds for sorting",
+  byName["Own words"].addedOn, Date.parse("2026-08-03T12:00:00.000Z"));
 checkTrue("a duplicated subcategory id is warned about",
   warned(w, "Duplicate id", 'already uses that id'));
 checkTrue("a subcategory under an unknown parent is skipped, with a warning",

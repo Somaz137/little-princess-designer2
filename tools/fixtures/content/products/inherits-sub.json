@@ -1,4 +1,11 @@
 {
-  "name": "Inherits sub", "subcategory": "s1", "order": 10,
-  "sizes": [{ "size": "4–6 years", "price": 2000 }]
+  "name": "Inherits sub",
+  "subcategory": "s1",
+  "addedOn": "2026-08-04T12:00:00.000Z",
+  "sizes": [
+    {
+      "size": "4–6 years",
+      "price": 2000
+    }
+  ]
 }

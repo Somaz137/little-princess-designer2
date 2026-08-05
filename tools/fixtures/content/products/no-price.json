@@ -1,7 +1,15 @@
 {
-  "name": "No price", "subcategory": "s1",
+  "name": "No price",
+  "subcategory": "s1",
+  "addedOn": "2026-07-01T12:00:00.000Z",
   "sizes": [
-    { "size": "4–6 years", "price": 0 },
-    { "size": "7–9 years", "price": "not a number" }
+    {
+      "size": "4–6 years",
+      "price": 0
+    },
+    {
+      "size": "7–9 years",
+      "price": "not a number"
+    }
   ]
 }

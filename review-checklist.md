@@ -112,7 +112,7 @@ Ordered by what to do first. The three admin-facing items (#3, #4, #13) all edit
       non-clickable as "Currently unavailable", keeping price, size dropdown and
       the floating WhatsApp button working for enquiries.
 
-- [ ] **`tools/content.js:231` + `site/admin/config.yml` — newest pieces are not
+- [x] **`tools/content.js:231` + `site/admin/config.yml` — newest pieces are not
       surfaced anywhere.** Products sort by a hand-set `order` number (values 5–60
       are deliberately curated today, so this cannot simply be replaced) and carry
       no date, so new work is invisible until a customer digs into the right

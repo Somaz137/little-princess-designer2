@@ -1,8 +1,23 @@
 {
-  "name": "Photos", "subcategory": "s2", "order": 20,
+  "name": "Photos",
+  "subcategory": "s2",
+  "addedOn": "2026-08-03T12:00:00.000Z",
   "images": [
-    { "url": "https://example.test/pasted.jpg", "upload": "/assets/uploads/ignored.jpg", "alt": "" },
-    { "url": "", "upload": "assets/uploads/relative.jpg", "alt": "Has alt" }
+    {
+      "url": "https://example.test/pasted.jpg",
+      "upload": "/assets/uploads/ignored.jpg",
+      "alt": ""
+    },
+    {
+      "url": "",
+      "upload": "assets/uploads/relative.jpg",
+      "alt": "Has alt"
+    }
   ],
-  "sizes": [{ "size": "13–16 years", "price": 7000 }]
+  "sizes": [
+    {
+      "size": "13–16 years",
+      "price": 7000
+    }
+  ]
 }

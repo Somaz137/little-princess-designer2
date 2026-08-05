@@ -1,7 +1,15 @@
 {
-  "name": "Bad size row", "subcategory": "s1", "order": 30,
+  "name": "Bad size row",
+  "subcategory": "s1",
+  "addedOn": "2026-08-02T12:00:00.000Z",
   "sizes": [
-    { "size": "99–100 years", "price": 5000 },
-    { "size": "10–12 years", "price": 4000 }
+    {
+      "size": "99–100 years",
+      "price": 5000
+    },
+    {
+      "size": "10–12 years",
+      "price": 4000
+    }
   ]
 }
