@@ -154,6 +154,12 @@ function load() {
   const subById = Object.fromEntries(subs.map(s => [s.id, s]));
 
   // --- products -----------------------------------------------------------
+  // The last rung of the wording cascade, editable in Site Settings. Missing
+  // altogether is fine — every field falls back to "" exactly as it did before
+  // this level existed.
+  const siteDefaults = settings.productDefaults || {};
+  const siteSpecs = siteDefaults.specs || {};
+
   const products = [];
   const noPhoto = [];
   let hiddenCount = 0;
@@ -211,13 +217,17 @@ function load() {
           ? data.accessoryPrice
           : settings.accessoryPriceDefault || 0
       ),
-      description: nonEmpty(data.description, sub.defaultDescription),
-      description2: nonEmpty(data.description2, sub.defaultDescription2),
+      // product → subcategory → site default. The third step exists so no
+      // wording can resolve empty: leaving a piece and its subcategory both
+      // blank is two clicks in the admin, and an empty description takes the
+      // page summary with it.
+      description: nonEmpty(data.description, sub.defaultDescription, siteDefaults.description),
+      description2: nonEmpty(data.description2, sub.defaultDescription2, siteDefaults.description2),
       specs: {
-        fabric: nonEmpty(specsIn.fabric, specsDefault.fabric),
-        occasion: nonEmpty(specsIn.occasion, specsDefault.occasion),
-        fit: nonEmpty(specsIn.fit, specsDefault.fit),
-        care: nonEmpty(specsIn.care, specsDefault.care)
+        fabric: nonEmpty(specsIn.fabric, specsDefault.fabric, siteSpecs.fabric),
+        occasion: nonEmpty(specsIn.occasion, specsDefault.occasion, siteSpecs.occasion),
+        fit: nonEmpty(specsIn.fit, specsDefault.fit, siteSpecs.fit),
+        care: nonEmpty(specsIn.care, specsDefault.care, siteSpecs.care)
       },
       images
     };

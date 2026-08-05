@@ -422,6 +422,33 @@ collections:
           - { label: "Accessory note", name: accessoryNote, widget: string }
           - { label: "Delivery note", name: deliveryNote, widget: string, hint: "The small print under the total on a product page." }
 
+          - label: "Default product wording"
+            name: productDefaults
+            widget: object
+            collapsed: true
+            hint: >
+              The last fallback for product wording. A piece uses its own words
+              first, then its subcategory's standard wording, then these. Filling
+              these in means no product can end up with a blank description or an
+              empty details row, however it was added.
+            fields:
+              - { label: "Description", name: description, widget: text, required: false }
+              - { label: "Second paragraph", name: description2, widget: text, required: false }
+              - label: "Closing sentence"
+                name: summaryTail
+                widget: string
+                required: false
+                hint: "Ends the one-line summary shown in Google results and WhatsApp previews, after the first sentence of the description."
+              - label: "Details"
+                name: specs
+                widget: object
+                collapsed: true
+                fields:
+                  - { label: "Fabric", name: fabric, widget: string, required: false }
+                  - { label: "Occasion", name: occasion, widget: string, required: false }
+                  - { label: "Fit", name: fit, widget: string, required: false }
+                  - { label: "Care", name: care, widget: string, required: false }
+
           - label: "Home page — search engine listing"
             name: seo
             widget: object

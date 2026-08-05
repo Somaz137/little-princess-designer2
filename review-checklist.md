@@ -47,7 +47,7 @@ Ordered by what to do first. The three admin-facing items (#3, #4, #13) all edit
       **Fix:** guard the split, and add site-wide fallback wording (next item) so
       the field can never resolve empty in practice.
 
-- [ ] **`content/settings.json` + `site/admin/config.yml:391` — no site-wide default
+- [x] **`content/settings.json` + `site/admin/config.yml:391` — no site-wide default
       product wording.** Fallbacks stop at the subcategory
       (`tools/content.js:213-220`), and the closing sentence used in every product
       summary is hardcoded at `tools/render.js:644` where no admin can reach it.

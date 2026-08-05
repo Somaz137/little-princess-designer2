@@ -35,8 +35,9 @@ const safeHref = url => {
 };
 
 /**
- * Closes every product's page summary. Hardcoded here for now — the review
- * checklist has moving it into Site Settings as its own item.
+ * Closes every product's page summary when Site Settings has no wording of its
+ * own. Kept as a constant rather than an empty string so a settings file
+ * missing the field still produces a whole sentence.
  */
 const SUMMARY_TAIL = "Made to order, hand-finished in our Lahore studio.";
 
@@ -616,7 +617,8 @@ function renderProduct(model, p, siteUrl) {
   // "hand-stitched buttons.. Made to order" in today's Prince Arthur Suit
   // summary comes from.
   const opening = String(p.description || "").split(". ")[0].trim().replace(/[.\s]+$/, "");
-  const desc = opening ? opening + ". " + SUMMARY_TAIL : SUMMARY_TAIL;
+  const tail = (s.productDefaults && String(s.productDefaults.summaryTail || "").trim()) || SUMMARY_TAIL;
+  const desc = opening ? opening + ". " + tail : tail;
 
   const specRows = [
     ["Fabric", p.specs.fabric],
