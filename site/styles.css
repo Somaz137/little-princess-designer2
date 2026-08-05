@@ -147,9 +147,29 @@ img{max-width:100%}
 .lp-story{position:relative;height:320vh;background:#EFDCE4}
 .lp-sticky{
   position:sticky;top:var(--lp-header,78px);
-  height:calc(100svh - var(--lp-header,78px));
+  /* `svh` is the small-viewport height — the phone's viewport with the URL bar
+     showing — so the hero does not resize as the bar slides away. It is also
+     Chrome 108 / Safari 15.4 / Samsung Internet 21, and an engine older than
+     that throws the whole declaration away rather than ignoring the unit.
+     That left this element at `height:auto`, so the art frame's `height:100%`
+     resolved against nothing and the entire hero collapsed to zero — while the
+     headlines above it, laid out normally, carried on animating. That is the
+     "the title changed but there was no picture" report: the images download
+     fine, they are just painted into a zero-sized box.
+     So `vh` here, and `svh` only where it is supported. It has to be @supports
+     rather than the usual trick of writing both declarations and letting the
+     invalid one be dropped — that trick does NOT work through `var()`. A
+     declaration containing a variable cannot be validated until computed-value
+     time, so the `svh` version wins the cascade at parse time and only then
+     turns out to be invalid, at which point the property resets to `auto`
+     instead of falling back to the line above it. Verified: written as two
+     plain declarations, this element still collapsed. */
+  height:calc(100vh - var(--lp-header,78px));
   display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
   overflow:hidden;
+}
+@supports (height:1svh){
+  .lp-sticky{height:calc(100svh - var(--lp-header,78px))}
 }
 /* The three headlines share one grid cell in normal flow, so the band sizes
    itself to the tallest wrapped line and can never clip. */
@@ -174,6 +194,19 @@ img{max-width:100%}
   position:relative;height:100%;width:auto;aspect-ratio:860/1143;max-width:100%;
   border-radius:var(--radius-hand);overflow:hidden;
 }
+/* The hero frame is the one place a missing `aspect-ratio` is fatal rather
+   than ugly. Everywhere else it sits on a `width:100%` box and only supplies
+   the height; here the frame is `width:auto` with a percentage height and none
+   of its children are in flow, so without the ratio there is nothing to give
+   it a width and it computes to zero. Chrome gained `aspect-ratio` in 88 and
+   Safari in 15, so this is a much older tier of browser than the `svh` problem
+   above — and one that would be losing every product photo too. Filling the
+   available width is a fair trade there: `object-fit:cover` crops the dress
+   rather than distorting it. */
+@supports not (aspect-ratio:1/1){
+  .lp-artframe{width:100%}
+}
+
 /* app.js writes inline opacity on these every scroll frame. Without a
    compositor hint each write repaints a full-bleed image, which is what
    makes the hero judder on phones. Six promoted layers is a bounded cost. */
@@ -774,7 +807,10 @@ carousel-3d{
   .lp-header[data-min="1"] .lp-igbtn svg{width:0;height:0}
 
   /* Hero story */
-  .lp-story{height:165svh}
+  /* Same fallback pair as .lp-sticky. Without the `vh` line an older phone
+     falls all the way back to the 320vh in the base rule, which stretches the
+     three-stage crossfade over twice the scrolling it was timed for. */
+  .lp-story{height:165vh;height:165svh}
   .lp-sticky{justify-content:space-between}
   .lp-hooks{min-height:clamp(48px,8vh,84px);padding:0.65rem 1rem 0.55rem}
   .lp-hook{font-size:2.5rem}
