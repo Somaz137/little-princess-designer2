@@ -1,132 +1,138 @@
-# Handoff: Little Princess Designer — Netlify + Decap CMS launch
-_Last updated: 2026-08-04_
+# Handoff: Little Princess Designer — live site, admin, link previews
+_Last updated: 2026-08-05_
 
 ## Goal
 
-Get a handmade kidswear shop site (Lahore) live on Netlify with a working admin
-page, so the owner can add products, prices and photos without a developer.
-Photos are to live on Cloudinary rather than in the git repo.
+A handmade kidswear shop (Lahore) running on Netlify, where the owner and
+invited helpers add products, prices and photos through a form — no developer.
+Photos live on Cloudinary, not in git.
 
 ## What we're building
 
 Static site, no database, no server. `content/` holds one JSON file per product,
-subcategory, category page, plus a settings file. Netlify runs `npm run build`,
-which regenerates all 45 pages from `content/` + `site/` into `dist/`. The Decap
-CMS admin at `/admin/` writes those JSON files back to the repo, which triggers
-the next rebuild.
+subcategory and category page plus a settings file. Netlify runs `npm run build`,
+which regenerates every page from `content/` + `site/` into `dist/`. Decap CMS at
+`/admin/` writes those JSON files back to the repo, triggering the next build.
 
-Key constraints:
-- Zero runtime dependencies. `tools/check-config.js` parses `config.yml` with a
-  hand-rolled YAML reader — anything added to the config must survive it, and it
-  gates every build.
+Constraints that bite if forgotten:
+- **Zero runtime dependencies.** `tools/check-config.js` parses `config.yml` with
+  a hand-rolled YAML reader and gates every build — anything added to the config
+  must survive it.
+- **Every field in `content/` must be declared in `site/admin/config.yml`**, or
+  Decap silently deletes it on save. `npm run check` enforces this.
 - `site/tokens.css` is a binding design system. Don't edit its values.
-- Every field present in `content/` must be declared in `site/admin/config.yml`,
-  or Decap silently deletes it on save. `npm run check` enforces this.
+- **Never claim a mobile fix is verified.** Headless Chromium ignores the
+  viewport meta, does not reproduce scrolling, and does not fire the URL-bar
+  resize events. Phone-width screenshots are capture artifacts — the existing
+  contact page "overflows" identically. Only a real device confirms.
 
 ## Current state
 
-**Live and working:** site deploys at `https://littleprincessdesigner.netlify.app`.
-Build is clean (45 pages + `404.html`). Everything below is merged to `main`
-(PR #1 and PR #2, HEAD `0d73d7a`).
+**Live** at `https://littleprincessdesigner.netlify.app`. Build clean.
+Admin works end to end: two people (Rimaz, Javeria) have saved edits through
+DecapBridge, and their names land in the commit messages as intended.
 
-**Fixed:** publishing from the admin used to fail with
-`API_ERROR: Resource not accessible by personal access token` — the token
-DecapBridge uses had read-only access. The owner corrected it in GitHub /
-DecapBridge settings; nothing in this repo changed. `main` has had no CMS-authored
-commit yet, so the first successful save is still unconfirmed from here.
+**PR #5 is OPEN and UNMERGED** — https://github.com/Somaz137/little-princess-designer2/pull/5
+`mergeable_state: clean`, Netlify checks were still running when the session
+ended. Branch `claude/netlify-bridgecap-cms-setup-xb5hwb` at `0c160d2`, one
+commit ahead of `main` (`38883cb`). Merging it is the next action.
 
-**Not started:** Cloudinary. The `media_library` block in
-`site/admin/config.yml` is still commented out, so uploads would commit into
-this repo. Must be switched on *before* any photo is uploaded — repo history is
-permanent. It needs the owner's Cloudinary **cloud name** and **API key**; those
-two values are the only edit left.
+**Unverified in PR #5** (all need a real phone or a real share):
+- Instagram icon no longer flashing left on header minimise
+- Header now waiting for the hero sequence before minimising
+- Cloudinary-resized link previews actually rendering in WhatsApp
 
-**Empty:** every image slot in `content/` is still `{"url": "", "upload": ""}` —
-39 products, 4 category cards, 10 carousel photos, 1 About photo. The build warns
-about the products and succeeds; the site renders "photo coming soon" frames.
+**Content problem, not code:** CMS edits deleted subcategory `b2`, orphaning
+three boys products — Cotton-Silk Three Piece, Eid Waistcoat Set, Junior
+Waistcoat Set. They are hidden from the site until reassigned in the admin. The
+build names each one. Catalogue is now 36 live products, 43 pages.
+
+**Not started:** Cloudinary's *upload library*. The `media_library` block in
+`site/admin/config.yml` is still commented out, so the admin has no upload
+button — photos are pasted as Cloudinary URLs by hand, which works. Enabling it
+needs only the owner's cloud name and API key (not the API secret).
+
+**Empty:** all four category card photos (`content/categories/*.json`,
+`card.image`). This is why category links preview with the generic card and why
+the home page shows "GIRLS PHOTO" placeholders. Owner must add them in the
+admin; no code change can supply them.
 
 ## Files in flight
 
-- `site/admin/config.yml` — done. `backend: git-gateway` with DecapBridge PKCE,
-  real site id `6a40028d-8569-4023-a050-8b533a65ff01` in both `auth_endpoint`
-  and `auth_token_endpoint`. Top-level `auth:` claim block present. Cloudinary
-  block at ~line 59 still commented out — the one thing left to edit here.
-- `site/admin/index.html` — done. Decap pinned to `3.15.1` (was `^3.8.0`).
-- `tools/content.js` — done. `settings.about.photo` and `settings.carousel` now
-  go through `resolveImage()`.
-- `tools/render.js` — done. Added `shareImage()`, og:image/twitter:image
-  threading through `page()`/`head()`, `noindex` support, and `render404()`.
-- `tools/build.js` — done. Writes `dist/404.html`.
-- `docs/CMS-SETUP.md` — done. Rewritten for DecapBridge; GitHub OAuth steps gone.
-- `docs/ADMIN-GUIDE.md`, `README.md` — done. Login wording updated.
+- `tools/render.js` — `shareImage()` + `cloudinaryPreview()` build og:image;
+  `jsonLdScript()` escapes structured data; `render404()`; home section order.
+- `tools/content.js` — `normaliseSrc()` forces a leading `/`; settings-level
+  carousel/about photos resolved; WebP-first-photo warning (skips Cloudinary).
+- `tools/build.js` — counts `.html` actually written; emits `404.html`.
+- `site/app.js` — header latch threshold tied to the hero story; resize handler
+  ignores height-only changes.
+- `site/styles.css` — `.lp-igbtn` no longer transitions `margin`; `will-change`
+  on hero layers; `.lp-main--notfound`, `.lp-cta--center`; `.lp-back` inline-block.
+- `site/admin/config.yml` — DecapBridge PKCE, real site id, `auth:` claims.
+  Cloudinary block still commented out.
+- `site/assets/share-card.png` — 1200x630 PNG preview card (210 KB).
+- `tools/share-card.html` — its source, with re-render instructions in a comment.
+- `review-checklist.md` — all six review findings checked off.
 
-Nothing uncommitted. Working tree clean.
+Working tree clean; everything committed and pushed.
 
 ## What's changed
 
-- Audited the repo against the Netlify + Decap + Cloudinary plan. Netlify config,
-  build, and `/admin/*` rewrite were all already correct.
-- Chose DecapBridge over GitHub sign-in, at the user's request, so non-technical
-  people can be invited by email without repo write access.
-- First pass used DecapBridge's GoTrue email/password backend. The user then
-  supplied the dashboard-generated snippet, which uses **PKCE** instead —
-  replaced the whole backend block with theirs. `identity_url` was dropped; it is
-  unread on the PKCE path.
-- Added the top-level `auth:` claim mapping. Not cosmetic: without it
-  `{{author-name}}` resolves to an empty string, since `PKCEAuthenticationPage`
-  builds the display name by joining the `first_name`/`last_name` claims.
-- Fixed a real rendering bug: the home carousel and About photo emitted
-  `<img src="">` on every build, because those two settings-level image fields
-  never went through `resolveImage()`. Would have stayed broken after Cloudinary
-  was enabled, with nothing in the admin explaining why.
-- Added og:image/twitter:image (were missing entirely while `twitter:card` was
-  already `summary_large_image`), pinned the Decap version, added a 404 page.
-- Kept the shop's own `logo_url` rather than DecapBridge's offered logo, and set
-  `site_url` to the real Netlify address.
+- Admin sign-in moved from GitHub OAuth to DecapBridge PKCE so non-technical
+  helpers can edit without repo access. Confirmed working by two real editors.
+- Closed a stored XSS: `JSON.stringify` does not escape `<`, so a CMS field
+  containing `</script>` broke out of the JSON-LD block. That mattered *because*
+  of the DecapBridge switch — content editors now hold no repo access.
+- Fixed blank home carousel and About photos (`<img src="">`), missing share
+  tags, a wrong page count, three 404 defects, and the `.lp-back` pill
+  overlapping the product gallery.
+- **Link previews took two passes.** First diagnosis (every share image was
+  WebP, which WhatsApp will not render) was correct but incomplete — added
+  `share-card.png`. Products still failed: the shared card showed the right
+  title and description and dropped only the image, which pointed at image
+  *size*. og:image now requests a Cloudinary copy at
+  `c_fill,g_auto,w_1200,h_630,f_jpg,q_auto`; the page keeps the original.
+- Home page reordered twice: Explore the Collection and Get yours now moved
+  above Features/About, then the quote banner moved to the very end.
 
 ## Failed attempts
 
-- **`unpkg.com` and `docs.netlify.com` are blocked by this environment's proxy**
-  (403 on CONNECT). Verify package contents via `registry.npmjs.org` instead —
-  download the tarball and read `dist/*.js.map` `sourcesContent`. That worked
-  well and is how every Decap claim below was confirmed.
-- **`add_repo` for `decaporg/decap-cms` was denied by the user**, and
-  `mcp__github__get_file_contents` refuses repos outside session scope. Don't
-  retry; use the npm tarball route.
-- **Nearly added a `netlify-identity-widget` script tag** — most tutorials for
-  the git-gateway backend tell you to. Reading `decap-cms-ui-auth` showed
-  `NetlifyAuthenticationPage` renders its own email/password form and only defers
-  to `window.netlifyIdentity` when that global exists. Adding the widget would
-  hijack login and point it at the retired Netlify Identity service. Do not add it.
-- **Web search hit its session rate limit** (resets 2:30pm UTC) while diagnosing
-  the publish error, so DecapBridge's current dashboard wording was not re-verified.
+- **`unpkg.com`, `docs.netlify.com`, `*.netlify.app` and `res.cloudinary.com`
+  are all blocked by this environment's proxy** (403 on CONNECT). Verify package
+  behaviour through `registry.npmjs.org` instead: download the tarball and read
+  `dist/*.js.map` `sourcesContent`. This is how every Decap claim was confirmed.
+  It also means the deploy preview and the live site cannot be inspected — do
+  not promise to check them.
+- **`add_repo` for `decaporg/decap-cms` was denied by the user.** Don't retry;
+  use the npm tarball route.
+- **Do not add a `netlify-identity-widget` script tag.** Most git-gateway
+  tutorials call for it. `decap-cms-ui-auth` only defers to
+  `window.netlifyIdentity` when that global exists, so adding it would hijack
+  login and point it at the retired Netlify Identity service.
+- **ffmpeg cannot decode WebP here** (Playwright's minimal build). Use headless
+  Chromium to render and screenshot instead — that is how `share-card.png` was
+  produced.
+- **`pkill -f "tools/serve.js"` kills its own shell** (the pattern matches the
+  bash command line). Use `pkill -f "serve[.]js"`.
+- **Nearly shipped literal U+2028/U+2029 characters in a regex.** They survived
+  transit, but had they been normalised to spaces the code would have replaced
+  every space in the structured data. Written as `\uXXXX` escapes instead.
+- Anchor-jump screenshots (`#about`) do not work — headless Chromium resets
+  scroll. To capture lower sections, inject a fixed-**pixel** height override for
+  `.lp-story` into a throwaway copy in `dist/`; `vh` units scale with the tall
+  capture window and do not help.
 
 ## Next step
 
-Turn on Cloudinary, before any photo is uploaded. Uncomment the `media_library`
-block in `site/admin/config.yml` and fill in the owner's Cloudinary **cloud name**
-and **API key** (Cloudinary dashboard → Product Environment Credentials). Both are
-client-side values by design; the API *secret* is not used and must not go in.
+Merge PR #5 once its Netlify checks pass
+(`mcp__github__merge_pull_request`, owner `Somaz137`, repo
+`little-princess-designer2`, pullNumber 5, merge_method `merge`), then sync the
+local branch to `main` and push it so the branch ref matches.
 
-Verified this session, so the two values really are the whole job:
-
-- The pinned `decap-cms@3.15.1` bundle already contains
-  `decap-cms-media-library-cloudinary@3.1.0` and registers it. **No extra
-  `<script>` tag** — the common tutorial step is unnecessary here.
-- Option names are right, checked against that package's source:
-  `output_filename_only` is an integration option (sits beside `name`), while
-  `default_transformations` is a Cloudinary behaviour key (sits inside `config`)
-  and takes an array-of-arrays. Getting either nesting wrong fails silently.
-- `tools/check-config.js`'s hand-rolled YAML reader survives the uncommented
-  block — tested with real values; `npm run check` still passes.
-- `resolveImage()` uses the stored string verbatim, and `shareImage()` already
-  passes absolute URLs through. So a `https://res.cloudinary.com/...` value lands
-  correctly in both `<img src>` and `og:image` with no code change.
-- `api_key` is quoted in the template on purpose: unquoted, an all-digit key
-  parses as a YAML number and reaches the widget in the wrong type.
-- Once enabled, the admin loads `https://media-library.cloudinary.com/global/all.js`
-  at runtime. Nothing to do today — there is no CSP on the site — but that host
-  has to be allowed if one is ever added.
-
-After that the work is content, not code: fill the 54 empty image slots via
-`/admin/`, keeping uploads ~1600px on the long edge and under ~300 KB.
+Then hand three things back to the owner, none of which are code:
+1. Test a share on `littleprincessdesigner.netlify.app` — **not** a
+   `<deploy-id>--littleprincessdesigner.netlify.app` snapshot URL, and append
+   `?1` to defeat WhatsApp's per-URL preview cache.
+2. Reassign the three orphaned `b2` products in the admin.
+3. Add the four category card photos, and send the Cloudinary cloud name and
+   API key to switch the upload library on.
