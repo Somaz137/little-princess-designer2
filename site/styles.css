@@ -739,10 +739,14 @@ carousel-3d{
   .lp-header[data-min="1"] .lp-logo img{height:1.9rem}
   .lp-header[data-min="1"] .lp-nav{gap:5px}
   .lp-header[data-min="1"] .lp-navlink{padding:0.4rem 0.65rem;font-size:0.85rem}
-  .lp-header[data-min="1"] .lp-igbtn{
-    width:0;height:0;opacity:0;border-width:0;margin:0;
-    overflow:hidden;pointer-events:none;
-  }
+  /* The Instagram button stays put and just gets a little smaller, the same as
+     the logo. It used to collapse to nothing here, and the `margin:0` in that
+     rule wiped out the `margin-left:auto` holding it against the right edge —
+     so the moment the header minimised it snapped left and faded out there,
+     which is what read as the icon flashing on the wrong side. Whatever else
+     changes in this rule, do not reset the margin. */
+  .lp-header[data-min="1"] .lp-igbtn{width:2.25rem;height:2.25rem}
+  .lp-header[data-min="1"] .lp-igbtn svg{width:1.25rem;height:1.25rem}
 
   /* Hero story */
   .lp-story{height:165svh}
