@@ -71,67 +71,14 @@
       "description": "How to order handmade kidswear from Little Princess Designer: confirm on WhatsApp, pay 25% advance, and we make it to your measurements. FAQs, sizes and delivery."
     }
   },
-  "carousel": [
-    {
-      "url": "",
-      "upload": "",
-      "alt": "Handmade girls party frock in blush pink net, made to order"
-    },
-    {
-      "url": "",
-      "upload": "",
-      "alt": "Boys prince suit with braided coat and matching trousers"
-    },
-    {
-      "url": "",
-      "upload": "",
-      "alt": "Ivory flower-girl dress with hand-sewn rosettes"
-    },
-    {
-      "url": "",
-      "upload": "",
-      "alt": "Themed birthday dress for girls with appliqué bodice"
-    },
-    {
-      "url": "",
-      "upload": "",
-      "alt": "Baby romper in soft pre-washed cotton, peach"
-    },
-    {
-      "url": "",
-      "upload": "",
-      "alt": "Girls luxury gown in layered net over satin with beaded bodice"
-    },
-    {
-      "url": "",
-      "upload": "",
-      "alt": "Boys three-piece waistcoat set in cotton-silk"
-    },
-    {
-      "url": "",
-      "upload": "",
-      "alt": "Girls party skirt with satin waistband and lined underlayer"
-    },
-    {
-      "url": "",
-      "upload": "",
-      "alt": "Baby gift set — top, bottom and cap in matching fabric"
-    },
-    {
-      "url": "",
-      "upload": "",
-      "alt": "Ready-to-wear girls dress, stitched and dispatched same day"
-    }
-  ],
-  "carouselHeading": "Explore the Collection",
-  "latestHeading": "Just finished in the studio",
+  "carouselHeading": "Just finished in the studio",
   "accessoryLabel": "Add matching accessory",
   "accessoryNote": "This costs extra charges.",
   "featuresHeading": "Features",
   "categoriesHeading": "Get yours now",
   "deliveryNote": "Delivery charges are not included in this total.",
   "facebook": "https://www.facebook.com/LittlePrincessDesigner/",
-  "carouselHint": "Drag to spin · tap a piece to bring it forward",
+  "carouselHint": "Drag to spin · tap a piece to open it",
   "accessoryPriceDefault": 100,
   "footerNote": "© 2026 Little Princess Designer · Lahore, Pakistan",
   "about": {

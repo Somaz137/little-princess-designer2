@@ -604,12 +604,19 @@
   /* --- boot ----------------------------------------------------------- */
 
   function boot() {
+    // initSearch first, and deliberately. It reveals the search button, which
+    // is `hidden` in the markup — and on a narrow screen that extra button
+    // makes the nav wrap, so the header gets taller. initHeader measures the
+    // header once and caches the height in --lp-header, which .lp-sticky uses
+    // for both its top offset and its height. Measuring before the button
+    // appeared left that value up to 44px short at 390px wide, and the sticky
+    // header then clipped the hero headline on scroll.
+    initSearch();
     initHeader();
     initStory();
     initCards();
     initShop();
     initDetail();
-    initSearch();
   }
 
   if (document.readyState === "loading") {

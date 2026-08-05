@@ -110,7 +110,7 @@ collections:
     # Just the name: the stored subcategory is a short code like "g3", which
     # means nothing at a glance. Use Group by → Subcategory to organise the list.
     summary: "{{name}}"
-    sortable_fields: [name, order, subcategory]
+    sortable_fields: [name, addedOn, subcategory]
     editor:
       preview: false
     view_filters:
@@ -164,7 +164,7 @@ collections:
         widget: datetime
         default: "{{now}}"
         required: false
-        hint: "Filled in for you when you add a piece. Newest pieces come first on the shop pages, and the four newest of all appear on the home page. Change it only to move a piece up or down that order."
+        hint: "Filled in for you when you add a piece. Newest pieces come first on the shop pages, and the ten newest of all fill the spinning ring on the home page. Change it only to move a piece up or down that order."
 
       - label: "Sizes and prices"
         name: sizes
@@ -477,12 +477,6 @@ collections:
               - { label: "Title", name: title, widget: string }
               - { label: "Subtitle", name: subtitle, widget: string, hint: "Hidden on phones to save space." }
 
-          - label: "Newest pieces heading"
-            name: latestHeading
-            widget: string
-            required: false
-            hint: "Sits above the four most recently added pieces on the home page."
-
           - { label: "Features heading", name: featuresHeading, widget: string }
           - label: "Features"
             name: features
@@ -526,19 +520,10 @@ collections:
                   - { label: "…or paste an image link", name: url, widget: string, required: false }
                   - { label: "Photo description (alt text)", name: alt, widget: string }
 
+          # The ring fills itself from the ten most recently added pieces, so
+          # there is no photo list here to keep up to date — only the wording.
           - { label: "Carousel heading", name: carouselHeading, widget: string }
           - { label: "Carousel hint", name: carouselHint, widget: string }
-          - label: "Carousel photos"
-            name: carousel
-            widget: list
-            label_singular: "Photo"
-            collapsed: true
-            summary: "{{fields.alt}}"
-            hint: "The spinning \"Explore the Collection\" ring on the home page. Eight to twelve photos looks best."
-            fields:
-              - { label: "Upload a photo", name: upload, widget: image, required: false }
-              - { label: "…or paste an image link", name: url, widget: string, required: false }
-              - { label: "Photo description (alt text)", name: alt, widget: string }
 
           - { label: "Categories row heading", name: categoriesHeading, widget: string }
 
