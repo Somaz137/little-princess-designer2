@@ -38,7 +38,7 @@ Ordered by what to do first. The three admin-facing items (#3, #4, #13) all edit
 
 ## Correctness
 
-- [ ] **`tools/render.js:644` — empty description yields a malformed page summary.**
+- [x] **`tools/render.js:644` — empty description yields a malformed page summary.**
       `description` is optional on both products (`config.yml:212`) and
       subcategories (`:319`), so `p.description.split(". ")[0]` can be `""`, giving
       a meta/og description that opens with a bare `". Made to order…"`, plus an

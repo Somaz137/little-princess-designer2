@@ -34,6 +34,12 @@ const safeHref = url => {
   return SAFE_SCHEMES.includes(scheme[1]) ? esc(raw) : "#";
 };
 
+/**
+ * Closes every product's page summary. Hardcoded here for now — the review
+ * checklist has moving it into Site Settings as its own item.
+ */
+const SUMMARY_TAIL = "Made to order, hand-finished in our Lahore studio.";
+
 const money = n => "PKR " + Number(n).toLocaleString("en-US");
 
 /** Splits a CMS textarea into paragraphs on blank lines. */
@@ -602,6 +608,16 @@ function renderProduct(model, p, siteUrl) {
   ).join("");
   const first = p.sizes[0];
 
+  // The page summary is the opening sentence of the description plus a fixed
+  // tail. Both ends of that need guarding: `description` is optional on
+  // products and on subcategories, so it can resolve empty and leave the
+  // summary opening on a bare ". "; and when the description is a single
+  // sentence, split() never takes its full stop off, which is where the
+  // "hand-stitched buttons.. Made to order" in today's Prince Arthur Suit
+  // summary comes from.
+  const opening = String(p.description || "").split(". ")[0].trim().replace(/[.\s]+$/, "");
+  const desc = opening ? opening + ". " + SUMMARY_TAIL : SUMMARY_TAIL;
+
   const specRows = [
     ["Fabric", p.specs.fabric],
     ["Occasion", p.specs.occasion],
@@ -650,7 +666,7 @@ ${svg(ICON.arrowRight, { size: 20, stroke: "var(--tone-deep)", width: 2 })}
 
 <div class="lp-desc">
 <h2 class="lp-eyebrow">Product description</h2>
-<p>${esc(p.description)}</p>
+${p.description ? "<p>" + esc(p.description) + "</p>" : ""}
 ${p.description2 ? "<p>" + esc(p.description2) + "</p>" : ""}
 <dl class="lp-specs">
 ${specRows.map(([k, v]) => "<dt>" + esc(k) + "</dt><dd>" + esc(v) + "</dd>").join("\n")}
@@ -682,8 +698,6 @@ Order on WhatsApp</a>
 </div>
 </main>`;
 
-  const desc = p.description.split(". ")[0] + ". Made to order, hand-finished in our Lahore studio.";
-
   return page(model, {
     tab: p.tab,
     siteUrl,
@@ -696,7 +710,8 @@ Order on WhatsApp</a>
       "@context": "https://schema.org",
       "@type": "Product",
       name: p.name,
-      description: p.description,
+      // Never empty: falls back to the same summary the meta tags carry.
+      description: p.description || desc,
       category: p.tabLabel + " > " + p.subcategoryName,
       brand: { "@type": "Brand", name: s.brandName },
       image: p.images.map(i => absoluteUrl(i.src, siteUrl)),
