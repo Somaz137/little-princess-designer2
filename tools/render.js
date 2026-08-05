@@ -5,6 +5,8 @@
  * than assembled by JavaScript. app.js then only handles interactivity.
  */
 
+const images = require("./images");
+
 const ESC = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ESC[c]);
 
@@ -74,13 +76,49 @@ const svg = (body, { size = 24, stroke = "currentColor", width = 1.6, viewBox = 
 
 /* --- shared image frame ------------------------------------------------- */
 
-/** Renders a photo, or the empty frame shown until one is added in the CMS. */
-function frame(image, { eager = false, placeholder = "Photo coming soon" } = {}) {
+/**
+ * How wide each kind of card photo is actually drawn, read off styles.css so
+ * the browser can pick a copy rather than fetching a 4000px original for a
+ * 250px hole. 768px is the phone breakpoint used throughout the stylesheet.
+ *
+ *   carousel — .lp-car-face is 3/4 of the carousel's 31.25rem height (20rem on
+ *              a phone), so 375px and 240px
+ *   category — .lp-getyours is 4 columns of the 1180px container, less .lp-gy's
+ *              padding and border; 2 columns on a phone
+ *   product  — .lp-grid is 2 columns of 900px; 2 columns of the viewport on a
+ *              phone
+ *   studio   — .lp-ceo gives the photo 0.5 of a 0.5fr/1.5fr split, capped at
+ *              230px on a phone
+ *
+ * These are hints, not promises: get one wrong and the browser fetches a copy
+ * a size out, which is still far less than the original.
+ */
+const CARD_SIZES = {
+  carousel: "(max-width: 768px) 240px, 375px",
+  category: "(max-width: 768px) 44vw, (max-width: 1024px) 45vw, 255px",
+  product: "(max-width: 768px) 45vw, 436px",
+  studio: "(max-width: 768px) 230px, 270px"
+};
+
+/**
+ * Renders a photo, or the empty frame shown until one is added in the CMS.
+ *
+ * `sizes` is the width the picture is actually drawn at, as a CSS length or
+ * media-query list. Pass it and the browser is offered resized copies through
+ * `srcset` and picks one to match the screen; leave it out and the original is
+ * served whole, which is what the product gallery wants — that is the one view
+ * where the photo is the point and a visitor may pinch into it.
+ */
+function frame(image, { eager = false, placeholder = "Photo coming soon", sizes = "" } = {}) {
   if (!image) {
     return '<div class="lp-ph"><img class="lp-ph-crown" src="/assets/logo-crown.png" alt=""><span>' +
       esc(placeholder) + "</span></div>";
   }
+  // Empty on a host that cannot resize, in which case both attributes are
+  // dropped and the markup is exactly what it was before.
+  const set = sizes ? images.srcset(image.src) : "";
   return '<img src="' + esc(image.src) + '" alt="' + esc(image.alt) + '"' +
+    (set ? ' srcset="' + esc(set) + '" sizes="' + esc(sizes) + '"' : "") +
     (eager ? "" : ' loading="lazy"') + ' decoding="async">';
 }
 
@@ -359,7 +397,7 @@ ${ctas.slice(0, 3).map((c, i) => {
 <div class="lp-car-wrap">
 <carousel-3d>
 ${(s.carousel || []).map((img, i) =>
-  '<div><div class="lp-car-face">' + frame(img, { placeholder: "Piece " + (i + 1) }) + "</div></div>"
+  '<div><div class="lp-car-face">' + frame(img, { placeholder: "Piece " + (i + 1), sizes: CARD_SIZES.carousel }) + "</div></div>"
 ).join("\n")}
 </carousel-3d>
 </div>
@@ -370,7 +408,7 @@ ${(s.carousel || []).map((img, i) =>
 <div class="lp-getyours">
 ${model.categories.map(c => `<a href="${c.href}">
 <div class="lp-gy" data-cat="${esc(c.key)}">
-<div class="lp-gy-photo">${frame(c.card.image, { placeholder: esc(c.label) + " photo" })}</div>
+<div class="lp-gy-photo">${frame(c.card.image, { placeholder: esc(c.label) + " photo", sizes: CARD_SIZES.category })}</div>
 <div class="lp-gy-t">${esc(c.label)}</div>
 <div class="lp-gy-s">${esc(c.card.subtitle)}</div>
 </div>
@@ -391,7 +429,7 @@ ${svg(ICON[FEATURE_ICONS[f.icon] || "crown"], { size: 30, stroke: "#fff", width:
 
 <section class="lp-sect lp-sect--gap9 lp-anchor" id="about" aria-labelledby="about-heading">
 <div class="lp-ceo">
-<div class="lp-ceo-photo">${frame(s.about.photo, { placeholder: "Studio or team photo" })}</div>
+<div class="lp-ceo-photo">${frame(s.about.photo, { placeholder: "Studio or team photo", sizes: CARD_SIZES.studio })}</div>
 <div>
 <div class="lp-eyebrow lp-ceo-eyebrow">${esc(s.about.eyebrow)}</div>
 <h2 class="lp-ceo-h" id="about-heading">${esc(s.about.heading)}</h2>
@@ -454,7 +492,7 @@ function productCard(model, p) {
 <a class="lp-card-imgbtn" href="${safeHref(p.href)}" aria-label="${esc("View " + p.name + " — " + p.subcategoryName + " for " + p.tabLabel)}">
 <div class="lp-card-photo">
 ${p.badge ? '<span class="lp-badge" data-badge="' + esc(p.badge) + '">' + esc(p.badge) + "</span>" : ""}
-${frame(p.images[0] ? { src: p.images[0].src, alt } : null, { placeholder: "Photo coming soon" })}
+${frame(p.images[0] ? { src: p.images[0].src, alt } : null, { placeholder: "Photo coming soon", sizes: CARD_SIZES.product })}
 </div>
 </a>
 <div class="lp-card-body">

@@ -23,7 +23,7 @@ Ordered by what to do first. The three admin-facing items (#3, #4, #13) all edit
 
 ## Performance
 
-- [ ] **`tools/render.js:57` — cards download full-resolution originals.**
+- [x] **`tools/render.js:57` — cards download full-resolution originals.**
       `frame()` emits one unmodified photo URL, so a phone rendering a 180px card
       pulls the whole upload; a shop page can cost 15–25 MB where ~1 MB would do.
       **Fix:** emit a `srcset` of provider-resized copies (400/800/1200) with a
