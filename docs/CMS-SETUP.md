@@ -108,46 +108,79 @@ did what.
 
 ---
 
-## Optional: Cloudinary for photos
+## 6. Photos: the ImageKit library
 
-By default, photos you upload are committed into the repository. That is fine
-for a few hundred web-sized images, but anything committed to git stays in its
-history forever — so a hundred 6 MB photos will make the repo slow to clone and
-count against your storage permanently.
+Photos do **not** go into this repository. Pressing **Choose a photo** on any
+photo row opens the shop's [ImageKit](https://imagekit.io) library instead —
+drag a photo in, or pick one already there, press **Insert**, and its address
+lands in the field.
 
-If you would rather keep photos out of the repo:
+Two reasons it works this way:
 
-1. Sign up at [cloudinary.com](https://cloudinary.com) (the free tier is
-   generous) and find your **Cloud name** and **API key** on the dashboard.
-2. In `site/admin/config.yml`, uncomment the `media_library` block and fill in
-   both values.
-3. Commit and push.
+- Anything committed to git stays in its history **forever**, even after it is
+  deleted. A hundred photos straight off a phone would sit in this repository
+  permanently and be downloaded by every copy of it.
+- ImageKit resizes on delivery. The site asks it for a 400-, 800-, 1200- or
+  1600-pixel copy depending on the screen looking at it, so a phone never
+  downloads the 4,000-pixel original. That rewriting lives in `tools/images.js`
+  and nothing else in the project knows about it.
 
-Uploads then go to Cloudinary instead, and the config already asks Cloudinary to
-resize to 1600px and auto-pick the best format, so photos load fast without you
-having to think about it.
+### Turning it on for a new ImageKit account
 
-The three hero images (`dress-sketch-tall.webp`, `dress-colour-tall.webp`,
-`dress-real-tall.webp`) stay as files in `site/assets/` either way. They are part
-of the page design rather than catalogue content, so they are not editable in
-the admin — replace the files directly if you ever want to change them.
+1. Sign up at [imagekit.io](https://imagekit.io) — the free tier is generous.
+2. On the dashboard, find your **URL endpoint** under **Developer options →
+   URL endpoints**. It looks like `https://ik.imagekit.io/abc12xyz`. The last
+   part, `abc12xyz`, is your **ImageKit ID**.
+3. Put that ID into `site/admin/config.yml`, in the `media_library` block:
 
-**Either way**, keep uploads reasonably sized: about 1600px on the long edge and
-under 300 KB. Phone photos straight from the camera are typically 4–8 MB, which
-makes the site slow to load on mobile data.
+   ```yaml
+   media_library:
+     name: imagekit
+     config:
+       imagekit_id: "abc12xyz"
+   ```
+
+   This is optional and it is not a password — everything in that block only
+   saves the editor a step. Leave it empty and the library still opens; it just
+   asks which ImageKit account to open first.
+4. Commit and push.
+
+There is no API key and no secret anywhere in the admin. The library asks each
+editor to sign in to ImageKit themselves, in a panel inside the page, and that
+sign-in is what grants access. Anyone you want editing photos needs their own
+ImageKit login — invite them from the ImageKit dashboard, the same way they were
+invited on DecapBridge.
+
+### The three hero images
+
+`dress-sketch-tall.webp`, `dress-colour-tall.webp` and `dress-real-tall.webp`
+stay as files in `site/assets/`. They are part of the page design rather than
+catalogue content, so they are not editable in the admin — replace the files
+directly if you ever want to change them.
 
 ---
 
 ## A note on the two ways to add a photo
 
-Each photo row in the admin has an **Upload a photo** field and an **…or paste
-an image link** field. Separately, Decap's own image picker also has an
-**Insert from URL** button inside it.
+Each photo row in the admin has a **Choose a photo** field, which opens the
+ImageKit library, and an **…or paste an image link** field, which takes any full
+`https://` address typed in by hand.
 
-Both routes work, and the site treats them the same way. Use whichever you
-prefer — the `url` field is just more visible, since you can see the address on
-the form without opening a dialog. If a row has both an upload and a pasted
-link, the link wins.
+Both work and the site treats them the same way, but they are not equal:
+
+- The library is the normal route. Photos picked there get resized for phones
+  automatically, and get a properly-sized picture on WhatsApp when the link is
+  shared.
+- A pasted link is the escape hatch, for a photo hosted somewhere else or for a
+  day when the library will not open. If it does not point at ImageKit, the
+  photo is served exactly as it is — full size, however large that is.
+
+If a row has both, the pasted link wins.
+
+Keep uploads reasonably sized anyway: about 1600px on the long edge. Phone
+photos straight from the camera are typically 4–8 MB, and while ImageKit will
+shrink them for the website, the upload itself still has to happen over your
+own connection.
 
 ---
 
@@ -206,6 +239,25 @@ size with a price, and its subcategory still exists.
 That is expected — they have nowhere to live. Open each product and pick a new
 subcategory. Nothing was lost. The build log lists every affected product by
 name.
+
+**The photo library opens but will not let me sign in**
+The sign-in happens inside a panel served by imagekit.io, so a browser that
+blocks third-party cookies refuses it. Chrome's incognito windows block them by
+default. Use an ordinary window, or allow cookies for `imagekit.io` for that
+tab. Meanwhile you can still add photos with the **…or paste an image link**
+field — copy the address from the ImageKit dashboard.
+
+**Pressing "Choose a photo" pops up "The ImageKit photo library could not
+load"**
+The library's script did not download. Reload the page; if it keeps happening
+the browser or the network is blocking `unpkg.com`, which is also where the
+admin itself comes from.
+
+**A photo shows on the website but the WhatsApp preview has no picture**
+Check the photo is in the ImageKit library rather than pasted from somewhere
+else. WhatsApp drops preview images over roughly 300 KB, and the sized-down
+copy it needs can only be made for photos on a host the site knows how to ask —
+that is ImageKit, and files already under `/assets/uploads/`.
 
 **The build failed with "exists in the JSON but is NOT declared in config.yml"**
 Someone hand-edited a file in `content/` and added a field the admin does not

@@ -56,36 +56,41 @@ local_backend: true
 #   publish_mode: editorial_workflow
 publish_mode: simple
 
-# Uploads committed to the repo. Keep photos web-sized (under ~300 KB) —
-# anything committed to git stays in its history forever.
+# Where an upload would be committed if photos still went into the repository.
+# They do not — see the ImageKit block below — but Decap wants these declared,
+# and the photos already at /assets/uploads/ are still served from here.
 media_folder: "site/assets/uploads"
 public_folder: "/assets/uploads"
 
-# --- Cloudinary --------------------------------------------------------------
-# Uncomment this block and fill in your cloud name + API key to send uploads to
-# Cloudinary instead of the repo. Product photos then live off-git, and the
-# `url` field on each image stays available for pasting links from anywhere.
+# --- Photos: the ImageKit library --------------------------------------------
+# Pressing "Choose an image" opens the shop's ImageKit library instead of
+# committing the file into this repository. That matters because anything
+# committed to git stays in its history forever, even after it is deleted: a
+# hundred photos straight off a phone would sit in the repo permanently, and
+# every clone would carry them.
+#
+# There is nothing secret here and nothing to fill in for it to work. The
+# widget asks the editor to sign in to ImageKit itself, so no key of any kind
+# reaches this page — every value below only saves a step. The wiring is in
+# site/admin/imagekit.js, which explains the whole arrangement.
+#
 # The three hero sketch/colour/photo images stay as repo files either way —
 # they are part of the page design, not catalogue content.
-#
-# Nothing else has to change: the Decap build loaded in admin/index.html already
-# ships the Cloudinary media library, and the site renders whatever address the
-# upload field ends up holding. Turn this on BEFORE uploading any photo — files
-# already committed stay in git history even if you delete them afterwards.
-#
-# media_library:
-#   name: cloudinary
-#   output_filename_only: false
-#   config:
-#     cloud_name: YOUR_CLOUD_NAME
-#     # Quoted on purpose. Unquoted it reads as a number, and Cloudinary's widget
-#     # wants a string — an all-digit key would arrive in the wrong type.
-#     api_key: "YOUR_API_KEY"
-#     default_transformations:
-#       - - fetch_format: auto
-#           quality: auto
-#           width: 1600
-#           crop: limit
+media_library:
+  name: imagekit
+  config:
+    # Your ImageKit ID: the last part of your URL endpoint, so for
+    # https://ik.imagekit.io/abc12xyz it is abc12xyz. Dashboard → Developer
+    # options → URL endpoints. Filling it in means the library opens straight
+    # into this shop's account instead of asking which account to open.
+    imagekit_id: ""
+    # Turn on ONLY if you sign in to ImageKit with Google or Microsoft rather
+    # than with a password. On a password account it sends you down a sign-in
+    # route you cannot finish.
+    sso: false
+    # Optional folder to open in, e.g. "/products". Leave empty to land at the
+    # top of the library. A folder named here has to exist in ImageKit already.
+    folder: ""
 
 # Where the "back to site" link in the admin points.
 site_url: https://littleprincessdesigner.netlify.app
@@ -180,19 +185,19 @@ collections:
         label_singular: "Photo"
         collapsed: false
         summary: "{{fields.alt}}"
-        hint: "First photo is the one on the card. The product page shows up to three — front, side and back work well. Each row takes EITHER an uploaded file OR a pasted link, not both."
+        hint: "First photo is the one on the card. The product page shows up to three — front, side and back work well. Each row takes EITHER a photo from the library OR a pasted link, not both."
         fields:
-          - label: "Upload a photo"
+          - label: "Choose a photo"
             name: upload
             widget: image
             required: false
             allow_multiple: false
-            hint: "Drag a file in, or pick one you have already uploaded."
+            hint: "Opens your ImageKit photo library. Drag a new photo in there, or pick one you have already added, and press Insert."
           - label: "…or paste an image link"
             name: url
             widget: string
             required: false
-            hint: "A full https:// address. If both this and an upload are filled in, the link wins."
+            hint: "A full https:// address, from anywhere. Only needed if the library above will not open. If both are filled in, the link wins."
           - label: "Photo description (alt text)"
             name: alt
             widget: string
@@ -403,7 +408,7 @@ collections:
                 name: image
                 widget: object
                 fields:
-                  - { label: "Upload a photo", name: upload, widget: image, required: false }
+                  - { label: "Choose a photo", name: upload, widget: image, required: false }
                   - { label: "…or paste an image link", name: url, widget: string, required: false }
               - { label: "Photo description (alt text)", name: alt, widget: string }
           - label: "Search engine listing"
@@ -558,7 +563,7 @@ collections:
                 name: photo
                 widget: object
                 fields:
-                  - { label: "Upload a photo", name: upload, widget: image, required: false }
+                  - { label: "Choose a photo", name: upload, widget: image, required: false }
                   - { label: "…or paste an image link", name: url, widget: string, required: false }
                   - { label: "Photo description (alt text)", name: alt, widget: string }
 

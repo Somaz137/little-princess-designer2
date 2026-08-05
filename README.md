@@ -33,8 +33,11 @@ site/             ← hand-written source
 tools/            ← the build
   content.js          reads and validates content/
   render.js           turns it into HTML pages
+  images.js           the one place any photo host is described (ImageKit)
   build.js            writes dist/
   check-config.js     stops the CMS from silently dropping fields
+  warm-previews.js    builds the WhatsApp preview copies before anyone shares
+  test.js             assertions over content.js and images.js
   serve.js            local preview server
   seed-content.js     one-time starter catalogue (safe to delete)
   build-preview.js    packs dist/ into one self-contained preview.html
@@ -52,6 +55,7 @@ npm run build     # generate dist/
 npm start         # build, then serve on http://localhost:8080
 npm run cms       # local admin save-server (run alongside npm start)
 npm run check     # verify content/ matches the CMS config
+npm test          # assertions over the build's content and image rules
 npm run preview   # bundle the whole site into a single shareable preview.html
 ```
 

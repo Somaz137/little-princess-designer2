@@ -177,6 +177,17 @@
     padding-right:8px !important;
   }
 
+  /* --- 5b. The ImageKit photo library ----------------------------------
+     The widget draws its own full-screen modal at `z-index: 1`, which loses
+     to Decap's editor toolbar and leaves the picker half-covered. Everything
+     else here is cosmetic; the z-index is not. */
+  .ik-media-library-widget-modal{z-index:99999 !important}
+  .ik-media-library-widget-modal-content{
+    border:1px solid var(--ink-200) !important;
+    border-radius:14px !important;
+    overflow:hidden !important;
+  }
+
   /* Loading state, replaced once the CMS mounts. */
   #lp-boot{
     position:fixed;inset:0;display:flex;flex-direction:column;
@@ -226,6 +237,20 @@
      checking the admin still loads. Release notes:
      https://github.com/decaporg/decap-cms/releases -->
 <script src="https://unpkg.com/decap-cms@3.15.1/dist/decap-cms.js"></script>
+
+<!-- ImageKit's embeddable media library, and the file that plugs it into the
+     Photos button. Pinned for the same reason Decap is, above.
+
+     Order matters twice over: both of these have to run after decap-cms.js,
+     which is what creates `window.CMS`, and imagekit.js has to register the
+     library before Decap finishes fetching config.yml — otherwise Decap reads
+     `media_library: imagekit`, finds nothing registered under that name and
+     stops with a configuration error. Ordinary <script> tags run in order
+     while the config is still being fetched, so this holds; adding `defer` or
+     `async` to either line would break it. -->
+<script src="https://unpkg.com/imagekit-media-library-widget@2.4.1/dist/imagekit-media-library-widget.min.js"></script>
+<script src="/admin/imagekit.js"></script>
+
 <script>
   // Hide the splash as soon as Decap has painted anything — its login screen
   // included, so the Login button is never sitting behind the overlay.
