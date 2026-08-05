@@ -4,10 +4,13 @@ Findings from the code review of `main` on 2026-08-05, plus the admin-experience
 round at the bottom. Ticked boxes are done and on `main`.
 
 **Every item on this list is now ticked.** The last one — the live preview panel
-under "Admin experience" — was finished on 2026-08-05. Two of the recent ones
-carry an "unverified from here" note rather than a clean bill of health: the
-photo library and the preview panel both depend on scripts this container cannot
-reach, so the first real use in the admin is still their proof.
+under "Admin experience" — was finished on 2026-08-05.
+
+One thing is still waiting on real proof: the **preview panel** has never been
+seen inside the admin, because this container cannot reach the script the admin
+loads Decap from. The photo library beside it was in the same position and has
+since been verified by the owner — uploads and resizing both confirmed working
+on 2026-08-05.
 
 Ordered by what to do first. The three admin-facing items (#3, #4, #13) all edit
 `site/admin/config.yml`, so they are cheaper done together than separately.
@@ -186,11 +189,26 @@ admin to be called proven.
           the owner to supply. The optional `imagekit_id` in `config.yml` only
           saves a click. Photos go straight to ImageKit and never enter git
           history.
-          **Unverified from here:** the proxy blocks `ik.imagekit.io` and
-          `unpkg.com`, so neither a real upload nor a rendered `tr=` URL could
-          be tried. The transformation names are checked against ImageKit's own
-          published SDK and the widget's source, and the wiring is covered by
-          `npm test`; the first real upload is still the proof.
+          **Verified by the owner, 2026-08-05.** Both halves now have real
+          proof, which no amount of work in this container could have produced —
+          the proxy blocks `ik.imagekit.io`, so neither an upload nor a rendered
+          `tr=` URL could be tried from here.
+
+          · *Uploading works.* Real ImageKit addresses are in
+            `content/products/aurora-luxury-gown.json`, committed through the
+            admin by DecapBridge.
+          · *The resize instructions work.* The exact string the site builds —
+            `?updatedAt=…&tr=w-400,c-at_max,f-auto`, query parameters and all —
+            returns a different, smaller file than the same address without it.
+
+          Worth knowing for the next person who checks this: the test photo was
+          only 33 KB to start with, so the saving was 15% and it looked at first
+          as though nothing was happening. `c-at_max` only ever scales down, so
+          a photo already near the requested width has nothing to give. The rule
+          earns its keep on camera-sized uploads, not on thumbnails — judge it
+          on one of those, and by file size rather than by eye, since a browser
+          shrinks any large image to fit the window and makes the two look
+          identical.
     - [x] **Switch the preview panel on and feed it the real product card.**
           Done 2026-08-05. `editor.preview` is now `true` for products, and the
           panel draws the site's own card, updating as the form is typed into.
