@@ -79,7 +79,7 @@ Ordered by what to do first. The three admin-facing items (#3, #4, #13) all edit
 
 ## Polish
 
-- [ ] **`tools/render.js:594-599` — gallery arrows render on single-photo products.**
+- [x] **`tools/render.js:594-599` — gallery arrows render on single-photo products.**
       Prev/next are always drawn; with one photo (today: "Aurora Luxury Gown 123")
       they do nothing when clicked.
       **Fix:** omit both buttons when the gallery has one slide.

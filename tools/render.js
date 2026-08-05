@@ -595,7 +595,8 @@ function renderProduct(model, p, siteUrl) {
 
   const views = ["front", "side", "back"];
   const galleryImages = p.images.length ? p.images : [null, null, null];
-  const gallery = galleryImages.slice(0, Math.max(3, galleryImages.length)).map((img, i) => {
+  const slides = galleryImages.slice(0, Math.max(3, galleryImages.length));
+  const gallery = slides.map((img, i) => {
     const fallbackAlt = p.name + " — " + (views[i] || "detail") + " view of the handmade " +
       p.subcategoryName.toLowerCase() + " for " + p.tabLabel.toLowerCase();
     return "<div>" + frame(
@@ -619,6 +620,19 @@ function renderProduct(model, p, siteUrl) {
   const opening = String(p.description || "").split(". ")[0].trim().replace(/[.\s]+$/, "");
   const tail = (s.productDefaults && String(s.productDefaults.summaryTail || "").trim()) || SUMMARY_TAIL;
   const desc = opening ? opening + ". " + tail : tail;
+
+  // A product with one photo has nothing to page to, and app.js already
+  // null-checks both buttons, so they are simply left out. A product with no
+  // photos still gets three placeholder frames, and paging between those works
+  // the same as it always did.
+  const arrows = slides.length > 1
+    ? `<button type="button" class="lp-arrow lp-arrow--prev" data-gal-prev aria-label="Previous view">
+${svg(ICON.arrowLeft, { size: 20, stroke: "var(--tone-deep)", width: 2 })}
+</button>
+<button type="button" class="lp-arrow lp-arrow--next" data-gal-next aria-label="Next view">
+${svg(ICON.arrowRight, { size: 20, stroke: "var(--tone-deep)", width: 2 })}
+</button>`
+    : "";
 
   const specRows = [
     ["Fabric", p.specs.fabric],
@@ -650,12 +664,7 @@ function renderProduct(model, p, siteUrl) {
 <div class="lp-gallery" data-gallery>
 ${gallery}
 </div>
-<button type="button" class="lp-arrow lp-arrow--prev" data-gal-prev aria-label="Previous view">
-${svg(ICON.arrowLeft, { size: 20, stroke: "var(--tone-deep)", width: 2 })}
-</button>
-<button type="button" class="lp-arrow lp-arrow--next" data-gal-next aria-label="Next view">
-${svg(ICON.arrowRight, { size: 20, stroke: "var(--tone-deep)", width: 2 })}
-</button>
+${arrows}
 </div>
 
 <div class="lp-detail-col">
