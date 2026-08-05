@@ -229,4 +229,23 @@ function warms(src) {
   return HOSTS.some(h => h.warms && h.match.test(url));
 }
 
-module.exports = { PROFILES, hostFor, resized, srcset, preview, warms };
+/**
+ * Exported for Node and for the browser from the one file. The build requires
+ * it; the admin preview panel loads it as a plain <script>, where `module` does
+ * not exist and it leaves itself on the window for tools/card.js to pick up.
+ * Nothing above this line touches `fs` or the DOM, which is what lets the same
+ * text serve both.
+ *
+ * The name is deliberately not something plain like `API`. Loaded as ordinary
+ * <script> tags these files share one top-level scope, so a `const` of the same
+ * name in two of them is a redeclaration error — the second file stops dead and
+ * its global is never set. That failure is silent everywhere except the browser
+ * console, and it is why tools/test.js cannot be the only check on this file.
+ */
+const IMAGES_API = { PROFILES, hostFor, resized, srcset, preview, warms };
+
+if (typeof module === "object" && module.exports) {
+  module.exports = IMAGES_API;
+} else {
+  (typeof globalThis !== "undefined" ? globalThis : self).LPImages = IMAGES_API;
+}

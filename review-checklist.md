@@ -1,9 +1,13 @@
 # Review checklist
 
 Findings from the code review of `main` on 2026-08-05, plus the admin-experience
-round at the bottom. Ticked boxes are done and on `main`; unticked ones are still
-open — as of the last edit the only open item is the live preview panel, under
-"Admin experience". The photo library beside it is done, on ImageKit.
+round at the bottom. Ticked boxes are done and on `main`.
+
+**Every item on this list is now ticked.** The last one — the live preview panel
+under "Admin experience" — was finished on 2026-08-05. Two of the recent ones
+carry an "unverified from here" note rather than a clean bill of health: the
+photo library and the preview panel both depend on scripts this container cannot
+reach, so the first real use in the admin is still their proof.
 
 Ordered by what to do first. The three admin-facing items (#3, #4, #13) all edit
 `site/admin/config.yml`, so they are cheaper done together than separately.
@@ -138,8 +142,9 @@ Ordered by what to do first. The three admin-facing items (#3, #4, #13) all edit
 ## Admin experience
 
 Three findings from working through the admin as the owner uses it, 2026-08-05.
-The first two are settings and styling and are done. The third is the one that
-matters most and is **not started** — it needs something only the owner has.
+All done. The last of them — getting dresses in — is the one that mattered;
+both of its halves are finished, and both are waiting on a real sign-in to the
+admin to be called proven.
 
 - [x] **`site/admin/config.yml:112` — the product list showed nothing but a
       name.** 39 rows of bare names, so finding one piece meant opening several.
@@ -163,9 +168,10 @@ matters most and is **not started** — it needs something only the owner has.
       larger field hints, and the form widened to 1180px. Toggles and the delete
       button were left alone on purpose — see the note in that file.
 
-- [ ] **THE BIG ONE — get dresses into the admin.** 38 of 39 products have no
+- [x] **THE BIG ONE — get dresses into the admin.** 38 of 39 products have no
       photo. Everything above makes the tool pleasanter to use; none of it puts
-      a single dress on the site. Two halves; the first is now done:
+      a single dress on the site. Both halves are now done — the tool is ready
+      and the photos are the owner's to add:
     - [x] **Turn on the photo library — ImageKit, not Cloudinary.** Done
           2026-08-05. The owner opened an ImageKit account rather than a
           Cloudinary one, so the commented-out Cloudinary block was replaced
@@ -185,16 +191,49 @@ matters most and is **not started** — it needs something only the owner has.
           be tried. The transformation names are checked against ImageKit's own
           published SDK and the widget's source, and the wiring is covered by
           `npm test`; the first real upload is still the proof.
-    - [ ] **Switch the preview panel on and feed it the real product card.**
-          `editor.preview` is `false` for products (`site/admin/config.yml`), so
-          the empty third of the screen is currently just empty. Registering a
-          preview template with `CMS.registerPreviewTemplate` that renders the
-          site's own card markup would let the owner watch the actual card change
-          as they type, instead of publishing to find out. The card markup lives
-          in `productCard()` at `tools/render.js`, and the styles it needs are in
-          `site/styles.css` — the work is sharing those two with the admin
-          without duplicating them, which is why this is a day rather than an
-          hour.
+    - [x] **Switch the preview panel on and feed it the real product card.**
+          Done 2026-08-05. `editor.preview` is now `true` for products, and the
+          panel draws the site's own card, updating as the form is typed into.
+
+          **Shared, not copied.** `productCard()` and the four helpers it is
+          built from (`esc`, `safeHref`, `money`, `frame`) moved out of
+          `tools/render.js` into a new `tools/card.js` that runs unchanged under
+          both Node and a browser; `tools/images.js` got the same treatment for
+          its resize rules. `render.js` imports them, and the build copies both
+          files to `dist/admin/` so the admin has an address for them. One copy
+          of the card in the repository — change it and the preview changes with
+          it, which was the point.
+
+          `tools/card.js` also holds `fromCmsEntry()`: content.js's
+          product-shaping rules (`tools/content.js:256-295` — same filters, same
+          age order, same lowest-price rule) rewritten to bend rather than break
+          on a half-typed form, plus the notes the panel prints under the card
+          for what is still missing. It lives beside the card so `npm test` can
+          hold the two to the same rules.
+
+          **Verified:** the site builds byte-identically apart from its
+          timestamp — same 46 pages, same `dist/data/products.json`; `npm test`
+          covers the mapper and the moved `safeHref` allowlist (74 checks, up
+          from 43); and in Chromium the shared file really does load as a plain
+          script and produce a card **byte-identical** to the one Node builds.
+          `preview.js` itself was driven against a stubbed CMS — it registers,
+          renders a filled-in piece, renders the notes for an empty one, and
+          survives a null entry.
+
+          One bug that only the browser found, recorded because it will catch
+          the next person: both files ended up declaring `const API`, and plain
+          `<script>` tags share one top-level scope, so the second file died on
+          a redeclaration and its global was never set — silent everywhere but
+          the browser console. Hence `IMAGES_API` / `CARD_API`.
+
+          **Unverified from here:** the same wall as ImageKit — the admin loads
+          Decap from `unpkg.com`, which this container is blocked from, so the
+          panel has never been seen inside the real admin. The specific gamble
+          is the element factory: `window.h`, with `window.React.createElement`
+          as a fallback and a console warning if neither is there. If the panel
+          comes up blank, that line is the first place to look. Nothing in this
+          work can stop the admin loading — every step is wrapped so a failure
+          costs the preview and nothing else.
 
 ---
 

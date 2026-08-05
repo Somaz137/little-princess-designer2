@@ -137,8 +137,13 @@ collections:
     # upper, lower, date, default, ternary and truncate — nothing else parses.
     summary: "{{name}}  ·  {{subcategory}}  ·  PKR {{sizes.0.price | default('?')}}{{visible | ternary('', '  ·  HIDDEN')}}{{badge | ternary('  ·  ', '')}}{{badge | upper}}"
     sortable_fields: [name, addedOn, subcategory]
+    # The only collection with a preview. The panel draws the real shop card —
+    # the same code the live site is built with — so a piece can be checked
+    # before it is published rather than after. The wiring is in
+    # site/admin/preview.js; turning this back to false switches the panel off
+    # and leaves everything else working.
     editor:
-      preview: false
+      preview: true
     view_filters:
       - label: "Live on the website"
         field: visible
