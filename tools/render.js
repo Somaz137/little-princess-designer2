@@ -78,6 +78,8 @@ const ICON = {
   crown: '<path d="M3 7l4 4 5-6 5 6 4-4v11H3V7Z"></path>',
   dress: '<path d="M9 3h6l-1.5 4 5 12H5.5l5-12L9 3Z"></path><path d="M9 3c1 2 5 2 6 0"></path>',
   filters: '<path d="M4 6h16M7 12h10M10 18h4"></path>',
+  search: '<circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.6-3.6"></path>',
+  close: '<path d="m6 6 12 12M18 6 6 18"></path>',
   chevRight: '<path d="m9 6 6 6-6 6"></path>',
   chevDown: '<path d="m6 9 6 6 6-6"></path>',
   arrowLeft: '<path d="m14.5 5-7 7 7 7"></path>',
@@ -267,9 +269,27 @@ ${nav.map(n =>
   (n.key === activeTab ? ' aria-current="page"' : "") + ">" + esc(n.label) + "</a>"
 ).join("\n")}
 </nav>
+<button type="button" class="lp-searchbtn" data-search-open aria-expanded="false" aria-controls="lp-search" aria-label="Search the catalogue" hidden>
+${svg(ICON.search, { size: 24, stroke: "var(--berry-800)", width: 2 })}
+</button>
 <a class="lp-igbtn" target="_blank" rel="noopener" href="${safeHref(s.instagram)}" aria-label="Instagram">
 ${svg(ICON.igHeader, { size: 27, stroke: "#FFFCF8", width: 1.7 })}
 </a>
+</div>
+<!-- Unhidden by app.js along with the button that opens it: with no JavaScript
+     there is nothing to search with, so neither is shown. -->
+<div class="lp-search" id="lp-search" data-search hidden>
+<div class="lp-search-bar">
+<label class="lp-sr" for="lp-search-q">Search for a piece</label>
+<span class="lp-search-icon">${svg(ICON.search, { size: 20, stroke: "var(--text-muted)", width: 2 })}</span>
+<input class="lp-search-q" id="lp-search-q" type="search" data-search-input autocomplete="off"
+  placeholder="Search by name, category or section — try &quot;gown&quot; or &quot;boys&quot;">
+<button type="button" class="lp-search-close" data-search-close aria-label="Close search">
+${svg(ICON.close, { size: 20, stroke: "var(--berry-800)", width: 2 })}
+</button>
+</div>
+<p class="lp-search-note" data-search-note role="status" aria-live="polite"></p>
+<div class="lp-search-results" data-search-results></div>
 </div>
 </header>`;
 }

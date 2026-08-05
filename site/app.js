@@ -382,6 +382,149 @@
     }), { passive: true });
   }
 
+  /* --- 6. Catalogue search -------------------------------------------- */
+
+  /**
+   * 39 pieces across 12 sections were reachable only by browsing four tabs.
+   * The build already writes /data/products.json with everything needed, so
+   * this filters that rather than adding any server.
+   *
+   * The button and the panel are both `hidden` in the markup and unhidden
+   * here — with no JavaScript there is nothing to search with, so neither is
+   * shown at all rather than showing a control that does nothing.
+   */
+  function initSearch() {
+    var openBtn = $("[data-search-open]");
+    var panel = $("[data-search]");
+    if (!openBtn || !panel) return;
+
+    var input = $("[data-search-input]", panel);
+    var note = $("[data-search-note]", panel);
+    var results = $("[data-search-results]", panel);
+    var closeBtn = $("[data-search-close]", panel);
+
+    var MAX_HITS = 12;
+    var products = null;   // filled on first open
+    var loading = false;
+
+    openBtn.hidden = false;
+
+    function setOpen(open) {
+      panel.hidden = !open;
+      openBtn.setAttribute("aria-expanded", open ? "true" : "false");
+      if (open) {
+        load();
+        input.focus();
+        input.select();
+      }
+    }
+
+    function load() {
+      if (products || loading) return;
+      loading = true;
+      note.textContent = "Loading the catalogue…";
+      fetch("/data/products.json")
+        .then(function (r) {
+          if (!r.ok) throw new Error("HTTP " + r.status);
+          return r.json();
+        })
+        .then(function (data) {
+          products = (data && data.products) || [];
+          loading = false;
+          run();
+        })
+        .catch(function () {
+          loading = false;
+          products = null;
+          note.textContent = "Search is unavailable right now. Browse the tabs above instead.";
+          results.innerHTML = "";
+        });
+    }
+
+    /** Everything about a piece worth typing: its name, section and tab. */
+    function haystack(p) {
+      return (p.name + " " + p.subcategoryName + " " + p.tabLabel).toLowerCase();
+    }
+
+    function run() {
+      if (!products) return;
+      var q = input.value.trim().toLowerCase();
+      if (!q) {
+        note.textContent = "Type to search " + products.length + " pieces.";
+        results.innerHTML = "";
+        return;
+      }
+      // Every word has to match somewhere, so "boys suit" narrows rather than
+      // widening the way a single-substring match would.
+      var terms = q.split(/\s+/);
+      var hits = products.filter(function (p) {
+        var hay = haystack(p);
+        return terms.every(function (t) { return hay.indexOf(t) !== -1; });
+      });
+
+      if (!hits.length) {
+        note.textContent = 'Nothing matches "' + input.value.trim() + '". Try a shorter word.';
+        results.innerHTML = "";
+        return;
+      }
+
+      note.textContent = hits.length === 1
+        ? "1 piece found."
+        : hits.length > MAX_HITS
+          ? "Showing " + MAX_HITS + " of " + hits.length + " pieces — keep typing to narrow it."
+          : hits.length + " pieces found.";
+
+      results.innerHTML = "";
+      hits.slice(0, MAX_HITS).forEach(function (p) {
+        var a = document.createElement("a");
+        a.className = "lp-search-hit";
+        // Same guard render.js applies server-side: only ever a path on this
+        // site. href is built from a filename today and cannot be typed in the
+        // admin, but assigning a JSON string straight to .href is the one place
+        // here a scheme could sneak in, so it is checked rather than trusted.
+        a.href = /^\/[^/]/.test(String(p.href || "")) ? p.href : "#";
+
+        var img = p.images && p.images[0];
+        if (img) {
+          var el = document.createElement("img");
+          el.src = img.src;
+          el.alt = "";
+          el.loading = "lazy";
+          a.appendChild(el);
+        } else {
+          var ph = document.createElement("div");
+          ph.className = "lp-search-hit-ph";
+          a.appendChild(ph);
+        }
+
+        var text = document.createElement("div");
+        var t = document.createElement("div");
+        t.className = "lp-search-hit-t";
+        // textContent throughout: these are CMS values, and building the row
+        // by hand keeps them out of any HTML parse.
+        t.textContent = p.name;
+        var sub = document.createElement("div");
+        sub.className = "lp-search-hit-s";
+        sub.textContent = p.tabLabel + " · " + p.subcategoryName + " · from " + money(p.minPrice) +
+          (p.badge ? " · " + p.badge : "");
+        text.appendChild(t);
+        text.appendChild(sub);
+        a.appendChild(text);
+        results.appendChild(a);
+      });
+    }
+
+    openBtn.addEventListener("click", function () { setOpen(panel.hidden); });
+    if (closeBtn) closeBtn.addEventListener("click", function () {
+      setOpen(false);
+      openBtn.focus();
+    });
+    input.addEventListener("input", run);
+    panel.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") { setOpen(false); openBtn.focus(); }
+    });
+  }
+
   /* --- boot ----------------------------------------------------------- */
 
   function boot() {
@@ -390,6 +533,7 @@
     initCards();
     initShop();
     initDetail();
+    initSearch();
   }
 
   if (document.readyState === "loading") {

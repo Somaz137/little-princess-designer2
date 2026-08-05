@@ -123,7 +123,7 @@ Ordered by what to do first. The three admin-facing items (#3, #4, #13) all edit
       add a "Just finished in the studio" row of 4 cards to the home page after the
       carousel at `tools/render.js:345`, reusing `productCard()` and `.lp-grid`.
 
-- [ ] **no way to search the catalogue.** 39 products across 12 sections, findable
+- [x] **no way to search the catalogue.** 39 products across 12 sections, findable
       only by browsing four tabs. `dist/data/products.json` (`tools/build.js:77`)
       already contains everything needed.
       **Fix:** a client-side search box in `site/app.js` filtering that file.

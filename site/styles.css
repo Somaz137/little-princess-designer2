@@ -108,6 +108,73 @@ img{max-width:100%}
   .lp-hdr,.lp-logo img,.lp-igbtn,.lp-igbtn svg,.lp-navlink,.lp-chev{transition:none}
 }
 
+/* --- 3b. Search --------------------------------------------------------- */
+
+.lp-searchbtn{
+  flex:0 0 auto;width:3.25rem;height:3.25rem;border-radius:999px;
+  border:2px solid var(--berry-300);background:var(--paper-000);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  box-shadow:0 2px 0 var(--berry-300);
+  transition:filter 140ms ease,transform 140ms ease;
+}
+/* Both of these carry a display, which outranks the browser's own
+   [hidden]{display:none} — so each needs saying explicitly or the panel that
+   app.js hides stays on screen. */
+.lp-searchbtn[hidden]{display:none}
+.lp-searchbtn:hover{filter:brightness(1.04);transform:translateY(-2px)}
+
+.lp-search{
+  border-top:2px solid var(--border-soft);
+  background:var(--paper-000);
+  padding:var(--space-4) var(--gutter-page);
+  display:block;
+}
+.lp-search[hidden]{display:none}
+.lp-search-bar{
+  max-width:var(--width-container);margin:0 auto;
+  display:flex;align-items:center;gap:10px;
+  border:2px solid var(--berry-300);border-radius:var(--radius-pill);
+  background:var(--paper-050);padding:6px 10px 6px 14px;
+}
+.lp-search-icon{display:flex;flex:0 0 auto}
+.lp-search-q{
+  flex:1 1 auto;min-width:0;border:none;background:none;outline:none;
+  font:var(--weight-bold) 1rem/1.2 var(--font-ui);color:var(--ink-900);
+  padding:10px 0;
+}
+.lp-search-q::placeholder{color:var(--text-muted);font-weight:400}
+.lp-search-close{
+  flex:0 0 auto;width:2.25rem;height:2.25rem;border-radius:999px;
+  border:2px solid var(--berry-300);background:var(--paper-000);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+}
+.lp-search-note{
+  max-width:var(--width-container);margin:10px auto 0;
+  font:var(--type-small);color:var(--text-muted);
+}
+.lp-search-results{
+  max-width:var(--width-container);margin:0 auto;
+  /* The panel hangs off a sticky header, so it scrolls itself rather than
+     running off the bottom of the viewport on a phone. */
+  max-height:min(60vh,32rem);overflow-y:auto;
+}
+.lp-search-hit{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 8px;border-radius:var(--radius-md);
+  color:var(--text-body);
+}
+.lp-search-hit:hover,.lp-search-hit:focus-visible{background:var(--berry-100);color:var(--text-body)}
+.lp-search-hit img{
+  flex:0 0 auto;width:52px;height:68px;object-fit:cover;
+  border-radius:var(--radius-sm);background:var(--tone-soft);
+}
+.lp-search-hit-ph{
+  flex:0 0 auto;width:52px;height:68px;border-radius:var(--radius-sm);
+  background:var(--berry-100);
+}
+.lp-search-hit-t{font:var(--weight-black) 1rem/1.25 var(--font-ui);color:var(--ink-900)}
+.lp-search-hit-s{font:var(--type-small);color:var(--text-muted);margin-top:2px}
+
 /* --- 4. Layout ----------------------------------------------------------- */
 
 .lp-main{display:block}
