@@ -10,7 +10,7 @@ Ordered by what to do first. The three admin-facing items (#3, #4, #13) all edit
 
 ## Security
 
-- [ ] **`tools/render.js:212`, `:232-234`, `:722`, `:727` — CMS link fields are not
+- [x] **`tools/render.js:212`, `:232-234`, `:722`, `:727` — CMS link fields are not
       scheme-checked.** `instagram` / `facebook` / `tiktok` are free-text fields in
       the admin (`site/admin/config.yml:412-414`) and land straight in `href`.
       `esc()` escapes `<>&"'` and does nothing to `javascript:`, so an editor can

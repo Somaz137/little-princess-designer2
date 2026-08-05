@@ -11,6 +11,27 @@ const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ESC[c]);
 /** Minimal inline formatting for CMS prose: **bold** only. */
 const inline = s => esc(s).replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
 
+/**
+ * Escapes a link address and allowlists its scheme. `esc()` alone neutralises
+ * markup but leaves `javascript:` intact, and the social links are free-text
+ * fields held by editors who have no repo access, so every address that comes
+ * out of the CMS goes through here rather than through `esc()`. Anything
+ * outside the allowlist collapses to "#" so the link is inert, not broken.
+ */
+const SAFE_SCHEMES = ["https:", "http:", "mailto:", "tel:"];
+const safeHref = url => {
+  const raw = String(url == null ? "" : url).trim();
+  if (!raw) return "#";
+  // Browsers drop control characters while parsing a scheme, so "java\tscript:"
+  // still runs. Decide on a stripped copy, but emit the address as written.
+  const probe = raw.replace(/[\u0000-\u0020]/g, "").toLowerCase();
+  if (probe.startsWith("//")) return "#"; // scheme-relative: points off-site
+  if (/^[/#?]/.test(probe)) return esc(raw); // same-page or same-site
+  const scheme = probe.match(/^([a-z][a-z0-9+.-]*:)/);
+  if (!scheme) return esc(raw); // relative path, no scheme to check
+  return SAFE_SCHEMES.includes(scheme[1]) ? esc(raw) : "#";
+};
+
 const money = n => "PKR " + Number(n).toLocaleString("en-US");
 
 /** Splits a CMS textarea into paragraphs on blank lines. */
@@ -209,7 +230,7 @@ ${nav.map(n =>
   (n.key === activeTab ? ' aria-current="page"' : "") + ">" + esc(n.label) + "</a>"
 ).join("\n")}
 </nav>
-<a class="lp-igbtn" target="_blank" rel="noopener" href="${esc(s.instagram)}" aria-label="Instagram">
+<a class="lp-igbtn" target="_blank" rel="noopener" href="${safeHref(s.instagram)}" aria-label="Instagram">
 ${svg(ICON.igHeader, { size: 27, stroke: "#FFFCF8", width: 1.7 })}
 </a>
 </div>
@@ -229,17 +250,17 @@ ${categories.map(c => '<a href="' + c.href + '">' + esc(c.label) + "</a>").join(
 <div class="lp-footcol">
 <div class="lp-eyebrow">Follow</div>
 <div>
-<a target="_blank" rel="noopener" href="${esc(s.instagram)}">Instagram</a>
-<a target="_blank" rel="noopener" href="${esc(s.facebook)}">Facebook</a>
-<a target="_blank" rel="noopener" href="${esc(s.tiktok)}">TikTok</a>
-<a target="_blank" rel="noopener" href="${esc(waLink(s.whatsappNumber))}">WhatsApp</a>
+<a target="_blank" rel="noopener" href="${safeHref(s.instagram)}">Instagram</a>
+<a target="_blank" rel="noopener" href="${safeHref(s.facebook)}">Facebook</a>
+<a target="_blank" rel="noopener" href="${safeHref(s.tiktok)}">TikTok</a>
+<a target="_blank" rel="noopener" href="${safeHref(waLink(s.whatsappNumber))}">WhatsApp</a>
 </div>
 </div>
 <div class="lp-footcol">
 <div class="lp-eyebrow">Contact</div>
 <div>
-<a href="mailto:${esc(s.email)}">${esc(s.email)}</a>
-<a href="tel:${esc(String(s.phoneDisplay).replace(/\s/g, ""))}">${esc(s.phoneDisplay)}</a>
+<a href="${safeHref("mailto:" + s.email)}">${esc(s.email)}</a>
+<a href="${safeHref("tel:" + String(s.phoneDisplay).replace(/\s/g, ""))}">${esc(s.phoneDisplay)}</a>
 <a href="/contact/">How to order</a>
 <a href="/#about">About us</a>
 <a href="/contact/#faq">FAQ</a>
@@ -251,7 +272,7 @@ ${categories.map(c => '<a href="' + c.href + '">' + esc(c.label) + "</a>").join(
 }
 
 function floatingWa(s) {
-  return `<a class="lp-float" target="_blank" rel="noopener" href="${esc(waLink(s.whatsappNumber))}" aria-label="Contact us on WhatsApp">
+  return `<a class="lp-float" target="_blank" rel="noopener" href="${safeHref(waLink(s.whatsappNumber))}" aria-label="Contact us on WhatsApp">
 <span class="lp-float-label">${esc(s.floatingLabel)}</span>
 <span class="lp-float-circle">${svg(ICON.waFilled, { size: 32, viewBox: "0 0 32 32", stroke: "none", width: 0 })}</span>
 </a>`;
@@ -321,7 +342,7 @@ ${stages.map((st, i) =>
 <div class="lp-cta">
 ${ctas.slice(0, 3).map((c, i) => {
   const m = ctaMeta[i] || ctaMeta[0];
-  return '<a href="' + esc(m.href) + '"' + (m.external ? ' target="_blank" rel="noopener"' : "") + ">" +
+  return '<a href="' + safeHref(m.href) + '"' + (m.external ? ' target="_blank" rel="noopener"' : "") + ">" +
     svg(m.icon, { stroke: "var(--berry-800)" }) +
     '<span class="lp-cta-t">' + esc(c.title) + "</span>" +
     '<span class="lp-cta-s">' + esc(c.subtitle) + "</span></a>";
@@ -430,14 +451,14 @@ function productCard(model, p) {
     : p.name + " — handmade " + p.subcategoryName.toLowerCase() + " for " + p.tabLabel.toLowerCase();
 
   return `<article class="lp-card" data-product data-min-price="${p.minPrice}" data-sizes="${esc(p.sizes.map(s => s.size).join("|"))}">
-<a class="lp-card-imgbtn" href="${p.href}" aria-label="${esc("View " + p.name + " — " + p.subcategoryName + " for " + p.tabLabel)}">
+<a class="lp-card-imgbtn" href="${safeHref(p.href)}" aria-label="${esc("View " + p.name + " — " + p.subcategoryName + " for " + p.tabLabel)}">
 <div class="lp-card-photo">
 ${p.badge ? '<span class="lp-badge" data-badge="' + esc(p.badge) + '">' + esc(p.badge) + "</span>" : ""}
 ${frame(p.images[0] ? { src: p.images[0].src, alt } : null, { placeholder: "Photo coming soon" })}
 </div>
 </a>
 <div class="lp-card-body">
-<h4><a class="lp-card-name" href="${p.href}">${esc(p.name)}</a></h4>
+<h4><a class="lp-card-name" href="${safeHref(p.href)}">${esc(p.name)}</a></h4>
 <div class="lp-card-price" data-price-out>${money(first.price)}</div>
 <select class="lp-select" data-price-select aria-label="${esc("Select size for " + p.name)}">${opts}</select>
 </div>
@@ -632,7 +653,7 @@ ${specRows.map(([k, v]) => "<dt>" + esc(k) + "</dt><dd>" + esc(v) + "</dd>").joi
 <div class="lp-total-note">${esc(s.deliveryNote)}</div>
 </div>
 
-<a class="lp-wa" target="_blank" rel="noopener" href="${esc(waLink(s.whatsappNumber,
+<a class="lp-wa" target="_blank" rel="noopener" href="${safeHref(waLink(s.whatsappNumber,
   "Hello Little Princess Designer, I'd like to order:\n" + p.name +
   "\nSize: " + first.size + "\nMatching accessory: no\nTotal shown: " + money(first.price)))}" data-wa-order>
 ${svg(ICON.waFilled, { size: 20, viewBox: "0 0 32 32", stroke: "none", width: 0 })}
@@ -719,12 +740,12 @@ ${cards.map(card => {
   const meta = (c.social && c.social[card.key]) || {};
   const ext = card.key === "email" ? "" : ' target="_blank" rel="noopener"';
   return `<div>
-<a class="lp-social-icon"${ext} href="${esc(card.href)}" aria-label="${esc(card.aria)}">
+<a class="lp-social-icon"${ext} href="${safeHref(card.href)}" aria-label="${esc(card.aria)}">
 ${svg(card.icon, { size: 28, stroke: "var(--berry-800)", width: 1.5 })}
 </a>
 <div class="lp-social-t">${esc(card.label)}</div>
 <p>${esc(meta.description || "")}</p>
-<a class="lp-social-pill"${ext} href="${esc(card.href)}">${esc(meta.button || "Open")}</a>
+<a class="lp-social-pill"${ext} href="${safeHref(card.href)}">${esc(meta.button || "Open")}</a>
 </div>`;
 }).join("\n")}
 </div>
@@ -735,7 +756,7 @@ ${svg(card.icon, { size: 28, stroke: "var(--berry-800)", width: 1.5 })}
 <h3>${esc(c.feedback.heading)}</h3>
 <p>${esc(c.feedback.body)}</p>
 </div>
-<a class="lp-feedback-btn" target="_blank" rel="noopener" href="${esc(waLink(s.whatsappNumber, c.feedback.prefill))}">
+<a class="lp-feedback-btn" target="_blank" rel="noopener" href="${safeHref(waLink(s.whatsappNumber, c.feedback.prefill))}">
 ${svg(ICON.waOutline, { size: 22, stroke: "#ffffff", width: 1.8 })}
 ${esc(c.feedback.button)}</a>
 </div>
@@ -788,7 +809,7 @@ been renamed or taken down. Everything else is still here.
 </p>
 <div class="lp-cta lp-cta--center">
 ${links.map(l =>
-  '<a href="' + esc(l.href) + '"' + (l.external ? ' target="_blank" rel="noopener"' : "") + ">" +
+  '<a href="' + safeHref(l.href) + '"' + (l.external ? ' target="_blank" rel="noopener"' : "") + ">" +
   svg(l.icon, { stroke: "var(--berry-800)" }) +
   '<span class="lp-cta-t">' + esc(l.title) + "</span>" +
   '<span class="lp-cta-s">' + esc(l.subtitle) + "</span></a>"
