@@ -455,22 +455,40 @@ carousel-3d{
 .lp-load{
   position:relative;display:inline-flex;align-items:center;gap:2.5rem;
   font:var(--weight-black) 0.9375rem/1 var(--font-ui);color:#FFFFFF;
-  background:linear-gradient(90deg,
-    color-mix(in oklab,var(--tone) 58%,#ffffff) 0%,
-    var(--tone) 52%,
-    var(--tone-deep) 100%);
+  /* Fallbacks first; the tinted versions are in the @supports block below.
+     `color-mix` is Chrome 111, and because these declarations also contain
+     `var()` an older engine does not quietly ignore them — it accepts them at
+     parse time and then drops the whole property at computed-value time, the
+     same trap documented on `.lp-sticky`. For `background` that resets to
+     transparent, and this button's text is white, so on Chrome 103 the
+     "Load more" pill vanished entirely. The gradient below keeps the per-tab
+     tint and only loses the lightened left end. */
+  background:linear-gradient(90deg,var(--tone) 0%,var(--tone-deep) 100%);
   border:none;border-radius:999px;
   padding:0.5rem 0.5rem 0.5rem 1.9rem;cursor:pointer;
-  box-shadow:0 8px 18px color-mix(in oklab,var(--tone-deep) 32%,transparent),
-             0 2px 4px color-mix(in oklab,var(--tone-deep) 24%,transparent);
+  box-shadow:0 8px 18px rgba(34,36,31,.30),0 2px 4px rgba(34,36,31,.22);
   transition:filter 140ms ease,transform 140ms ease,box-shadow 140ms ease;
 }
 .lp-load:hover{filter:brightness(1.06);transform:translateY(-2px)}
-.lp-load:active{transform:translateY(1px);box-shadow:0 3px 8px color-mix(in oklab,var(--tone-deep) 30%,transparent)}
+.lp-load:active{transform:translateY(1px);box-shadow:0 3px 8px rgba(34,36,31,.28)}
 .lp-load-badge{
   flex:0 0 auto;width:2.25rem;height:2.25rem;border-radius:999px;background:#FFFCF8;
   display:flex;align-items:center;justify-content:center;
-  box-shadow:0 1px 3px color-mix(in oklab,var(--tone-deep) 28%,transparent);
+  box-shadow:0 1px 3px rgba(34,36,31,.26);
+}
+/* The intended look, wherever color-mix exists. Shadows tinted with the tab's
+   own deep tone rather than the neutral ink used above. */
+@supports (background:color-mix(in oklab,red 50%,white)){
+  .lp-load{
+    background:linear-gradient(90deg,
+      color-mix(in oklab,var(--tone) 58%,#ffffff) 0%,
+      var(--tone) 52%,
+      var(--tone-deep) 100%);
+    box-shadow:0 8px 18px color-mix(in oklab,var(--tone-deep) 32%,transparent),
+               0 2px 4px color-mix(in oklab,var(--tone-deep) 24%,transparent);
+  }
+  .lp-load:active{box-shadow:0 3px 8px color-mix(in oklab,var(--tone-deep) 30%,transparent)}
+  .lp-load-badge{box-shadow:0 1px 3px color-mix(in oklab,var(--tone-deep) 28%,transparent)}
 }
 
 /* --- 12. Filters panel ------------------------------------------------- */
