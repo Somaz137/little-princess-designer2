@@ -377,7 +377,7 @@ carousel-3d{
   touch-action:pan-y;cursor:grab;height:31.25rem;
 }
 .lp-car-face{
-  position:relative;width:100%;aspect-ratio:3/4;
+  display:block;position:relative;width:100%;aspect-ratio:3/4;
   border-radius:var(--radius-md);overflow:hidden;
   border:2px solid var(--paper-000);box-shadow:var(--shadow-sm);
 }
@@ -456,10 +456,6 @@ carousel-3d{
   gap:1.75rem;max-width:var(--lp-gridmax);margin:0 auto;
 }
 .lp-grid > [hidden]{display:none}
-/* The home page's newest-pieces row: four across rather than the shop's two,
-   so it reads as one row. Falls back to the shop's two columns on a phone,
-   where the rule in the phone block below takes over. */
-.lp-grid--4{grid-template-columns:repeat(4,minmax(0,1fr))}
 /* Shows the first four before app.js boots, so the full grid never flashes.
    app.js drops the attribute and takes over visibility itself. */
 .lp-grid[data-preload] > .lp-card:nth-child(n+5){display:none}

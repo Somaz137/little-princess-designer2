@@ -104,11 +104,24 @@ class Carousel3D extends HTMLElement {
 
   _faceClick(e) {
     const faces = this._faces;
-    const face = faces.find(f => f.contains(e.target));
+    // `pointerdown` captures the pointer so a drag keeps working past the edge
+    // of the element — but while a pointer is captured the browser retargets
+    // its events, and the click that follows, to the capturing element. So
+    // `e.target` is always this carousel and never a face: matching on it meant
+    // tapping a face did nothing at all, and a link inside one never fired.
+    // Hit-test the coordinates instead, which is what was meant all along.
+    const hit = this.ownerDocument.elementFromPoint(e.clientX, e.clientY);
+    const face = hit && faces.find(f => f === hit || f.contains(hit));
     if (!face) return;
     const n = faces.length;
     const current = (((faces.indexOf(face) * (360 / n) + this._rot) % 360) + 360) % 360;
-    if (current < 12 || current > 348) return; // already front — let the click through
+    if (current < 12 || current > 348) {
+      // Already front. The retargeted click will not reach a link inside the
+      // face on its own, so follow it here.
+      const link = face.matches('a') ? face : face.querySelector('a');
+      if (link) link.click();
+      return;
+    }
     e.preventDefault();
     let delta = -current;
     if (delta < -180) delta += 360;

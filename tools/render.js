@@ -41,15 +41,12 @@ const safeHref = url => {
  */
 const SUMMARY_TAIL = "Made to order, hand-finished in our Lahore studio.";
 
-/** How many pieces the home page shows as newest, and the wording above them. */
-const LATEST_COUNT = 4;
-const LATEST_HEADING = "Just finished in the studio";
-
-/** First of these with something in it; "" if none. Mirrors content.js. */
-const nonEmptyText = (...vals) => {
-  for (const v of vals) if (typeof v === "string" && v.trim()) return v.trim();
-  return "";
-};
+/**
+ * How many pieces spin in the home carousel. Ten, because that is how many
+ * faces the cylinder was built around — fewer makes each face wide and the
+ * ring sparse.
+ */
+const CAROUSEL_COUNT = 10;
 
 const money = n => "PKR " + Number(n).toLocaleString("en-US");
 
@@ -364,20 +361,13 @@ function renderHome(model, siteUrl) {
   const hooks = (s.heroHooks || []).slice(0, 3).map(h => (typeof h === "string" ? h : h.text || ""));
   const ctas = s.heroCtas || [];
 
-  // The newest four pieces across the whole catalogue. Until this row existed,
-  // new work was invisible unless a customer happened to open the right
-  // subcategory. Same card as the shop pages, so it prices and links the same
-  // way; app.js wires every [data-product] on the page, and the filter and
-  // load-more code only looks inside [data-subsect], which this is not.
-  const newest = [...model.products].sort((a, b) => b.addedOn - a.addedOn || a.name.localeCompare(b.name))
-    .slice(0, LATEST_COUNT);
-  const latest = newest.length ? `
-<section class="lp-sect lp-sect--gap9">
-<h2 class="lp-h2"><img class="lp-crown" src="/assets/logo-crown.png" alt="">${esc(nonEmptyText(s.latestHeading, LATEST_HEADING))}</h2>
-<div class="lp-grid lp-grid--4">
-${newest.map(p => productCard(model, p)).join("\n")}
-</div>
-</section>` : "";
+  // The carousel used to spin a hand-curated photo list from Site Settings.
+  // It shows the newest pieces instead, so new work is visible from the home
+  // page rather than only to someone who opens the right subcategory — and so
+  // the row keeps itself up to date with no one having to maintain it.
+  const newest = [...model.products]
+    .sort((a, b) => b.addedOn - a.addedOn || a.name.localeCompare(b.name))
+    .slice(0, CAROUSEL_COUNT);
   const stages = [
     { src: "/assets/dress-sketch-tall.webp", alt: "Pencil sketch of a made-to-order party frock for girls, drawn in the Little Princess Designer studio" },
     { src: "/assets/dress-colour-tall.webp", alt: "The same girls party frock, watercoloured to show the chosen fabric and trim colours" },
@@ -430,13 +420,18 @@ ${ctas.slice(0, 3).map((c, i) => {
 </div>
 <div class="lp-car-wrap">
 <carousel-3d>
-${(s.carousel || []).map((img, i) =>
-  '<div><div class="lp-car-face">' + frame(img, { placeholder: "Piece " + (i + 1), sizes: CARD_SIZES.carousel }) + "</div></div>"
+${newest.map(p =>
+  '<div><a class="lp-car-face" href="' + safeHref(p.href) +
+  '" aria-label="' + esc(p.name + " — " + p.subcategoryName + " for " + p.tabLabel) + '">' +
+  // The placeholder carries the product name rather than the generic wording:
+  // a photo-only face with no photo would otherwise say nothing at all, and
+  // most of the catalogue is still unphotographed.
+  frame(p.images[0] || null, { placeholder: p.name, sizes: CARD_SIZES.carousel }) +
+  "</a></div>"
 ).join("\n")}
 </carousel-3d>
 </div>
 </section>
-${latest}
 
 <section class="lp-sect lp-sect--gap9">
 <h2 class="lp-h2"><img class="lp-crown" src="/assets/logo-crown.png" alt="">${esc(s.categoriesHeading)}</h2>
