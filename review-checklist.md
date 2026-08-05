@@ -1,7 +1,9 @@
 # Review checklist
 
-Open findings from the code review of `main` on 2026-08-05. Line numbers verified
-against the working tree that day. Nothing here is implemented yet.
+Findings from the code review of `main` on 2026-08-05, plus the admin-experience
+round at the bottom. Ticked boxes are done and on `main`; unticked ones are still
+open — as of the last edit the only open item is the Cloudinary photo library and
+the live preview panel, under "Admin experience".
 
 Ordered by what to do first. The three admin-facing items (#3, #4, #13) all edit
 `site/admin/config.yml`, so they are cheaper done together than separately.
@@ -132,6 +134,57 @@ Ordered by what to do first. The three admin-facing items (#3, #4, #13) all edit
       live in a JS object and are lost on reload, so a filtered view cannot be sent
       to a customer over WhatsApp.
       **Fix:** mirror `state` into the URL hash and restore from it on load.
+
+## Admin experience
+
+Three findings from working through the admin as the owner uses it, 2026-08-05.
+The first two are settings and styling and are done. The third is the one that
+matters most and is **not started** — it needs something only the owner has.
+
+- [x] **`site/admin/config.yml:112` — the product list showed nothing but a
+      name.** 39 rows of bare names, so finding one piece meant opening several.
+      **Fixed:** the row summary now carries section, price and any HIDDEN /
+      SOLD OUT marker, and two view filters were added for photos. Two limits
+      worth knowing, both Decap's rather than ours: the section shows the stored
+      code (`g3`, `y1`) because a summary cannot follow a relation to its label,
+      and the price is the first size row's, not the lowest, because a summary
+      cannot compare rows.
+
+- [x] **`site/admin/config.yml` — Photos sat ~2,000px down a ~2,700px form.**
+      The field most likely to be the reason for opening a product was the one
+      furthest from the top.
+      **Fixed:** moved to second, directly under the product name.
+
+- [x] **`site/admin/index.html` — the admin read as someone else's tool.**
+      Decap's own cold grey page, blue accents and system fonts, with the form
+      capped at 800px and centred while roughly a third of the screen sat empty
+      (`ControlPaneContainer`, `max-width:800px`).
+      **Fixed:** warm paper, berry buttons, hand-lettered headings, darker and
+      larger field hints, and the form widened to 1180px. Toggles and the delete
+      button were left alone on purpose — see the note in that file.
+
+- [ ] **THE BIG ONE — get dresses into the admin.** 38 of 39 products have no
+      photo. Everything above makes the tool pleasanter to use; none of it puts
+      a single dress on the site. Two halves, and the first is blocked on the
+      owner:
+    - [ ] **Turn on the Cloudinary photo library.** The block is already written
+          and commented out at `site/admin/config.yml:71-83`, and the Decap build
+          in `site/admin/index.html` already ships the widget — so this is
+          uncommenting six lines and filling in two values. **Blocked:** needs
+          the owner's Cloudinary **cloud name** and **API key** (not the API
+          secret), from the Cloudinary dashboard. Nobody else can supply these.
+          Turn it on *before* uploading any photo: anything committed to the repo
+          first stays in git history even after it is deleted.
+    - [ ] **Switch the preview panel on and feed it the real product card.**
+          `editor.preview` is `false` for products (`site/admin/config.yml`), so
+          the empty third of the screen is currently just empty. Registering a
+          preview template with `CMS.registerPreviewTemplate` that renders the
+          site's own card markup would let the owner watch the actual card change
+          as they type, instead of publishing to find out. The card markup lives
+          in `productCard()` at `tools/render.js`, and the styles it needs are in
+          `site/styles.css` — the work is sharing those two with the admin
+          without duplicating them, which is why this is a day rather than an
+          hour.
 
 ---
 

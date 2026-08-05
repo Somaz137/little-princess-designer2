@@ -107,9 +107,25 @@ collections:
     format: json
     identifier_field: name
     slug: "{{slug}}"
-    # Just the name: the stored subcategory is a short code like "g3", which
-    # means nothing at a glance. Use Group by → Subcategory to organise the list.
-    summary: "{{name}}"
+    # Every row shows name, section, price and any warning marker, so the list
+    # can be read without opening anything.
+    #
+    #   Blush Party Frock  ·  g3  ·  PKR 18500  ·  HIDDEN  ·  SOLD OUT
+    #
+    # Two things to know about it:
+    #
+    #   · The section is the stored code (g3, y1), not "Girls / Party". Decap
+    #     cannot look a relation up for a summary — it only sees what is in the
+    #     file, and the file holds the code. Group by → Subcategory still puts
+    #     the readable names as headings.
+    #   · The price is the FIRST size row's price, not the lowest. The website
+    #     shows the lowest ("from PKR …"); a summary cannot compare rows. If a
+    #     row's price looks wrong here, open it and check which row is first.
+    #
+    # `ternary('a','b')` prints a when the field is set and b when it is not,
+    # which is how HIDDEN appears only on hidden pieces. Decap's filters are
+    # upper, lower, date, default, ternary and truncate — nothing else parses.
+    summary: "{{name}}  ·  {{subcategory}}  ·  PKR {{sizes.0.price | default('?')}}{{visible | ternary('', '  ·  HIDDEN')}}{{badge | ternary('  ·  ', '')}}{{badge | upper}}"
     sortable_fields: [name, addedOn, subcategory]
     editor:
       preview: false
@@ -123,6 +139,23 @@ collections:
       - label: "Sold out"
         field: badge
         pattern: "Sold out"
+      # Photo filters. A filter matches a field's value as text, so these read
+      # the whole Photos list at once and ask whether a real image address
+      # appears anywhere in it — a pasted link (https://…) or an uploaded file
+      # (/assets/uploads/…). That is the only form that catches both a piece
+      # with no photo rows at all and a piece whose rows are still blank; a
+      # filter on the first row's link misses the first case, because a field
+      # that does not exist never matches.
+      # Single-quoted deliberately: a double-quoted YAML scalar turns \\s into \s
+      # on the way in, so the pattern would have to be written with doubled
+      # backslashes and would then read differently to tools/yaml.js, which does
+      # not process escapes. Single quotes mean both parsers see the same text.
+      - label: "No photo yet"
+        field: images
+        pattern: '^(?![\s\S]*(https?://|/assets/uploads/))[\s\S]*$'
+      - label: "Photo added"
+        field: images
+        pattern: '(https?://|/assets/uploads/)'
     view_groups:
       - label: "Subcategory"
         field: subcategory
@@ -131,6 +164,35 @@ collections:
         name: name
         widget: string
         hint: "Shown on the card and the product page. This also sets the web address, so avoid renaming a product that is already being shared."
+
+      # Second on the form, straight under the name. It used to sit last, about
+      # 2,000px down a 2,700px form, so the one field most likely to be the
+      # reason for opening a product was the one furthest from the top. The name
+      # stays first because it is what the entry is called everywhere else.
+      - label: "Photos"
+        name: images
+        widget: list
+        label_singular: "Photo"
+        collapsed: false
+        summary: "{{fields.alt}}"
+        hint: "First photo is the one on the card. The product page shows up to three — front, side and back work well. Each row takes EITHER an uploaded file OR a pasted link, not both."
+        fields:
+          - label: "Upload a photo"
+            name: upload
+            widget: image
+            required: false
+            allow_multiple: false
+            hint: "Drag a file in, or pick one you have already uploaded."
+          - label: "…or paste an image link"
+            name: url
+            widget: string
+            required: false
+            hint: "A full https:// address. If both this and an upload are filled in, the link wins."
+          - label: "Photo description (alt text)"
+            name: alt
+            widget: string
+            required: false
+            hint: "Describe the piece for search engines and for anyone using a screen reader — e.g. \"Blush pink net party frock for girls, hand-beaded bodice\"."
 
       - label: "Subcategory"
         name: subcategory
@@ -227,31 +289,6 @@ collections:
           - { label: "Occasion", name: occasion, widget: string, required: false }
           - { label: "Fit", name: fit, widget: string, required: false }
           - { label: "Care", name: care, widget: string, required: false }
-
-      - label: "Photos"
-        name: images
-        widget: list
-        label_singular: "Photo"
-        collapsed: false
-        summary: "{{fields.alt}}"
-        hint: "First photo is the one on the card. The product page shows up to three — front, side and back work well. Each row takes EITHER an uploaded file OR a pasted link, not both."
-        fields:
-          - label: "Upload a photo"
-            name: upload
-            widget: image
-            required: false
-            allow_multiple: false
-            hint: "Drag a file in, or pick one you have already uploaded."
-          - label: "…or paste an image link"
-            name: url
-            widget: string
-            required: false
-            hint: "A full https:// address. If both this and an upload are filled in, the link wins."
-          - label: "Photo description (alt text)"
-            name: alt
-            widget: string
-            required: false
-            hint: "Describe the piece for search engines and for anyone using a screen reader — e.g. \"Blush pink net party frock for girls, hand-beaded bodice\"."
 
   # ---------------------------------------------------------------------------
   # SUBCATEGORIES — the sections inside each tab

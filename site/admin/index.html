@@ -9,16 +9,173 @@
 <!-- Same self-hosted fonts as the site; no third-party request. -->
 <link rel="stylesheet" href="/tokens.css">
 <style>
-  /* Brand skin for the CMS chrome. Decap styles its own internals; these are
-     the bits that read as "someone else's tool" until they're themed. */
+  /* ---------------------------------------------------------------------
+     Brand skin for the CMS chrome.
+
+     Decap ships its own stylesheet — a cold grey page (#eff0f4), white cards,
+     blue accents, system fonts. None of that is configurable, so it is
+     overridden here.
+
+     Two things to know before editing:
+
+     · The selectors match on *part* of a class name, because Decap's classes
+       are generated (`css-1x2y3z-ControlPaneContainer`). The readable half is
+       stable per release, and the release is pinned at the bottom of this
+       file, so these hold until someone bumps that version. If the admin ever
+       looks half-themed after an upgrade, this block is the first suspect.
+     · `!important` is needed throughout: Decap injects its styles at runtime,
+       after this file, so equal-specificity rules lose.
+
+     Deliberately NOT restyled: the on/off toggles and the delete button.
+     Forcing a brand colour onto a toggle makes "off" look like "on", and a
+     berry delete button reads as safe. Both matter more than matching.
+     --------------------------------------------------------------------- */
   :root{
-    --lp-berry:#A43462;
-    --lp-berry-deep:#5C1533;
-    --lp-berry-soft:#FDEEF4;
-    --lp-paper:#FFFCF8;
-    --lp-ink:#333530;
+    /* Aliases onto the real design tokens in /tokens.css, which is loaded
+       above — so the admin cannot drift from the site it edits. The literal
+       fallbacks are for the one case that matters: if tokens.css fails to
+       load, the boot screen below is what the owner is left looking at, and
+       it should still be legible rather than unstyled. */
+    --lp-berry:var(--berry-700,#A43462);
+    --lp-berry-deep:var(--berry-900,#5C1533);
+    --lp-berry-soft:var(--berry-100,#FDEEF4);
+    --lp-paper:var(--paper-050,#FFFCF8);
+    --lp-ink:var(--ink-800,#333530);
   }
   body{background:var(--lp-paper);font-family:"Nunito","Segoe UI",system-ui,sans-serif}
+
+  /* --- 1. Warm paper instead of cold grey ------------------------------
+     Decap paints the editor screen with its own `colors.background`, which is
+     a blue-grey. The page behind the form is the largest surface in the tool,
+     so it sets the temperature of everything. */
+  body,
+  [class*="EditorContainer"],
+  [class*="AppMainContainer"]{background:var(--paper-050) !important}
+
+  /* Card surfaces stay white so the form still reads as paper on a desk,
+     but the border and shadow warm up and lose the grey edge. */
+  [class*="SidebarContainer"],
+  [class*="CollectionTopContainer"],
+  [class*="ListCard"],
+  [class*="GridCard"],
+  [class*="SearchResultContainer"]{
+    background:var(--paper-000) !important;
+    border:1px solid var(--ink-100) !important;
+    border-radius:14px !important;
+    box-shadow:0 1px 3px rgba(34,36,31,.06) !important;
+  }
+
+  /* --- 2. Hand-lettered headings ---------------------------------------
+     The logo voice, used only where the site uses it: page and section
+     headings. Product names in the list stay in Nunito — Caveat Brush is a
+     display face and a column of 39 names set in it is harder to scan. */
+  [class*="CollectionTopHeading"],
+  [class*="SidebarHeading"],
+  [class*="SettingsSectionTitle"]{
+    font-family:var(--font-hand) !important;
+    color:var(--berry-800) !important;
+    letter-spacing:.4px !important;
+    text-transform:none !important;
+  }
+  [class*="CollectionTopHeading"]{font-size:32px !important}
+  [class*="SidebarHeading"]{font-size:22px !important}
+
+  /* --- 3. Berry buttons ------------------------------------------------
+     The actions that commit something: Publish, Save, New, Login. */
+  [class*="PublishButton"],
+  [class*="PublishedButton"],
+  [class*="SaveButton"],
+  [class*="CollectionTopNewButton"],
+  [class*="AppHeaderQuickNewButton"],
+  [class*="LoginButton"],
+  button[class*="ButtonPrimary"]{
+    background-color:var(--berry-700) !important;
+    border-color:var(--berry-900) !important;
+    color:var(--paper-000) !important;
+    font-family:var(--font-ui) !important;
+    font-weight:700 !important;
+  }
+  [class*="PublishButton"]:hover,
+  [class*="SaveButton"]:hover,
+  [class*="CollectionTopNewButton"]:hover,
+  [class*="AppHeaderQuickNewButton"]:hover,
+  [class*="LoginButton"]:hover{background-color:var(--berry-800) !important}
+  /* Without this, an override on a disabled Save makes it look clickable. */
+  [class*="PublishButton"]:disabled,
+  [class*="SaveButton"]:disabled,
+  button[class*="ButtonPrimary"]:disabled{
+    background-color:var(--berry-300) !important;
+    border-color:var(--berry-300) !important;
+    cursor:not-allowed !important;
+  }
+
+  /* The quieter add/insert buttons inside a form: berry, but as an outline
+     so they do not compete with Publish. */
+  [class*="AddButton"],
+  [class*="InsertButton"],
+  [class*="FileWidgetButton"],
+  [class*="UploadButton"]{
+    background:var(--berry-100) !important;
+    color:var(--berry-800) !important;
+    border:1.5px solid var(--berry-300) !important;
+    font-weight:700 !important;
+  }
+
+  /* Blue is Decap's accent for the selected collection; berry here. */
+  [class*="NavLinkActive"],
+  [class*="SidebarNavLink"][class*="Active"]{
+    color:var(--berry-700) !important;
+    background-color:var(--berry-100) !important;
+  }
+
+  /* --- 4. Readable hints and labels ------------------------------------
+     Decap sets hints small and pale grey, which is where the wording that
+     explains each field lives. Darker and a size up, with room to breathe. */
+  [class*="ControlHint"]{
+    color:var(--ink-700) !important;
+    font-family:var(--font-ui) !important;
+    font-size:13.5px !important;
+    line-height:1.55 !important;
+    margin-top:6px !important;
+  }
+  [class*="FieldLabel"],
+  [class*="NestedObjectLabel"]{
+    font-family:var(--font-ui) !important;
+    font-weight:700 !important;
+    font-size:14px !important;
+    color:var(--ink-800) !important;
+    text-transform:none !important;
+  }
+
+  /* Inputs on warm paper, with a berry focus ring rather than a blue one. */
+  [class*="TextControl"],
+  [class*="AuthInput"],
+  input[type="text"],input[type="number"],input[type="url"],textarea,select{
+    font-family:var(--font-ui) !important;
+    border-color:var(--ink-200) !important;
+  }
+  [class*="TextControl"]:focus,
+  input:focus,textarea:focus,select:focus{
+    border-color:var(--berry-500) !important;
+    box-shadow:0 0 0 3px var(--berry-100) !important;
+    outline:none !important;
+  }
+
+  /* --- 5. Use the empty third of the screen ----------------------------
+     The live preview is off for products (editor.preview: false in
+     config.yml), so nothing is rendered beside the form — but Decap still
+     caps the form itself at 800px and centres it, leaving roughly a third of
+     a laptop screen empty. Widening it fits the photo rows and the size/price
+     rows without horizontal cramming. The cap stays, because a form running
+     the full width of a wide monitor is harder to read, not easier.
+
+     The doubled selector is deliberate: Decap has two nested elements both
+     labelled ControlPaneContainer, and only the inner one carries the width. */
+  [class*="ControlPaneContainer"] [class*="ControlPaneContainer"]{
+    max-width:1180px !important;
+    padding-left:8px !important;
+    padding-right:8px !important;
+  }
 
   /* Loading state, replaced once the CMS mounts. */
   #lp-boot{
@@ -31,16 +188,25 @@
   #lp-boot small{font:400 13px/1.5 "Nunito",sans-serif;color:#6B6D68;max-width:44ch}
   #lp-boot[hidden]{display:none}
 
-  /* Decap chrome in brand colours. */
+  /* --- 6. The top bar --------------------------------------------------
+     Last on purpose. `[class*="AppHeader"]` also matches the buttons inside
+     the bar, so these rules have to come after the button rules above or they
+     would paint the New button berry-on-berry and hide it. */
   [class*="AppHeader"]{background:var(--lp-berry) !important}
-  [class*="AppHeader"] a,[class*="AppHeader"] button{color:#fff !important}
-  [class*="SiteLinkText"]{font-family:"Caveat Brush",cursive !important;font-size:20px !important}
-  button[class*="ButtonPrimary"],[class*="ToolbarButton"][class*="primary"]{
-    background:var(--lp-berry) !important;border-color:var(--lp-berry-deep) !important;
+  [class*="AppHeader"] a,[class*="AppHeader"] button{color:var(--paper-000) !important}
+  [class*="SiteLinkText"],
+  [class*="AppHeaderSiteLink"]{font-family:var(--font-hand) !important;font-size:20px !important}
+  /* The one button sitting on the berry bar: reversed out, so it is visible
+     against it. Typed as `button[...]` to outrank the descendant rule above. */
+  button[class*="AppHeaderQuickNewButton"]{
+    background-color:var(--paper-000) !important;
+    border-color:var(--paper-000) !important;
+    color:var(--berry-800) !important;
   }
-  [class*="CardsGrid"] [class*="Card"]{border-radius:14px !important}
-  /* Field hints readable rather than whisper-grey. */
-  [class*="ControlHint"]{color:#6B6D68 !important;font-size:12.5px !important}
+  button[class*="AppHeaderQuickNewButton"]:hover{
+    background-color:var(--berry-100) !important;
+    color:var(--berry-900) !important;
+  }
 </style>
 </head>
 <body>
