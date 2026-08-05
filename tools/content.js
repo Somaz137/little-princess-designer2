@@ -114,7 +114,7 @@ function readDir(dir) {
 const isAbsoluteSrc = src => /^(https?:)?\/\//i.test(src) || /^data:/i.test(src);
 
 /**
- * An image address is either absolute — Cloudinary and anything else pasted in
+ * An image address is either absolute — ImageKit and anything else pasted in
  * full — or a path on this site, which must start with "/". A value with
  * neither resolves against whatever page it happens to land on, and gets the
  * site origin glued straight onto it when building share tags. Force it
@@ -343,7 +343,8 @@ function load({ dir = CONTENT, quiet: silent = false } = {}) {
     warn(webpFirst.length + " product(s) have a WebP first photo, which WhatsApp and " +
       "Facebook will not show when the link is shared: " +
       webpFirst.slice(0, 5).join(", ") + (webpFirst.length > 5 ? ", …" : "") +
-      ". Use a JPEG or PNG for the first photo, or set Cloudinary's format to jpg.");
+      ". Use a JPEG or PNG for the first photo — photos uploaded to ImageKit are " +
+      "converted for sharing automatically.");
   }
 
   // One line rather than one per product — with an empty catalogue this would

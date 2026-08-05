@@ -6,6 +6,11 @@
  * A regression in any of those is invisible in review and shows up as a
  * product quietly missing from the live shop.
  *
+ * Plus tools/images.js, for a different reason: the addresses it builds are
+ * only ever proved right by a photo appearing, and every photo on this site
+ * comes from an account no test can reach. Pinning the exact strings here at
+ * least means a change to them has to be deliberate.
+ *
  * Dependency-free on purpose — no runner, no framework, nothing to install.
  *
  *   npm test
@@ -22,6 +27,7 @@
 
 const path = require("path");
 const { load, SIZES } = require("./content");
+const images = require("./images");
 
 const FIXTURE = path.join(__dirname, "fixtures", "content");
 
@@ -53,7 +59,7 @@ const model = load({ dir: FIXTURE, quiet: true });
 const byName = Object.fromEntries(model.products.map(p => [p.name, p]));
 const w = model.warnings;
 
-console.log("Checking tools/content.js against tools/fixtures/content…\n");
+console.log("Checking tools/content.js against tools/fixtures/content, and tools/images.js…\n");
 
 /* which products survive */
 
@@ -129,6 +135,45 @@ check("an address with no scheme and no leading slash is forced root-relative",
   byName["Photos"].images[1].src, "/assets/uploads/relative.jpg");
 checkTrue("and warned about", warned(w, "assets/uploads/relative.jpg", "no leading"));
 check("an alt that is set is kept", byName["Photos"].images[1].alt, "Has alt");
+
+/* image addresses (tools/images.js) */
+
+// A photo as the ImageKit library hands it over: a delivery address with the
+// upload time already on it, which is what makes the query string worth
+// getting right.
+const IK = "https://ik.imagekit.io/shop/products/frock.jpg?updatedAt=1770000000";
+
+check("a card asks for three widths, largest last",
+  images.srcset(IK, "card").split(", ").map(s => s.split(" ")[1]),
+  ["400w", "800w", "1200w"]);
+check("a card copy scales down only, and lets ImageKit pick the format",
+  images.resized(IK, 800),
+  IK + "&tr=w-800,c-at_max,f-auto");
+check("the gallery goes one step larger and pins the quality",
+  images.srcset(IK, "detail").split(", ").pop(),
+  IK + "&tr=w-1600,c-at_max,f-auto,q-90 1600w");
+check("an unknown profile name costs quality, not a broken picture",
+  images.srcset(IK, "typo"), images.srcset(IK, "card"));
+
+check("the share copy is a padded JPEG at exactly the size it claims",
+  images.preview(IK),
+  { url: IK + "&tr=w-1200,h-630,cm-pad_resize,bg-FFFCF8,f-jpg",
+    width: 1200, height: 630, type: "image/jpeg" });
+check("transforming an already-transformed address replaces, never stacks",
+  images.preview(images.preview(IK).url).url, images.preview(IK).url);
+check("an address with no query string of its own still gets one",
+  images.resized("https://ik.imagekit.io/shop/frock.jpg", 400),
+  "https://ik.imagekit.io/shop/frock.jpg?tr=w-400,c-at_max,f-auto");
+checkTrue("ImageKit photos are worth warming before anyone shares one",
+  images.warms(IK));
+
+// The fallback the whole table rests on: a host it does not know must cost
+// bytes, never a missing photo.
+const OTHER = "https://example.test/pasted.jpg";
+check("an unknown host is left exactly as it is", images.resized(OTHER, 400), OTHER);
+check("…with no srcset, so the browser keeps the single src", images.srcset(OTHER), "");
+check("…and no share copy claimed for it", images.preview(OTHER), null);
+checkTrue("…and nothing to warm", !images.warms(OTHER));
 
 /* shape the rest of the build relies on */
 

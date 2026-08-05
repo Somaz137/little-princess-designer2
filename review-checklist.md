@@ -2,8 +2,8 @@
 
 Findings from the code review of `main` on 2026-08-05, plus the admin-experience
 round at the bottom. Ticked boxes are done and on `main`; unticked ones are still
-open — as of the last edit the only open item is the Cloudinary photo library and
-the live preview panel, under "Admin experience".
+open — as of the last edit the only open item is the live preview panel, under
+"Admin experience". The photo library beside it is done, on ImageKit.
 
 Ordered by what to do first. The three admin-facing items (#3, #4, #13) all edit
 `site/admin/config.yml`, so they are cheaper done together than separately.
@@ -165,16 +165,26 @@ matters most and is **not started** — it needs something only the owner has.
 
 - [ ] **THE BIG ONE — get dresses into the admin.** 38 of 39 products have no
       photo. Everything above makes the tool pleasanter to use; none of it puts
-      a single dress on the site. Two halves, and the first is blocked on the
-      owner:
-    - [ ] **Turn on the Cloudinary photo library.** The block is already written
-          and commented out at `site/admin/config.yml:71-83`, and the Decap build
-          in `site/admin/index.html` already ships the widget — so this is
-          uncommenting six lines and filling in two values. **Blocked:** needs
-          the owner's Cloudinary **cloud name** and **API key** (not the API
-          secret), from the Cloudinary dashboard. Nobody else can supply these.
-          Turn it on *before* uploading any photo: anything committed to the repo
-          first stays in git history even after it is deleted.
+      a single dress on the site. Two halves; the first is now done:
+    - [x] **Turn on the photo library — ImageKit, not Cloudinary.** Done
+          2026-08-05. The owner opened an ImageKit account rather than a
+          Cloudinary one, so the commented-out Cloudinary block was replaced
+          rather than uncommented. Decap ships no ImageKit library, so the
+          wiring is ours: `site/admin/imagekit.js` registers ImageKit's own
+          embeddable widget through `CMS.registerMediaLibrary`, and
+          `site/admin/index.html` loads both. `tools/images.js` swapped its
+          Cloudinary resize rules for ImageKit's `tr=` parameters; nothing else
+          in the build had to change, which is what that file was extracted for.
+          **Not blocked on anything:** the widget carries no keys — each editor
+          signs in to ImageKit inside the panel — so there is nothing left for
+          the owner to supply. The optional `imagekit_id` in `config.yml` only
+          saves a click. Photos go straight to ImageKit and never enter git
+          history.
+          **Unverified from here:** the proxy blocks `ik.imagekit.io` and
+          `unpkg.com`, so neither a real upload nor a rendered `tr=` URL could
+          be tried. The transformation names are checked against ImageKit's own
+          published SDK and the widget's source, and the wiring is covered by
+          `npm test`; the first real upload is still the proof.
     - [ ] **Switch the preview panel on and feed it the real product card.**
           `editor.preview` is `false` for products (`site/admin/config.yml`), so
           the empty third of the screen is currently just empty. Registering a

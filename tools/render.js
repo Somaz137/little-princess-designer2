@@ -169,7 +169,7 @@ function frame(image, { eager = false, placeholder = "Photo coming soon", sizes 
 
 /**
  * Absolute form of an image address. WhatsApp, Instagram and structured data
- * all reject relative paths; Cloudinary links are already absolute, so those
+ * all reject relative paths; ImageKit links are already absolute, so those
  * pass through untouched and everything else gets the site origin.
  *
  * content.js guarantees a leading "/" on anything not absolute, so this can

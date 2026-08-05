@@ -1,18 +1,17 @@
 #!/usr/bin/env node
 /**
- * Warms the Cloudinary share images so the first person to share a link does
+ * Warms the ImageKit share images so the first person to share a link does
  * not have to wait for one to be built.
  *
  * og:image does not point at the photo the visitor sees. It points at a
- * *derived* copy — `c_fill,g_auto,w_1200,h_630,f_jpg,q_auto` — and Cloudinary
- * builds derived copies lazily, on the first request for that exact URL. That
- * first request is the slow one: Cloudinary fetches the original, runs `g_auto`
- * (content-aware crop, an analysis pass), re-encodes under `q_auto` (a second
- * analysis pass), stores the result and only then answers. Seconds, not
+ * *derived* copy — `w-1200,h-630,cm-pad_resize,…` — and ImageKit builds
+ * derived copies lazily, on the first request for that exact URL. That first
+ * request is the slow one: ImageKit fetches the original, resizes and pads it,
+ * re-encodes it as JPEG, stores the result and only then answers. Seconds, not
  * milliseconds. Every request after that is a cached CDN hit.
  *
  * WhatsApp builds its preview card on the sender's phone the moment the link is
- * pasted, and it gives up on a slow image long before Cloudinary has finished.
+ * pasted, and it gives up on a slow image long before ImageKit has finished.
  * That is why a freshly-photographed product shares as a bare card with the
  * right title and no picture, and why sharing the same link again later works —
  * the first share paid for the build and warmed the cache for everyone else.
@@ -71,7 +70,7 @@ function fetchOnce(url) {
   return new Promise((resolve) => {
     const started = Date.now();
     const req = https.get(url, { headers: { "User-Agent": "little-princess-designer build/warm-previews" } }, (res) => {
-      // The body is thrown away — the point is to make Cloudinary build the
+      // The body is thrown away — the point is to make ImageKit build the
       // derived copy, not to keep it. Draining it frees the socket.
       res.resume();
       res.on("end", () => resolve({ ok: res.statusCode === 200, status: res.statusCode, ms: Date.now() - started }));
@@ -99,7 +98,7 @@ async function main() {
   }
 
   // Local builds have no reason to reach out, and on a machine without a route
-  // to Cloudinary every URL would sit here until it timed out. Netlify sets
+  // to ImageKit every URL would sit here until it timed out. Netlify sets
   // NETLIFY=true; `--force` is the escape hatch for testing this by hand.
   const forced = process.argv.includes("--force");
   if (!process.env.NETLIFY && !forced) {
