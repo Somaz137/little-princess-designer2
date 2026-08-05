@@ -128,7 +128,7 @@ Ordered by what to do first. The three admin-facing items (#3, #4, #13) all edit
       already contains everything needed.
       **Fix:** a client-side search box in `site/app.js` filtering that file.
 
-- [ ] **`site/app.js:170` — filter state is not in the URL.** Chosen size and price
+- [x] **`site/app.js:170` — filter state is not in the URL.** Chosen size and price
       live in a JS object and are lost on reload, so a filtered view cannot be sent
       to a customer over WhatsApp.
       **Fix:** mirror `state` into the URL hash and restore from it on load.

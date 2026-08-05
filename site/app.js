@@ -191,6 +191,66 @@
       return Number(card.getAttribute("data-min-price")) <= state.max;
     }
 
+    /* --- filter state in the URL ------------------------------------- */
+
+    /**
+     * Size and price lived only in `state`, so a filtered view could not be
+     * reloaded or sent to a customer — the link opened the unfiltered page.
+     * They are mirrored into the hash instead.
+     *
+     * Only non-default values are written, so an unfiltered page keeps a clean
+     * address, and `#g1`-style section anchors — which the footer and
+     * breadcrumbs both use — are left alone: a hash with no "=" in it is a link
+     * to a section, not filter state.
+     */
+    function writeHash() {
+      var parts = [];
+      if (state.size) parts.push("size=" + encodeURIComponent(state.size));
+      if (range && state.max < Number(range.max)) parts.push("max=" + state.max);
+      var hash = parts.length ? "#" + parts.join("&") : "";
+      // replaceState rather than assigning location.hash: dragging the price
+      // slider would otherwise push one history entry per step and bury
+      // whatever page the visitor arrived from.
+      history.replaceState(null, "", location.pathname + location.search + hash);
+    }
+
+    /** Restores state from the hash. Returns false if there was none to read. */
+    function readHash() {
+      var raw = location.hash.slice(1);
+      if (raw.indexOf("=") === -1) return false;
+
+      var params = {};
+      raw.split("&").forEach(function (pair) {
+        var i = pair.indexOf("=");
+        if (i === -1) return;
+        try {
+          params[decodeURIComponent(pair.slice(0, i))] = decodeURIComponent(pair.slice(i + 1));
+        } catch (err) {
+          /* A half-typed or mangled escape — ignore that pair rather than throw. */
+        }
+      });
+
+      // Only a size this page actually offers. A stale or invented one would
+      // otherwise match nothing and read as an empty catalogue.
+      var offered = chips.map(function (c) { return c.getAttribute("data-size-chip"); });
+      state.size = offered.indexOf(params.size) !== -1 ? params.size : null;
+      chips.forEach(function (c) {
+        c.setAttribute("aria-pressed",
+          c.getAttribute("data-size-chip") === state.size ? "true" : "false");
+      });
+
+      if (range) {
+        var hi = Number(range.max);
+        var lo = Number(range.min);
+        var max = Number(params.max);
+        // Clamped, so a hand-edited number cannot push the slider off its track.
+        state.max = params.max !== undefined && isFinite(max) ? Math.min(hi, Math.max(lo, max)) : hi;
+        range.value = state.max;
+        if (rangeOut) rangeOut.textContent = money(state.max);
+      }
+      return true;
+    }
+
     function apply() {
       sections.forEach(function (sec) {
         var cards = $$("[data-product]", sec);
@@ -283,6 +343,7 @@
           c.setAttribute("aria-pressed", c === chip && !already ? "true" : "false");
         });
         sections.forEach(function (sec) { sec._visible = sec._initial; });
+        writeHash();
         apply();
       });
     });
@@ -293,6 +354,7 @@
         state.max = Number(range.value);
         if (rangeOut) rangeOut.textContent = money(state.max);
         sections.forEach(function (sec) { sec._visible = sec._initial; });
+        writeHash();
         apply();
       });
     }
@@ -307,6 +369,20 @@
         state.max = Number(range.max);
         if (rangeOut) rangeOut.textContent = money(state.max);
       }
+      sections.forEach(function (sec) { sec._visible = sec._initial; });
+      writeHash();
+      apply();
+    });
+
+    // Restore before the first paint, so a shared link opens already filtered
+    // rather than showing everything and then narrowing.
+    readHash();
+
+    // Someone pasting a different filtered link into the same tab, or using
+    // Back after arriving on one. Our own writeHash uses replaceState, which
+    // does not fire this, so there is no loop.
+    window.addEventListener("hashchange", function () {
+      if (!readHash()) return;
       sections.forEach(function (sec) { sec._visible = sec._initial; });
       apply();
     });
