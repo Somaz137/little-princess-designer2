@@ -324,6 +324,9 @@ function load({ dir = CONTENT, quiet: silent = false } = {}) {
       addedOn: Date.parse(data.addedOn) || 0,
       sizes,
       minPrice: Math.min(...sizes.map(s => s.price)),
+      // Absent counts as on, so every piece saved before this field existed
+      // keeps offering the accessory exactly as it did.
+      showAccessory: data.showAccessory !== false,
       accessoryPrice: Number(
         Number.isFinite(Number(data.accessoryPrice)) && Number(data.accessoryPrice) > 0
           ? data.accessoryPrice

@@ -270,6 +270,7 @@ function fromCmsEntry(data, catalogue) {
       tab: sub.parent,
       tabLabel: sub.label,
       badge: String(d.badge || "").trim(),
+      showAccessory: d.showAccessory !== false,
       images: imgs,
       // The card reads `sizes[0]` and `minPrice` unconditionally. A single
       // priceless row keeps it drawable while the form is still empty; the
@@ -420,6 +421,18 @@ ${svg(ICON.arrowRight, { size: 20, stroke: "var(--tone-deep)", width: 2 })}
 </button>`
     : "";
 
+  // Left out entirely for a piece that has no matching accessory, rather than
+  // shown and ignored. app.js finds no tick-box and leaves the total alone —
+  // it already null-checks this, so nothing else has to change.
+  const accessory = p.showAccessory === false ? "" : `<div>
+<label class="lp-acc">
+<input type="checkbox" data-accessory aria-describedby="lp-acc-note">
+<span>${esc(s.accessoryLabel)}</span>
+</label>
+<div class="lp-acc-note" id="lp-acc-note">${esc(s.accessoryNote)}</div>
+</div>
+`;
+
   const specRows = [
     ["Fabric", p.specs.fabric],
     ["Occasion", p.specs.occasion],
@@ -457,14 +470,7 @@ ${specRows.map(([k, v]) => "<dt>" + esc(k) + "</dt><dd>" + esc(v) + "</dd>").joi
 </dl>
 </div>
 
-<div>
-<label class="lp-acc">
-<input type="checkbox" data-accessory aria-describedby="lp-acc-note">
-<span>${esc(s.accessoryLabel)}</span>
-</label>
-<div class="lp-acc-note" id="lp-acc-note">${esc(s.accessoryNote)}</div>
-</div>
-
+${accessory}
 <div class="lp-total">
 <div class="lp-total-row">
 <span class="lp-total-label">Total</span>

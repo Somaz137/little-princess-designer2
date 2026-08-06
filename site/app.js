@@ -168,8 +168,8 @@
     out.classList.toggle("lp-card-price--sale", !!(was && Number(was) > 0));
   }
 
-  function initCards() {
-    $$("[data-product]").forEach(function (card) {
+  function initCards(root) {
+    $$("[data-product]", root).forEach(function (card) {
       card._prices = priceTable(card);
       var select = $("[data-price-select]", card);
       if (select) {
@@ -416,8 +416,8 @@
 
   /* --- 5. Product detail --------------------------------------------- */
 
-  function initDetail() {
-    var detail = $("[data-detail]");
+  function initDetail(root) {
+    var detail = $("[data-detail]", root);
     if (!detail) return;
 
     var select = $("[data-detail-size]", detail);
@@ -649,9 +649,27 @@
     initDetail();
   }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", boot);
-  } else {
-    boot();
+  /**
+   * Handed out so the admin's preview panel can wire the markup it renders.
+   * Decap draws the preview into an iframe of its own, and a <script> tag
+   * inserted as markup never runs there — so without this the panel showed a
+   * product page whose size dropdown, accessory tick-box and total did nothing.
+   * site/admin/preview.js loads this file into that iframe and calls these two
+   * on each render.
+   */
+  window.LPBehaviour = { initCards: initCards, initDetail: initDetail };
+
+  /**
+   * The preview sets this before loading the file, because there it is a
+   * library rather than a page: the panel re-renders on every keystroke and
+   * calls the initialisers itself, so a self-boot would only wire the first
+   * render and then double up on it.
+   */
+  if (!window.LP_NO_AUTOBOOT) {
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", boot);
+    } else {
+      boot();
+    }
   }
 })();

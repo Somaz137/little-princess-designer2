@@ -289,13 +289,24 @@ collections:
             default: true
             hint: "Off = this size is not offered right now."
 
+      # Per piece rather than site-wide: the accessory suits a frock and not a
+      # shirt, and one switch for the whole shop could not tell them apart. A
+      # piece saved before this field existed has no value for it, which counts
+      # as on — so nothing already in the catalogue changes until it is turned
+      # off deliberately.
+      - label: "Offer a matching accessory"
+        name: showAccessory
+        widget: boolean
+        default: true
+        hint: "Off = the \"Add matching accessory\" tick-box disappears from this product's page, and the total is just the price. Turn it off for pieces you do not make an accessory for."
+
       - label: "Matching accessory price (PKR)"
         name: accessoryPrice
         widget: number
         value_type: int
         required: false
         default: 1500
-        hint: "Added to the total when the customer ticks \"Add matching accessory\". Leave blank to use the site default."
+        hint: "Added to the total when the customer ticks \"Add matching accessory\". Leave blank to use the site default. Ignored when the switch above is off."
 
       - label: "Description"
         name: description
