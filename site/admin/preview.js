@@ -79,7 +79,14 @@
       // — below the fold on every keystroke. Capping the gallery keeps the
       // whole page in view. This changes the scale of the preview, never its
       // content: the markup is still exactly what the site renders.
-      ".lp-preview .lp-galwrap{max-width:300px;margin:0 auto}" +
+      // An explicit width, not max-width. .lp-galwrap is a grid item, and the
+      // centring margins turn off its stretch — so with only a max-width it
+      // falls back to shrink-to-fit, and .lp-gallery is a horizontal scroller
+      // whose fit-content width is zero. The frame then had no width, the 3/4
+      // aspect ratio gave it no height, and the photo vanished along with its
+      // slot. A stated width cannot collapse. min() keeps it honest if the
+      // panel is ever narrower than 300px.
+      ".lp-preview .lp-galwrap{width:min(300px,100%);margin:0 auto}" +
       ".lp-preview-notes{margin:18px 0 0;padding:14px 16px;list-style:none;" +
       "background:#fff6ef;border:1px solid #e8d5c4;border-radius:12px;" +
       "font-size:13px;line-height:1.5;color:#6b4a3a}" +
