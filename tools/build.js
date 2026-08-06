@@ -141,6 +141,15 @@ writeFile("data/products.json", JSON.stringify({
     key: c.key, label: c.label, href: c.href,
     subcategories: c.subcategories.map(sub => ({
       id: sub.id, name: sub.name, order: sub.order,
+      // The section's standard wording travels with it, because the admin's
+      // preview panel needs the same fallback chain the site uses — a piece
+      // with a blank description shows its section's words, then the site
+      // defaults from settings.json. The form holds only the piece's own
+      // fields, so without these the panel would show a gap where the live
+      // page shows a paragraph.
+      defaultDescription: sub.defaultDescription || "",
+      defaultDescription2: sub.defaultDescription2 || "",
+      defaultSpecs: sub.defaultSpecs || {},
       products: sub.products.map(p => p.id)
     }))
   })),

@@ -69,8 +69,17 @@
     // list. Kept to the minimum: anything styled here is styling that is NOT
     // coming from the real site, and so is a chance for the preview to lie.
     window.CMS.registerPreviewStyle(
-      ".lp-preview{padding:18px;max-width:460px;margin:0 auto;font-family:var(--body,system-ui)}" +
-      ".lp-preview .lp-grid{display:block}" +
+      ".lp-preview{padding:16px}" +
+      // The panel is far narrower than a page. .lp-detail is auto-fit
+      // minmax(300px,1fr), so it drops to one column here by itself — this only
+      // stops .lp-main adding the page's own wide gutters on top of the panel's.
+      ".lp-preview .lp-main{padding:0;max-width:none}" +
+      // Stacked in a narrow panel, a full-width photo is about 700px tall and
+      // pushes the price and the description — the fields actually being typed
+      // — below the fold on every keystroke. Capping the gallery keeps the
+      // whole page in view. This changes the scale of the preview, never its
+      // content: the markup is still exactly what the site renders.
+      ".lp-preview .lp-galwrap{max-width:300px;margin:0 auto}" +
       ".lp-preview-notes{margin:18px 0 0;padding:14px 16px;list-style:none;" +
       "background:#fff6ef;border:1px solid #e8d5c4;border-radius:12px;" +
       "font-size:13px;line-height:1.5;color:#6b4a3a}" +
@@ -95,12 +104,44 @@
    * So a missing catalogue costs accuracy in two attributes, not a preview.
    */
   var catalogue = null;
-  try {
-    fetch("/data/products.json", { credentials: "same-origin" })
-      .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (json) { catalogue = json; })
-      .catch(function () { /* keep the fallbacks */ });
-  } catch (e) { /* no fetch: same fallbacks */ }
+  var settings = null;
+
+  /**
+   * Both files the build publishes, fetched once in the background.
+   *
+   *   products.json — the size order, the readable section name, and each
+   *                   section's standard wording for the fallback chain
+   *   settings.json — the WhatsApp number, the accessory wording and price,
+   *                   the delivery note, and the site-wide default wording
+   *
+   * Neither is required. Without them the panel still draws: the section name
+   * falls back to its stored code, the wording falls back to whatever the piece
+   * itself carries, and the order button falls back to a number-less link. A
+   * slow first keystroke is the cost, not a blank panel — and once they land,
+   * the next keystroke repaints with everything.
+   */
+  function grab(url, keep) {
+    try {
+      fetch(url, { credentials: "same-origin" })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (json) { if (json) keep(json); })
+        .catch(function () { /* keep the fallbacks */ });
+    } catch (e) { /* no fetch: same fallbacks */ }
+  }
+  grab("/data/products.json", function (j) { catalogue = j; });
+  grab("/data/settings.json", function (j) { settings = j; });
+
+  /** The section a piece belongs to, with its standard wording. */
+  function sectionFor(code) {
+    var cats = (catalogue && catalogue.categories) || [];
+    for (var i = 0; i < cats.length; i++) {
+      var subs = cats[i].subcategories || [];
+      for (var j = 0; j < subs.length; j++) {
+        if (subs[j].id === code) return subs[j];
+      }
+    }
+    return null;
+  }
 
   /* --- the panel ---------------------------------------------------------- */
 
@@ -128,7 +169,20 @@
         h("p", { className: "lp-preview-head" }, "Preview unavailable"));
     }
 
-    var html = '<div class="lp-grid">' + card.productCard(null, out.product) + "</div>";
+    // The product page as a customer meets it, not an impression of it: this is
+    // the same productDetail() the build writes into every product page. The
+    // panel is a narrow column, so it lays itself out the way a phone does —
+    // photo above, details below — which is how most customers see it anyway.
+    var data = plain(props.entry);
+    var wording = card.applyWording(data, sectionFor(out.product.subcategory), settings);
+    var product = Object.assign({}, out.product, wording, {
+      accessoryPrice: Number(data.accessoryPrice) > 0
+        ? Number(data.accessoryPrice)
+        : Number(settings && settings.accessoryPriceDefault) || 0
+    });
+
+    var html = '<main class="lp-main lp-main--product">' +
+      card.productDetail(product, settings || {}) + "</main>";
 
     var notes = out.notes.length
       ? h("ul", { className: "lp-preview-notes" },
@@ -136,11 +190,11 @@
       : null;
 
     return h("div", { className: "lp-preview" },
-      h("p", { className: "lp-preview-head" }, "How this looks in the shop"),
-      // The card is a string of the site's own markup. It is inserted as
-      // markup because that is what it is — and everything inside it that came
-      // from the form has already been through `esc()` and `safeHref()` in
-      // tools/card.js, the same two guards the live site relies on.
+      h("p", { className: "lp-preview-head" }, "The product page"),
+      // A string of the site's own markup. It is inserted as markup because
+      // that is what it is — and everything inside it that came from the form
+      // has already been through `esc()` and `safeHref()` in tools/card.js, the
+      // same two guards the live site relies on.
       h("div", { dangerouslySetInnerHTML: { __html: html } }),
       notes
     );

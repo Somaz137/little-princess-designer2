@@ -520,8 +520,18 @@ carousel-3d{
 .lp-badge[data-badge="Sold out"]{background:var(--ink-800);color:var(--paper-000);border-color:var(--ink-900)}
 /* Sale is the one badge that should pull the eye — filled rather than outlined,
    in the same berry the buttons use, so it reads as an offer and not as a
-   status like "Made to order". */
-.lp-badge[data-badge="Sale"]{background:var(--tone-deep);color:var(--paper-000);border-color:var(--tone-deep)}
+   status like "Made to order".
+
+   The white ring is what makes it survive a photograph. Filled berry on its own
+   has no edge: the border was the same colour as the fill, so on a pink or busy
+   picture the whole pill sank into the image and read as part of it. The ring
+   guarantees a hard line between badge and photo whatever is behind it, and the
+   deeper shadow lifts it off the surface — neither depends on the photo being a
+   helpful colour. */
+.lp-badge[data-badge="Sale"]{
+  background:var(--tone-deep);color:var(--paper-000);
+  border-color:var(--paper-000);box-shadow:var(--shadow-md);
+}
 
 /* Empty image frame — shown until a photo is added in the CMS. */
 .lp-ph{
