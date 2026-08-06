@@ -1,30 +1,23 @@
 {
-  "badge": "Sold out",
+  "badge": "Sale",
   "name": "Aurora Luxury Gown 123",
   "visible": true,
   "sizes": [
     {
       "available": true,
       "size": "13–16 years",
-      "price": 13060
+      "price": 13060,
+      "salePrice": 10000
     },
     {
       "available": true,
       "size": "10–12 years",
-      "price": 55
-    },
-    {
-      "available": true,
-      "size": "13–16 years",
-      "price": 21
-    },
-    {
-      "available": true,
-      "size": "4–6 years",
-      "price": 62
+      "price": 55,
+      "salePrice": 56
     }
   ],
-  "description2": "",
+  "showAccessory": false,
+  "description2": "pdqonwd",
   "accessoryPrice": 1475,
   "specs": {
     "fabric": "satin",
@@ -34,13 +27,10 @@
   },
   "images": [
     {
-      "upload": "https://ik.imagekit.io/lpdlhr/little%20princess%20website/8f058021-1c0d-4e5b-87bb-fbb3499ad5a7.jpg?updatedAt=1785953813917"
+      "upload": "https://ik.imagekit.io/lpdlhr/little%20princess%20website/downloadgram.org_763299475_18461117242118874_1852592455950499003_n.webp?updatedAt=1785996029186"
     },
     {
-      "upload": "https://ik.imagekit.io/lpdlhr/little%20princess%20website/77539bd4-de4d-46c9-97ab-bb8f7e546d30.jpg?updatedAt=1785954508460"
-    },
-    {
-      "upload": "https://ik.imagekit.io/lpdlhr/default-image.jpg?updatedAt=1785946581317"
+      "upload": "https://ik.imagekit.io/lpdlhr/little%20princess%20website/downloadgram.org_762864178_18461117275118874_4197146832630079061_n.webp?updatedAt=1785996028990"
     }
   ],
   "description": "Our most-requested blah blah blah",
