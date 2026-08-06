@@ -358,6 +358,64 @@ check("…on its lowest price", mapped.minPrice, built.minPrice);
 check("…on its photos", mapped.images.map(i => i.src), built.images.map(i => i.src));
 check("…and on their descriptions", mapped.images.map(i => i.alt), built.images.map(i => i.alt));
 
+/* --- the product page, shared with the preview panel ---------------------
+ *
+ * productDetail() builds everything on a product page below the breadcrumb, and
+ * the admin preview panel draws that same function. What is checked here is the
+ * bargain that makes sharing worth it: the build's own product page really is
+ * this output, so the panel cannot show one thing while the site shows another.
+ */
+
+const detailProduct = byName["On sale"];
+const detailHtml = card.productDetail(detailProduct, model.settings);
+
+checkTrue("the shared block is what the build's product page contains",
+  render.renderProduct(model, detailProduct, "https://example.test").includes(detailHtml));
+
+checkTrue("it carries the size picker app.js repaints from",
+  detailHtml.includes("data-detail-size") && detailHtml.includes('data-was="8000"'));
+checkTrue("…the sale price block", detailHtml.includes("lp-detail-price--sale"));
+checkTrue("…the total", detailHtml.includes("data-total"));
+checkTrue("…and the order button, addressed to the shop's number",
+  detailHtml.includes("data-wa-order") &&
+  detailHtml.includes(String(model.settings.whatsappNumber).replace(/[^0-9]/g, "")));
+
+// A sold-out piece must not offer an order button — the same rule the page has
+// had since that finding was fixed, now living in the shared file.
+const soldOutHtml = card.productDetail(
+  Object.assign({}, detailProduct, { badge: "Sold out" }), model.settings);
+checkTrue("a sold-out piece offers no order button",
+  !soldOutHtml.includes("data-wa-order") && soldOutHtml.includes("Currently unavailable"));
+
+/* the wording cascade the panel applies: piece → section → site default */
+
+const sectionWording = { defaultDescription: "SECTION words", defaultSpecs: { fabric: "SECTION fabric" } };
+const siteWording = { productDefaults: { description: "SITE words", specs: { fabric: "SITE fabric" } } };
+
+check("a piece's own words win",
+  card.applyWording({ description: "OWN words" }, sectionWording, siteWording).description,
+  "OWN words");
+check("blank falls through to the section",
+  card.applyWording({}, sectionWording, siteWording).description, "SECTION words");
+check("blank with no section wording falls through to the site default",
+  card.applyWording({}, {}, siteWording).description, "SITE words");
+check("the same three steps apply to the details rows",
+  [
+    card.applyWording({ specs: { fabric: "OWN" } }, sectionWording, siteWording).specs.fabric,
+    card.applyWording({}, sectionWording, siteWording).specs.fabric,
+    card.applyWording({}, {}, siteWording).specs.fabric
+  ],
+  ["OWN", "SECTION fabric", "SITE fabric"]);
+
+// The panel repeats this cascade because content.js cannot run in a browser.
+// Repeated logic is only safe while something checks the two agree.
+check("the panel's cascade agrees with the one the site is built with",
+  [
+    card.applyWording({}, sectionWording, siteWording).description,
+    card.applyWording({}, {}, {}).description
+  ],
+  ["SECTION words", ""]);
+
 /* --- report ------------------------------------------------------------- */
 
 if (failures.length) {
