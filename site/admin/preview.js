@@ -167,6 +167,56 @@
     }
   }
 
+  /* --- making the preview work, not just look right ----------------------- */
+
+  /**
+   * The panel renders into an iframe of Decap's own. A <script> tag inserted as
+   * markup never executes, so the page it draws was inert: the size dropdown
+   * did not reprice, a sale on any size but the first never appeared, and the
+   * accessory tick-box left the total alone.
+   *
+   * So site/app.js — the very file that does this on the live site — is loaded
+   * into that iframe and its initialisers are called on each render. One copy
+   * of the behaviour, exactly as there is one copy of the markup. LP_NO_AUTOBOOT
+   * is set first: in here app.js is a library, not a page, and its own boot
+   * would wire only the first render and then double up on it.
+   */
+  function withBehaviour(doc, run) {
+    var win = doc && doc.defaultView;
+    if (!win) return;
+    if (win.LPBehaviour) { run(win.LPBehaviour); return; }
+
+    if (!doc.getElementById("lp-behaviour")) {
+      win.LP_NO_AUTOBOOT = true;
+      var tag = doc.createElement("script");
+      tag.id = "lp-behaviour";
+      tag.src = "/app.js";
+      (doc.head || doc.documentElement).appendChild(tag);
+    }
+    // The script may already be in flight from an earlier render. Poll briefly
+    // rather than stacking load handlers; give up quietly after two seconds,
+    // which leaves the preview looking right but static — the state it was in
+    // before any of this, not a broken one.
+    var tries = 0;
+    var timer = win.setInterval(function () {
+      if (win.LPBehaviour) { win.clearInterval(timer); run(win.LPBehaviour); }
+      else if (++tries > 40) { win.clearInterval(timer); }
+    }, 50);
+  }
+
+  /** React hands the rendered node here; null on unmount. */
+  function wire(node) {
+    if (!node) return;
+    try {
+      withBehaviour(node.ownerDocument, function (lp) {
+        lp.initDetail(node);
+        lp.initCards(node);
+      });
+    } catch (e) {
+      if (window.console) console.warn("[lp] preview not wired: " + e);
+    }
+  }
+
   function ProductPreview(props) {
     var out;
     try {
@@ -202,7 +252,7 @@
       // that is what it is — and everything inside it that came from the form
       // has already been through `esc()` and `safeHref()` in tools/card.js, the
       // same two guards the live site relies on.
-      h("div", { dangerouslySetInnerHTML: { __html: html } }),
+      h("div", { ref: wire, dangerouslySetInnerHTML: { __html: html } }),
       notes
     );
   }

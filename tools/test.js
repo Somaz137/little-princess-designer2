@@ -387,6 +387,29 @@ const soldOutHtml = card.productDetail(
 checkTrue("a sold-out piece offers no order button",
   !soldOutHtml.includes("data-wa-order") && soldOutHtml.includes("Currently unavailable"));
 
+/* the matching accessory can be switched off per piece */
+
+// Matched on the tick-box's own class and note id, not on "data-accessory":
+// the wrapper carries data-accessory-price, which contains that string and
+// would make this pass whatever the switch did.
+checkTrue("a piece offers the accessory by default",
+  detailHtml.includes('class="lp-acc"') && detailHtml.includes('id="lp-acc-note"'));
+check("…and every piece saved before the switch existed still does",
+  detailProduct.showAccessory, true);
+
+const noAccessoryHtml = card.productDetail(
+  Object.assign({}, detailProduct, { showAccessory: false }), model.settings);
+checkTrue("switched off, the tick-box is left out rather than shown and ignored",
+  !noAccessoryHtml.includes('class="lp-acc"') && !noAccessoryHtml.includes('id="lp-acc-note"'));
+checkTrue("…and the rest of the page is untouched",
+  noAccessoryHtml.includes("data-total") && noAccessoryHtml.includes("data-detail-size"));
+check("the preview reads the switch the same way",
+  [
+    card.fromCmsEntry({ showAccessory: false }, catalogue).product.showAccessory,
+    card.fromCmsEntry({}, catalogue).product.showAccessory
+  ],
+  [false, true]);
+
 /* the wording cascade the panel applies: piece → section → site default */
 
 const sectionWording = { defaultDescription: "SECTION words", defaultSpecs: { fabric: "SECTION fabric" } };
