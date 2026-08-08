@@ -28,7 +28,10 @@ Constraints that bite if forgotten:
 
 ## Current state
 
-**Live** at `https://littleprincessdesigner.netlify.app`. Build clean.
+**Live** at `https://littleprincessdesigner.pk` — a custom domain added in
+August 2026; `littleprincessdesigner.netlify.app` redirects to it. Build clean.
+Preview deploys still answer on `.netlify.app` addresses of their own, which is
+correct: a custom domain serves the live deploy only.
 Admin works end to end: two people (Rimaz, Javeria) have saved edits through
 DecapBridge, and their names land in the commit messages as intended.
 
@@ -102,7 +105,8 @@ Working tree clean; everything committed and pushed.
 
 ## Failed attempts
 
-- **`unpkg.com`, `docs.netlify.com`, `*.netlify.app`, `res.cloudinary.com` and
+- **`unpkg.com`, `docs.netlify.com`, `*.netlify.app`, `littleprincessdesigner.pk`,
+  `res.cloudinary.com` and
   `ik.imagekit.io` are all blocked by this environment's proxy** (403 on
   CONNECT). `imagekit.io`'s docs pages answer 403 to WebFetch too; the npm
   tarballs of `imagekit-javascript` and `imagekit-media-library-widget` are the
@@ -138,7 +142,7 @@ Merge PR #5 once its Netlify checks pass
 local branch to `main` and push it so the branch ref matches.
 
 Then hand three things back to the owner, none of which are code:
-1. Test a share on `littleprincessdesigner.netlify.app` — **not** a
+1. Test a share on `littleprincessdesigner.pk` — **not** a
    `<deploy-id>--littleprincessdesigner.netlify.app` snapshot URL, and append
    `?1` to defeat WhatsApp's per-URL preview cache.
 2. Reassign the three orphaned `b2` products in the admin.
