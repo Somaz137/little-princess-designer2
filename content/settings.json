@@ -71,6 +71,17 @@
       "description": "How to order handmade kidswear from Little Princess Designer: confirm on WhatsApp, pay 25% advance, and we make it to your measurements. FAQs, sizes and delivery."
     }
   },
+  "productDefaults": {
+    "description": "Handmade to order in our own studio in Lahore, cut to your child's measurements and finished by hand.",
+    "description2": "Message us with the size and the colours you would like and we will send photos as the piece is made.",
+    "summaryTail": "Made to order, hand-finished in our Lahore studio.",
+    "specs": {
+      "fabric": "Confirmed with you before we cut.",
+      "occasion": "Parties, weddings and family occasions.",
+      "fit": "Cut to your measurements.",
+      "care": "Gentle hand wash, dry in shade."
+    }
+  },
   "carouselHeading": "Just finished in the studio",
   "accessoryLabel": "Add matching accessory",
   "accessoryNote": "This costs extra charges.",
@@ -113,7 +124,7 @@
     "heading": "We create the best memories for little princes and princesses",
     "subline": "Every pearl placed by hand, every stitch sewn by hand — **everything handmade**, with love."
   },
-  "email": "lpd.lhr@gmail.com",
+  "email": "info@littleprincessdesigner.pk",
   "features": [
     {
       "icon": "gift",
@@ -153,16 +164,5 @@
       "title": "Customized and Ready to wear",
       "subtitle": "Talk to us about yours"
     }
-  ],
-  "productDefaults": {
-    "description": "Handmade to order in our own studio in Lahore, cut to your child's measurements and finished by hand.",
-    "description2": "Message us with the size and the colours you would like and we will send photos as the piece is made.",
-    "summaryTail": "Made to order, hand-finished in our Lahore studio.",
-    "specs": {
-      "fabric": "Confirmed with you before we cut.",
-      "occasion": "Parties, weddings and family occasions.",
-      "fit": "Cut to your measurements.",
-      "care": "Gentle hand wash, dry in shade."
-    }
-  }
+  ]
 }
