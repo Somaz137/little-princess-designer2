@@ -93,7 +93,7 @@ media_library:
     folder: ""
 
 # Where the "back to site" link in the admin points.
-site_url: https://littleprincessdesigner.netlify.app
+site_url: https://littleprincessdesigner.pk
 # DecapBridge offers its own logo here; this keeps the shop's own lockup, which
 # is already sitting in site/assets and so needs no third-party request.
 logo_url: /assets/logo-lockup.webp
