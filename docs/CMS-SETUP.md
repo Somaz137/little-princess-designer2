@@ -41,7 +41,23 @@ Write down `YOUR-USERNAME/YOUR-REPO` — you need it twice below.
 The first deploy takes a minute or two. You will get a URL like
 `https://something-random-123.netlify.app`. You can change it under
 **Site configuration → Site details → Change site name**, or point your own
-domain at it later.
+domain at it later — which is what happened here: the shop is served from
+`littleprincessdesigner.pk`, and the `.netlify.app` address now redirects to it.
+
+Two things follow from having a custom domain, and both are worth knowing before
+they surprise you:
+
+- **Preview deploys keep their own `.netlify.app` addresses, and should.** A
+  custom domain serves one deploy — the live one. Every pull-request preview is
+  a separate copy, so Netlify gives each its own throwaway address. If previews
+  answered on the real domain, opening one would replace the live shop.
+- **The address the pages claim as their own comes from Netlify, not from this
+  repository.** The build reads the site's *primary* domain at build time and
+  stamps it into the canonical tag, `sitemap.xml`, `robots.txt` and the share
+  previews. So whichever of `littleprincessdesigner.pk` and
+  `www.littleprincessdesigner.pk` is marked **Primary domain** under
+  **Domain management** is the one Google indexes — and a change there only
+  reaches the pages on the *next* deploy.
 
 At this point the *website* works. The admin page will load but not let you in
 yet — that is step 3.
@@ -80,7 +96,7 @@ Two blocks in the config are optional but worth keeping:
 
 ## 4. Log in
 
-Go to `https://littleprincessdesigner.netlify.app/admin/` and press **Login**.
+Go to `https://littleprincessdesigner.pk/admin/` and press **Login**.
 You are sent to DecapBridge to sign in — by email and password, or with Google
 or Microsoft — and then returned to the admin. You should land on **Products**,
 with **Subcategories**, **Category pages** and **Site settings** in the sidebar.
